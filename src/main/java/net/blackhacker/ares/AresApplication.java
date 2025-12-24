@@ -15,7 +15,7 @@ public class AresApplication implements WebMvcConfigurer {
         registry.addViewController("/login").setViewName("login");
     }
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(AresApplication.class, args);
     }
 
