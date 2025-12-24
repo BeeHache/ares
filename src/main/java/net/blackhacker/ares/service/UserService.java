@@ -5,11 +5,14 @@ import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.repository.RoleRepository;
 import net.blackhacker.ares.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
@@ -18,6 +21,12 @@ public class UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+    }
 
     public User registerUser(User user) {
         if(userRepository.existsByEmail(user.getEmail())) {
@@ -38,7 +47,8 @@ public class UserService {
         return user;
     }
 
-    public boolean addRole(User user, Role role) {
+    public boolean addRole(User user, Role role)
+    {
         //TODO implement
         return false;
     }

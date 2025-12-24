@@ -1,0 +1,23 @@
+spring:
+    datasource:
+        driverClassName: org.apache.derby.jdbc.EmbeddedDriver
+        url: jdbc:derby:memory:myDb;create=true
+        username: sa
+        password: password
+
+    jpa:
+        properties:
+            hibernate:
+                dialect: org.hibernate.community.dialect.DerbyDialect
+        hibernate:
+            ddl-auto: update
+    security:
+        user:
+            password: password
+logging:
+    file:
+        name: ${spring.application.name}.log
+        path: ${HOME}/Projects/logs/
+    level:
+        web: DEBUG
+        org.springframework.security: DEBUG
