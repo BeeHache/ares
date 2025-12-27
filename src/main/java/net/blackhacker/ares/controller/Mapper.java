@@ -2,12 +2,17 @@ package net.blackhacker.ares.controller;
 
 import net.blackhacker.ares.dto.*;
 import net.blackhacker.ares.model.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
 
 @Component
 public class Mapper {
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public FeedDTO toFeedDTO(Feed feed) {
         if (feed == null) return null;
@@ -88,7 +93,7 @@ public class Mapper {
 
         User user = new User();
         user.setEmail(dto.getEmail());
-        user.setPassword(dto.getPassword());
+        user.setPassword(passwordEncoder.encode(dto.getPassword())); //encode password
         // Feeds and Roles usually require looking up entities from repositories
         return user;
     }
@@ -143,7 +148,8 @@ public class Mapper {
         Admins admin = new Admins();
         admin.setName(dto.getName());
         admin.setEmail(dto.getEmail());
-        admin.setPassword(dto.getPassword());
+        // Password should generally not be mapped back to DTO for security
+        admin.setPassword(passwordEncoder.encode(dto.getPassword())); //encode password;
         // Roles usually require looking up entities from repositories
         return admin;
     }
