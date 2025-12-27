@@ -1,13 +1,7 @@
 package net.blackhacker.ares.controller;
 
-import net.blackhacker.ares.dto.FeedDTO;
-import net.blackhacker.ares.dto.FeedItemDTO;
-import net.blackhacker.ares.dto.RoleDTO;
-import net.blackhacker.ares.dto.UserDTO;
-import net.blackhacker.ares.model.Feed;
-import net.blackhacker.ares.model.FeedItem;
-import net.blackhacker.ares.model.Role;
-import net.blackhacker.ares.model.User;
+import net.blackhacker.ares.dto.*;
+import net.blackhacker.ares.model.*;
 import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
@@ -86,11 +80,6 @@ public class Mapper {
                     .map(this::toFeedDTO)
                     .collect(Collectors.toSet()));
         }
-        if (user.getRoles() != null) {
-            dto.setRoles(user.getRoles().stream()
-                    .map(this::toRoleDTO)
-                    .collect(Collectors.toSet()));
-        }
         return dto;
     }
 
@@ -131,5 +120,31 @@ public class Mapper {
         if (dto == null) return null;
 
         return toRole(dto,null);
+    }
+
+    public AdminDTO toAdminDTO(Admins admin) {
+        if (admin == null) return null;
+
+        AdminDTO dto = new AdminDTO();
+        dto.setName(admin.getName());
+        dto.setEmail(admin.getEmail());
+        // Password should generally not be mapped back to DTO for security
+        if (admin.getRoles() != null) {
+            dto.setRoles(admin.getRoles().stream()
+                    .map(this::toRoleDTO)
+                    .collect(Collectors.toSet()));
+        }
+        return dto;
+    }
+
+    public Admins toAdmins(AdminDTO dto) {
+        if (dto == null) return null;
+
+        Admins admin = new Admins();
+        admin.setName(dto.getName());
+        admin.setEmail(dto.getEmail());
+        admin.setPassword(dto.getPassword());
+        // Roles usually require looking up entities from repositories
+        return admin;
     }
 }
