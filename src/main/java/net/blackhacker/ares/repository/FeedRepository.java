@@ -11,6 +11,6 @@ import java.util.List;
 @Repository
 public interface FeedRepository extends JpaRepository<Feed, Long> {
 
-    @Query("SELECT f FROM Feed f WHERE f.last_modified > ?1 ORDER BY f.last_modified ASC LIMIT ?2")
+    @Query("SELECT f FROM Feed f WHERE f.lastModified > ?1 ORDER BY f.lastModified ASC LIMIT ?2")
     List<Feed> findByLastModifiedAfter(LocalDateTime localDateTime, int limit);
 }
