@@ -1,7 +1,6 @@
 package net.blackhacker.ares.validation;
 
 import net.blackhacker.ares.dto.UserDTO;
-import net.blackhacker.ares.repository.UserRepository;
 import net.blackhacker.ares.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

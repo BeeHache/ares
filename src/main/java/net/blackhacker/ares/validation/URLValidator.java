@@ -3,6 +3,7 @@ package net.blackhacker.ares.validation;
 import org.springframework.stereotype.Component;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
@@ -22,7 +23,7 @@ public class URLValidator {
 
         try {
             // Using toURI() is a stricter check that validates the URL syntax more thoroughly.
-            new URL(url).toURI();
+            new URI(url).toURL();
         } catch (MalformedURLException | URISyntaxException e) {
             throw new ValidationException("Invalid URL format: " + url, e);
         }
