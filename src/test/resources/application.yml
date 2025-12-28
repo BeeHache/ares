@@ -17,3 +17,6 @@ spring:
 user:
   password:
     min_length: 8
+feed:
+  interval_seconds: 300 # 5 min
+  query_limit: 1000
