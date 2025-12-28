@@ -7,7 +7,11 @@ import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.service.UserService;
 import net.blackhacker.ares.validation.UserDTOValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
 
 @RestController()
 @RequestMapping("/api/user")
@@ -26,9 +30,12 @@ public class UserController {
     private UserDTOValidator userDTOValidator;
 
     @PostMapping("/register")
-    void registerUser(@RequestBody UserDTO userDTO) {
+    ResponseEntity<User> registerUser(@RequestBody UserDTO userDTO) {
         userDTOValidator.validateUserForRegistration(userDTO);
-        userService.registerUser(mapper.toModel(userDTO));
+        User user = userService.registerUser(mapper.toModel(userDTO));
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/").build().toUri();
+        return ResponseEntity.created(location).body(user);
     }
 
     @PostMapping("/login")

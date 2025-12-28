@@ -56,7 +56,7 @@ class UserControllerTest {
         mockMvc.perform(post("/api/user/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDTO)))
-                .andExpect(status().isOk()); // Expecting 200 OK as the method returns void
+                .andExpect(status().isCreated()); // Expecting 201 OK as the method returns void
     }
 
     @Test
