@@ -19,16 +19,11 @@ import java.util.Collection;
 public class UserController {
 
     @Autowired
-    private HttpServletRequest httpServletRequest;
-
-    @Autowired
     private HttpSession httpSession;
 
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private FeedService feedService;
 
     @Autowired
     private UserMapper mapper;
@@ -54,7 +49,6 @@ public class UserController {
         userDTOValidator.validateUserForLogin(userDTO);
         User user = userService.loginUser(mapper.toModel(userDTO));
         httpSession.setAttribute("user", mapper.toDTO(user));
-//        httpSession.ge
     }
 
 }

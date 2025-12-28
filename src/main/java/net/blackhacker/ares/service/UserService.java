@@ -18,8 +18,6 @@ public class UserService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
 
-    private RoleRepository roleRepository;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -36,29 +34,12 @@ public class UserService implements UserDetailsService {
         return userRepository.save(user);
     }
 
-    public User
-    registerUser(String email, String rawPassword) {
-        String hashed = passwordEncoder.encode(rawPassword);
-        User user = new User();
-        user.setEmail(email);
-        user.setPassword(hashed);
-        return registerUser(user);
-    }
-
     public User loginUser(User user) {
         return user;
-    }
-
-    public boolean addRole(User user, Role role)
-    {
-        //TODO implement
-        return false;
     }
 
     public User getUserByEmail(String email){
         return userRepository.findByEmail(email).orElse(null);
     }
 
-    public void find() {
-    }
 }
