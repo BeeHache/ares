@@ -2,9 +2,11 @@ package net.blackhacker.ares.mapper;
 
 import net.blackhacker.ares.dto.RoleDTO;
 import net.blackhacker.ares.model.Role;
+import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
 
+@Component
 public class RoleMapper implements ModelDTOMapper<Role, RoleDTO>{
     @Override
     public RoleDTO toDTO(Role role) {

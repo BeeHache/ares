@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 
@@ -38,7 +39,7 @@ public class Feed {
     private boolean isPodcast = false;
 
     @Column(nullable = false)
-    private Date lastModified;
+    private LocalDateTime lastModified;
 
     @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FeedItem> items = new ArrayList<>();

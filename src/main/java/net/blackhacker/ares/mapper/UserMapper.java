@@ -4,9 +4,11 @@ import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
 
+@Component
 public class UserMapper implements ModelDTOMapper<User, UserDTO> {
 
     @Autowired

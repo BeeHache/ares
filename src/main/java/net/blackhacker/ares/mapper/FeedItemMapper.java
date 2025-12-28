@@ -2,7 +2,9 @@ package net.blackhacker.ares.mapper;
 
 import net.blackhacker.ares.dto.FeedItemDTO;
 import net.blackhacker.ares.model.FeedItem;
+import org.springframework.stereotype.Component;
 
+@Component
 public class FeedItemMapper implements  ModelDTOMapper<FeedItem, FeedItemDTO> {
     @Override
     public FeedItemDTO toDTO(FeedItem item) {

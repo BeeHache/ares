@@ -36,7 +36,8 @@ public class UserService implements UserDetailsService {
         return userRepository.save(user);
     }
 
-    public User registerUser(String email, String rawPassword) {
+    public User
+    registerUser(String email, String rawPassword) {
         String hashed = passwordEncoder.encode(rawPassword);
         User user = new User();
         user.setEmail(email);
@@ -52,5 +53,12 @@ public class UserService implements UserDetailsService {
     {
         //TODO implement
         return false;
+    }
+
+    public User getUserByEmail(String email){
+        return userRepository.findByEmail(email).orElse(null);
+    }
+
+    public void find() {
     }
 }

@@ -1,5 +1,6 @@
-create table users (
+create table admins (
     id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL unique,
     password varchar(60) not null
 );
@@ -11,12 +12,18 @@ create table role (
     CONSTRAINT fk_role_parent FOREIGN KEY (parent_id) REFERENCES role(id) ON DELETE CASCADE
 );
 
-create table user_roles (
-    user_id BIGINT NOT NULL,
+create table admin_roles (
+    admin_id BIGINT NOT NULL,
     role_id BIGINT NOT NULL,
-    PRIMARY KEY (user_id, role_id),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (admin_id, role_id),
+    FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE,
     FOREIGN KEY (role_id) REFERENCES role(id) ON DELETE CASCADE
+);
+
+create table users (
+    id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    email VARCHAR(255) NOT NULL unique,
+    password varchar(60) not null
 );
 
 create table feeds (
@@ -27,6 +34,8 @@ create table feeds (
     is_podcast char(1) not null default 'N',
     last_modified timestamp
 );
+
+create index ix_feeds_last_mod on feeds (last_modified);
 
 create table feed_item (
     id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,

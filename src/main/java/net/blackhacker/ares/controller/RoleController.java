@@ -1,8 +1,11 @@
 package net.blackhacker.ares.controller;
 
+import net.blackhacker.ares.mapper.RoleMapper;
 import net.blackhacker.ares.model.Role;
 import net.blackhacker.ares.repository.RoleRepository;
 import net.blackhacker.ares.dto.RoleDTO;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,7 +15,11 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/roles")
 public class RoleController {
 
+    @Autowired
     private final RoleRepository roleRepository;
+
+    @Autowired
+    private RoleMapper mapper;
 
     public RoleController(RoleRepository roleRepository) {
         this.roleRepository = roleRepository;
@@ -23,7 +30,7 @@ public class RoleController {
     public List<RoleDTO> getRoleTree() {
         List<Role> rootRoles = roleRepository.findByParentRoleIsNull();
         return rootRoles.stream()
-                .map(RoleDTO::new)
+                .map(mapper::toDTO)
                 .collect(Collectors.toList());
     }
 

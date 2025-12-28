@@ -1,18 +1,19 @@
 spring:
-    application:
-        name: Ares
-    jpa:
-        database-platform: org.hibernate.dialect.H2Dialect
-        ddl-auto: update
-    datasource:
-        url: jdbc:h2:mem:testdb
-        driverClassName: org.h2.Driver
-        username: sa
-        password: password
-    h2:
-        console:
-            enabled: true
-            path: /h2-console
-    security:
-        user:
-            password: password
+  profiles:
+    active: dev
+  application:
+    name: Ares
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    properties:
+        hibernate:
+          dialect: org.hibernate.dialect.H2Dialect
+          ddl-auto: create-drop
+
+user:
+  password:
+    min_length: 8
