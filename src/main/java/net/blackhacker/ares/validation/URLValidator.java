@@ -2,18 +2,13 @@ package net.blackhacker.ares.validation;
 
 import org.springframework.stereotype.Component;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.regex.Pattern;
 
 @Component
 public class URLValidator {
 
     private static final Pattern URL_PATTERN = Pattern.compile(
-            "^(https?|ftp|file):\\/\\/[-a-zA-Z0-9+&@#\\/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#\\/%=~_|]"
-            //"^(https?):\\/\\/[^\\s\\/$.?#].[^\\s]*$"
+            "^(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]"
     );
 
     /**
@@ -31,6 +26,4 @@ public class URLValidator {
             throw new ValidationException("Invalid URL format: " + url);
         }
     }
-
-    private void noop() { }
 }
