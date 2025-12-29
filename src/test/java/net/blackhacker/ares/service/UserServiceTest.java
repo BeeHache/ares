@@ -56,9 +56,7 @@ class UserServiceTest {
         when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(UsernameNotFoundException.class, () -> {
-            userService.loadUserByUsername(email);
-        });
+        assertThrows(UsernameNotFoundException.class, () -> userService.loadUserByUsername(email));
 
         verify(userRepository, times(1)).findByEmail(email);
     }
