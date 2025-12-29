@@ -5,9 +5,16 @@ import org.springframework.stereotype.Component;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.regex.Pattern;
 
 @Component
 public class URLValidator {
+
+    private static final Pattern URL_PATTERN = Pattern.compile(
+            "^(https?|ftp|file):\\/\\/[-a-zA-Z0-9+&@#\\/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#\\/%=~_|]"
+            //"^(https?):\\/\\/[^\\s\\/$.?#].[^\\s]*$"
+    );
 
     /**
      * Validates the given URL string and throws a ValidationException if it's invalid.
@@ -20,11 +27,10 @@ public class URLValidator {
             throw new ValidationException("URL must not be empty.");
         }
 
-        try {
-            // Using toURI() is a stricter check that validates the URL syntax more thoroughly.
-            new URI(url).toURL();
-        } catch (MalformedURLException | URISyntaxException e) {
-            throw new ValidationException("Invalid URL format: " + url, e);
+        if (!URL_PATTERN.matcher(url).matches()) {
+            throw new ValidationException("Invalid URL format: " + url);
         }
     }
+
+    private void noop() { }
 }
