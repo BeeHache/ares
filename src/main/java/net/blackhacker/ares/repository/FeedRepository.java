@@ -13,4 +13,7 @@ public interface FeedRepository extends JpaRepository<Feed, Long> {
 
     @Query("SELECT f FROM Feed f WHERE f.lastModified > ?1 ORDER BY f.lastModified ASC LIMIT ?2")
     List<Feed> findByLastModifiedAfter(LocalDateTime localDateTime, int limit);
+
+    @Query("SELECT f FROM Feed f WHERE f.link = ?1")
+    Feed findByLink(String link);
 }
