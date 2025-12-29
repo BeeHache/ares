@@ -26,9 +26,12 @@ public class RoleMapper implements ModelDTOMapper<Role, RoleDTO>{
         Role role = new Role();
         role.setName(dto.getName());
         role.setParentRole(parent);
-        role.setSubRoles(dto.getChildren().stream()
-                .map(child -> toRole(child,role))
-                .collect(Collectors.toList()));
+        if (dto.getChildren() != null){
+            role.setSubRoles(dto.getChildren().stream()
+                    .map(child -> toRole(child,role))
+                    .collect(Collectors.toList()));
+        }
+
         return role;
     }
 
