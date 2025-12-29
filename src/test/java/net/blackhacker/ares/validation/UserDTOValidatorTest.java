@@ -5,7 +5,6 @@ import net.blackhacker.ares.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -57,9 +56,7 @@ class UserDTOValidatorTest {
         when(userService.getUserByEmail(userDTO.getEmail())).thenReturn(new net.blackhacker.ares.model.User());
 
         // Act & Assert
-        assertThrows(ValidationException.class, () -> {
-            userDTOValidator.validateUserForRegistration(userDTO);
-        });
+        assertThrows(ValidationException.class, () -> userDTOValidator.validateUserForRegistration(userDTO));
     }
 
     @Test
@@ -86,8 +83,6 @@ class UserDTOValidatorTest {
         doThrow(new ValidationException("Invalid email")).when(emailValidator).validateEmail("invalid-email");
 
         // Act & Assert
-        assertThrows(ValidationException.class, () -> {
-            userDTOValidator.validateUserForLogin(userDTO);
-        });
+        assertThrows(ValidationException.class, () -> userDTOValidator.validateUserForLogin(userDTO));
     }
 }
