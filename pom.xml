@@ -29,6 +29,8 @@
     <properties>
         <java.version>25</java.version>
         <jackson.version>2.13.4.2</jackson.version>
+        <rss-reader.version>3.12.0</rss-reader.version>
+        <opml-parser.version>3.1.0</opml-parser.version>
     </properties>
     <dependencies>
         <dependency>
@@ -73,7 +75,12 @@
         <dependency>
             <groupId>com.apptasticsoftware</groupId>
             <artifactId>rssreader</artifactId>
-            <version>3.12.0</version>
+            <version>${rss-reader.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>be.ceau</groupId>
+            <artifactId>opml-parser</artifactId>
+            <version>${opml-parser.version}</version>
         </dependency>
 
         <!-- Test dependencies -->
