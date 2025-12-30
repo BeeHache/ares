@@ -40,8 +40,8 @@ public class FeedService {
     void updateFeeds() {
         LocalDateTime fiveMinutesAgo = LocalDateTime.now().minusSeconds(feedIntervalSeconds);
         boolean notDone = true;
-        Collection<Feed> feeds = feedRepository.findByLastModifiedAfter(fiveMinutesAgo, queryLimit);
-        for(;notDone; notDone = feeds.size() < queryLimit) {
+
+        for(Collection<Feed> feeds ; notDone; notDone = feeds.size() < queryLimit) {
             feeds = feedRepository.findByLastModifiedAfter(fiveMinutesAgo, queryLimit);
 
             notDone = feeds.size() < queryLimit;
