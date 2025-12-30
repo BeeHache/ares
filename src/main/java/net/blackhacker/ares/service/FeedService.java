@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Collection;
 
@@ -18,7 +17,7 @@ public class FeedService {
     private FeedRepository feedRepository;
 
     @Autowired
-    private ReaderService readerService;
+    private UtilsService utilsService;
 
     @Value("${feed.interval_seconds}")
     private long feedIntervalSeconds;
@@ -27,9 +26,12 @@ public class FeedService {
     private int queryLimit;
 
 
-
-    void addFeed(String link) throws IOException {
-        readerService.read(link);
+    public Feed addFeed(String link) {
+        Feed feed = feedRepository.findByLink(link);
+        if (feed != null)
+            return feed;
+        feed = utilsService.readFeedUrl(link);
+        return feedRepository.save(feed);
     }
 
 
