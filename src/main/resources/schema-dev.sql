@@ -29,8 +29,8 @@ create table users (
 create table feeds (
     id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     title varchar(255) not null,
-    description varchar(1024),
-    link varchar(255) not null,
+    description varchar(2048),
+    link varchar(512) not null unique,
     is_podcast char(1) not null default 'N',
     last_modified timestamp
 );
@@ -44,7 +44,7 @@ create table feed_item (
     description VARCHAR(2048),
     link VARCHAR(512),
     image VARCHAR(512),
-    date VARCHAR(255),
+    date timestamp,
     CONSTRAINT fk_feed FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE
     );
 
