@@ -24,9 +24,6 @@ class UserServiceTest {
     @MockitoBean
     private UserRepository userRepository;
 
-    @MockitoBean
-    private PasswordEncoder passwordEncoder;
-
     @InjectMocks
     private UserService userService;
 
@@ -36,7 +33,7 @@ class UserServiceTest {
         String email = "test@example.com";
         User user = new User();
         user.setEmail(email);
-        user.setPassword(passwordEncoder.encode("password"));
+        user.setPassword("password");
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
 
