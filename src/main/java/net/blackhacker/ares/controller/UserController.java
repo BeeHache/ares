@@ -50,14 +50,6 @@ public class UserController {
     @Autowired
     private URLValidator urlValidator;
 
-    @PostMapping("/register")
-    ResponseEntity<User> registerUser(@RequestBody UserDTO userDTO) {
-        userDTOValidator.validateUserForRegistration(userDTO);
-        User user = userService.registerUser(userMapper.toModel(userDTO));
-
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/").build().toUri();
-        return ResponseEntity.created(location).body(user);
-    }
 
     @PostMapping("/login")
     void loginUser(@RequestBody UserDTO userDTO, HttpSession httpSession) {
