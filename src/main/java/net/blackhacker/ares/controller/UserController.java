@@ -1,6 +1,5 @@
 package net.blackhacker.ares.controller;
 
-import jakarta.servlet.http.HttpSession;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.mapper.FeedMapper;
@@ -15,13 +14,13 @@ import net.blackhacker.ares.validation.URLValidator;
 import net.blackhacker.ares.validation.UserDTOValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.Optional;
 
 @RestController()
 @RequestMapping("/api/user")
@@ -60,32 +59,17 @@ public class UserController {
         return ResponseEntity.created(location).body(user);
     }
 
-    @GetMapping("/logout")
-    @PreAuthorize("isAuthenticated()")
-    void logoutUser(HttpSession httpSession) {
-        httpSession.invalidate();
-    }
-
     @GetMapping("/")
-    UserDTO getUser(HttpSession httpSession) {
-        return userMapper.toDTO((User) httpSession.getAttribute("user"));
+    UserDTO getUser(@AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.getUserByEmail(userDetails.getUsername());
+        return userMapper.toDTO(user);
     }
-
 
     @PostMapping()
-    ResponseEntity<Void> importOPML(@RequestParam("file") MultipartFile file, HttpSession httpSession) {
-        UserDTO sessionUser = (UserDTO) httpSession.getAttribute("user");
-        if (sessionUser == null) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        final User user = userService.getUserByEmail(sessionUser.getEmail());
-        if (user == null) {
-            return ResponseEntity.badRequest().build();
-        }
-
+    ResponseEntity<Void> importOPML(@RequestParam("file") MultipartFile file, @AuthenticationPrincipal UserDetails userDetails) {
         multipartFileValidator.validateMultipartFile(file);
 
+        final User user = userService.getUserByUserDetails(userDetails);
         utilsService.opml(file).handleAsync((feeds, throwable)->{
             if (throwable != null) {
                 throw new RuntimeException(throwable);
@@ -101,20 +85,11 @@ public class UserController {
     }
 
     @PutMapping("/addfeed")
-    ResponseEntity<FeedDTO> addFeed(@RequestParam("link") String link, HttpSession httpSession){
-        UserDTO userDTO = (UserDTO) httpSession.getAttribute("user");
-        if (userDTO == null) {
-            return ResponseEntity.badRequest().build();
-        }
-
+    ResponseEntity<FeedDTO> addFeed(@RequestParam("link") String link, @AuthenticationPrincipal UserDetails userDetails){
         urlValidator.validateURL(link);
 
+        User user = userService.getUserByUserDetails(userDetails);
         Feed feed = feedService.addFeed(link);
-        Optional<User> userOption = userService.findByEmail(userDTO.getEmail());
-
-        if (userOption.isEmpty()) return ResponseEntity.badRequest().build();
-
-        User user = userOption.get();
         user.getFeeds().add(feed);
         userService.saveUser(user);
         FeedDTO feedDTO = feedMapper.toDTO(feed);
