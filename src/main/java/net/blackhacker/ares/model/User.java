@@ -30,6 +30,8 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    private final String role = "ROLE_USER";
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_feed",
@@ -37,7 +39,6 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "feed_id")
     )
     private Set<Feed> feeds = new HashSet<>();
-
 
 
     @Override

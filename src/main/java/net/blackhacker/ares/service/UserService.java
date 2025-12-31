@@ -20,8 +20,16 @@ public class UserService implements UserDetailsService {
     @Override
     @NullMarked
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(user.getEmail())
+                .password(user.getPassword()) // Must be already encoded (BCrypt)
+                .roles(user.getRole())        // Spring adds "ROLE_" prefix automatically
+                .disabled(!user.isEnabled())
+                .accountExpired(false)
+                .build();
     }
 
     public User registerUser(User user) {

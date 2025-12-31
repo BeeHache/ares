@@ -13,6 +13,7 @@ import net.blackhacker.ares.validation.MultipartFileValidator;
 import net.blackhacker.ares.validation.URLValidator;
 import net.blackhacker.ares.validation.UserDTOValidator;
 import net.blackhacker.ares.validation.ValidationException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -65,8 +66,15 @@ class UserControllerTest {
     @MockitoBean
     private URLValidator urlValidator;
 
-    private final MockHttpSession session = new MockHttpSession();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private MockHttpSession session = new MockHttpSession();
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+    @BeforeEach
+    void setUp() {
+        session = new MockHttpSession();
+        objectMapper = new ObjectMapper();
+    }
+
 
     @Test
     void registerUser_shouldReturnCreated_whenUserDataIsValid() throws Exception {

@@ -1,4 +1,16 @@
 package net.blackhacker.ares.dto;
 
-public class TokenDTO {
+import lombok.Data;
+
+import java.io.Serializable;
+
+@Data
+public class TokenDTO implements Serializable {
+    private String token;
+
+    public static TokenDTO token(String token){
+        TokenDTO tokenDTO = new TokenDTO();
+        tokenDTO.setToken(token);
+        return tokenDTO;
+    }
 }

@@ -11,3 +11,8 @@ user:
 feed:
     interval_seconds: 300 # 5 min
     query_limit: 1000
+security:
+    jwt:
+        secrete: ${JWT_SECRET}
+        refresh_expiration_ms: 86400000 # 24 hr
+        access_expiration_ms:  3600000  # 1 min

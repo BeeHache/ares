@@ -33,6 +33,7 @@
         <opml-parser.version>3.1.0</opml-parser.version>
         <postgressql.version>42.7.8</postgressql.version>
         <derby.version>10.17.1.0</derby.version>
+        <jjwt.version>0.13.0</jjwt.version>
     </properties>
     <dependencies>
         <dependency>
@@ -83,6 +84,11 @@
             <groupId>be.ceau</groupId>
             <artifactId>opml-parser</artifactId>
             <version>${opml-parser.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>${jjwt.version}</version>
         </dependency>
 
         <!-- Test dependencies -->
