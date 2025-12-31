@@ -2,11 +2,13 @@ package net.blackhacker.ares.controller;
 
 import net.blackhacker.ares.dto.TokenDTO;
 import net.blackhacker.ares.dto.UserDTO;
+import net.blackhacker.ares.mapper.UserMapper;
+import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.service.JWTService;
 import net.blackhacker.ares.service.RefreshTokenService;
 import net.blackhacker.ares.validation.UserDTOValidator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,6 +16,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Objects;
 
@@ -21,34 +24,41 @@ import java.util.Objects;
 @RequestMapping("/api/login")
 public class LoginController {
 
-    @Autowired
-    private RefreshTokenService refreshTokenService;
-
-    @Autowired
-    private UserDTOValidator userDTOValidator;
-
+    private final RefreshTokenService refreshTokenService;
+    private final UserDTOValidator userDTOValidator;
     private final AuthenticationManager authenticationManager;
     private final JWTService jwtService; // Your custom service to sign tokens
+    private final UserMapper userMapper;
 
-    LoginController(AuthenticationManager authenticationManager, JWTService jwtService){
+    LoginController(RefreshTokenService refreshTokenService, UserDTOValidator userDTOValidator,
+                    AuthenticationManager authenticationManager, JWTService jwtService,
+                    UserMapper userMapper){
+        this.refreshTokenService = refreshTokenService;
+        this.userDTOValidator = userDTOValidator;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.userMapper = userMapper;
     }
 
     @PostMapping
-    ResponseEntity<?> login(@RequestBody UserDTO userDTO) {
+    ResponseEntity<TokenDTO> login(@RequestBody UserDTO userDTO) {
         userDTOValidator.validateUserForLogin(userDTO);
+        User user = userMapper.toModel(userDTO);
+
+
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(userDTO.getPassword(), userDTO.getPassword())
+                new UsernamePasswordAuthenticationToken(user, userDTO.getPassword())
         );
 
-        UserDetails userDetails = (UserDetails) Objects.requireNonNull(authentication.getPrincipal());
+        User userDetails = (User) authentication.getPrincipal();
         String accessToken = jwtService.generateToken(userDetails);
         String refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername()).getToken();
         ResponseCookie cookie = createRefreshCookie(refreshToken);
         TokenDTO accessTokenDTO = TokenDTO.token(accessToken);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, cookie.toString());
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .headers(headers)
                 .body(accessTokenDTO);
     }
 
