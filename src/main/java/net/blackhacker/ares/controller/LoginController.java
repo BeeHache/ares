@@ -8,17 +8,12 @@ import net.blackhacker.ares.service.JWTService;
 import net.blackhacker.ares.service.RefreshTokenService;
 import net.blackhacker.ares.validation.UserDTOValidator;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import tools.jackson.databind.ObjectMapper;
-
-import java.util.Objects;
 
 @RestController()
 @RequestMapping("/api/login")
