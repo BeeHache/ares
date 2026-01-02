@@ -11,15 +11,11 @@ import net.blackhacker.ares.service.UserService;
 import net.blackhacker.ares.service.UtilsService;
 import net.blackhacker.ares.validation.MultipartFileValidator;
 import net.blackhacker.ares.validation.URLValidator;
-import net.blackhacker.ares.validation.UserDTOValidator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.Optional;
 
 @RestController()
 @RequestMapping("/api/user")
