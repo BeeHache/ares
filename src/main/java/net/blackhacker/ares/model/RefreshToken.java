@@ -2,7 +2,6 @@ package net.blackhacker.ares.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import org.springframework.data.annotation.Id;
 
 import java.time.Instant;
 
@@ -21,5 +20,6 @@ public class RefreshToken {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
+    @Column
     private Instant expiryDate;
 }
