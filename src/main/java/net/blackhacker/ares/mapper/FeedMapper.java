@@ -13,8 +13,12 @@ import java.util.stream.Collectors;
 @Component
 public class FeedMapper implements ModelDTOMapper<Feed, FeedDTO> {
 
-    @Autowired
-    private FeedItemMapper feedItemMapper;
+    private final FeedItemMapper feedItemMapper;
+
+    public FeedMapper(FeedItemMapper feedItemMapper){
+        this.feedItemMapper = feedItemMapper;
+    }
+
 
     @Override
     public FeedDTO toDTO(Feed feed) {

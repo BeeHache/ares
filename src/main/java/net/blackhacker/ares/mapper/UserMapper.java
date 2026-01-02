@@ -11,11 +11,13 @@ import java.util.stream.Collectors;
 @Component
 public class UserMapper implements ModelDTOMapper<User, UserDTO> {
 
-    @Autowired
-    private FeedMapper feedMapper;
+    private final FeedMapper feedMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public UserMapper(FeedMapper feedMapper, PasswordEncoder passwordEncoder){
+        this.feedMapper = feedMapper;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     public UserDTO toDTO(User user) {

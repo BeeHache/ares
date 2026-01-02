@@ -11,11 +11,13 @@ import java.util.stream.Collectors;
 @Component
 public class AdminMapper implements ModelDTOMapper<Admins, AdminDTO>{
 
-    @Autowired
-    private RoleMapper roleMapper;
+    private final RoleMapper roleMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public AdminMapper(RoleMapper roleMapper, PasswordEncoder passwordEncoder){
+        this.roleMapper = roleMapper;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     public AdminDTO toDTO(Admins admin) {
