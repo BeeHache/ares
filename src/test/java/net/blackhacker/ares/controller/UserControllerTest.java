@@ -13,15 +13,14 @@ import net.blackhacker.ares.validation.MultipartFileValidator;
 import net.blackhacker.ares.validation.URLValidator;
 import net.blackhacker.ares.validation.UserDTOValidator;
 import net.blackhacker.ares.validation.ValidationException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 import java.util.HashSet;
@@ -29,7 +28,6 @@ import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -65,45 +63,14 @@ class UserControllerTest {
     @MockitoBean
     private URLValidator urlValidator;
 
-    private final MockHttpSession session = new MockHttpSession();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private MockHttpSession session;
 
-    @Test
-    void registerUser_shouldReturnCreated_whenUserDataIsValid() throws Exception {
-        // Arrange
-        UserDTO userDTO = new UserDTO();
-        userDTO.setEmail("test@example.com");
-        userDTO.setPassword("ValidPassword123!");
-
-        User user = new User();
-
-        // Mock the validator to do nothing (pass the validation)
-        doNothing().when(userDTOValidator).validateUserForRegistration(any(UserDTO.class));
-        when(userMapper.toModel(any(UserDTO.class))).thenReturn(user);
-        when(userService.registerUser(any(User.class))).thenReturn(user);
-
-        // Act & Assert
-        mockMvc.perform(post("/api/user/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userDTO)))
-                .andExpect(status().isCreated()); // Expecting 201 OK as the method returns void
+    @BeforeEach
+    void setUp() {
+        session = new MockHttpSession();
     }
 
-    @Test
-    void registerUser_shouldReturnBadRequest_whenUserDataIsInvalid() throws Exception {
-        // Arrange
-        UserDTO userDTO = new UserDTO(); // Invalid DTO (e.g., empty email/password)
 
-        // Mock the validator to throw an exception
-        doThrow(new ValidationException("Invalid user data"))
-                .when(userDTOValidator).validateUserForRegistration(any(UserDTO.class));
-
-        // Act & Assert
-        mockMvc.perform(post("/api/user/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userDTO)))
-                .andExpect(status().isBadRequest());
-    }
 
     @Test
     void addFeed_shouldReturnOk_whenUserIsLoggedInAndUrlIsValid() throws Exception {

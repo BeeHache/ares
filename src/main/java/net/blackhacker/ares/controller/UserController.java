@@ -17,9 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
 import java.util.Optional;
 
 @RestController()
@@ -50,14 +48,6 @@ public class UserController {
     @Autowired
     private URLValidator urlValidator;
 
-    @PostMapping("/register")
-    ResponseEntity<User> registerUser(@RequestBody UserDTO userDTO) {
-        userDTOValidator.validateUserForRegistration(userDTO);
-        User user = userService.registerUser(userMapper.toModel(userDTO));
-
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/").build().toUri();
-        return ResponseEntity.created(location).body(user);
-    }
 
     @PostMapping("/login")
     void loginUser(@RequestBody UserDTO userDTO, HttpSession httpSession) {
