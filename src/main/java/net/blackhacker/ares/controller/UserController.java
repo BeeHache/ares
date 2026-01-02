@@ -18,9 +18,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
+import java.util.Optional;
 
 @RestController()
 @RequestMapping("/api/user")
@@ -50,14 +49,6 @@ public class UserController {
     @Autowired
     private URLValidator urlValidator;
 
-    @PostMapping("/register")
-    ResponseEntity<User> registerUser(@RequestBody UserDTO userDTO) {
-        userDTOValidator.validateUserForRegistration(userDTO);
-        User user = userService.registerUser(userMapper.toModel(userDTO));
-
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/").build().toUri();
-        return ResponseEntity.created(location).body(user);
-    }
 
     @GetMapping("/")
     UserDTO getUser(@AuthenticationPrincipal UserDetails userDetails) {

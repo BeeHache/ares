@@ -127,16 +127,6 @@ class LoginControllerTest {
         loginDTO.setEmail("test@example.com");
         loginDTO.setPassword("wrong-password");
 
-
-        User userModel = new User();
-        userModel.setEmail("test@example.com");
-
-        String accessTokenString = "access-token";
-
-        RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setUser(userModel);
-        refreshToken.setToken("refresh-token");
-
         doNothing().when(userDTOValidator).validateUserForLogin(any(UserDTO.class));
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new BadCredentialsException("Invalid credentials"));
