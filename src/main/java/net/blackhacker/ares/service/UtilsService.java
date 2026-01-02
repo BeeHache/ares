@@ -9,7 +9,6 @@ import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.repository.FeedRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,11 +24,13 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class UtilsService {
 
-    @Autowired
-    private FeedMapper feedMapper;
+    private final FeedMapper feedMapper;
+    private final FeedRepository feedRepository;
 
-    @Autowired
-    private FeedRepository feedRepository;
+    public UtilsService(FeedMapper feedMapper, FeedRepository feedRepository){
+        this.feedMapper = feedMapper;
+        this.feedRepository = feedRepository;
+    }
 
 
     public FeedDTO readFeedDTOUrl(String url) {

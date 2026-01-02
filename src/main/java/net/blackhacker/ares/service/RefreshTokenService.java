@@ -18,11 +18,13 @@ public class RefreshTokenService {
     @Value("${security.jwt.refresh_expiration_ms: 86400000}") // default 24 hrs
     private Long refreshTokenDurationMs;
 
-    @Autowired
     private RefreshTokenRepository refreshTokenRepository;
-
-    @Autowired
     private UserService userService;
+
+    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, UserService userService){
+        this.refreshTokenRepository = refreshTokenRepository;
+        this.userService = userService;
+    }
 
     public Optional<RefreshToken> findByToken(String token) {
         return refreshTokenRepository.findByToken(token);

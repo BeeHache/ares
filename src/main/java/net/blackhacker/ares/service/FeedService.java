@@ -13,17 +13,19 @@ import java.util.Collection;
 @Service
 public class FeedService {
 
-    @Autowired
-    private FeedRepository feedRepository;
-
-    @Autowired
-    private UtilsService utilsService;
+    private final FeedRepository feedRepository;
+    private final UtilsService utilsService;
 
     @Value("${feed.interval_seconds}")
     private long feedIntervalSeconds;
 
     @Value("${feed.query_limit}")
     private int queryLimit;
+
+    public FeedService(FeedRepository feedRepository, UtilsService utilsService) {
+        this.feedRepository = feedRepository;
+        this.utilsService = utilsService;
+    }
 
 
     public Feed addFeed(String link) {

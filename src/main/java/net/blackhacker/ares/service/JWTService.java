@@ -18,8 +18,8 @@ public class JWTService {
     @Value("${security.jwt.secret}")
     private String SECRET_KEY;
 
-    @Value("security.jwt.access_expiration_ms:3600000") // default is 1 min
-    private long EXPIRATION_TIME;
+    @Value("${security.jwt.access_expiration_ms:3600000}") // default is 1 min
+    private Long EXPIRATION_TIME;
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
