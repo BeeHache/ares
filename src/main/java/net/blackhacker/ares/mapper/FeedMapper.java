@@ -4,7 +4,6 @@ import com.apptasticsoftware.rssreader.Channel;
 import com.apptasticsoftware.rssreader.Item;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.model.Feed;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

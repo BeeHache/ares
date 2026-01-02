@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import net.blackhacker.ares.model.RefreshToken;
 import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.repository.RefreshTokenRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.time.Instant;
@@ -18,8 +17,8 @@ public class RefreshTokenService {
     @Value("${security.jwt.refresh_expiration_ms: 86400000}") // default 24 hrs
     private Long refreshTokenDurationMs;
 
-    private RefreshTokenRepository refreshTokenRepository;
-    private UserService userService;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final UserService userService;
 
     public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, UserService userService){
         this.refreshTokenRepository = refreshTokenRepository;

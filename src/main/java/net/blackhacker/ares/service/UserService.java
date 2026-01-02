@@ -3,7 +3,6 @@ package net.blackhacker.ares.service;
 import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.repository.UserRepository;
 import org.jspecify.annotations.NullMarked;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

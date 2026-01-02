@@ -30,7 +30,7 @@ public class GlobalExceptionHandler {
                 "Invalid username or password", // Avoid exposing too much detail
                 LocalDateTime.now()
         );
-        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<ErrorResponse>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
 
     // A catch-all for any other unexpected exceptions

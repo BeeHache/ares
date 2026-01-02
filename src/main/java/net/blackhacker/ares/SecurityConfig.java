@@ -60,7 +60,8 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(
                         auth -> auth
-                                .requestMatchers("/").permitAll()
+                                .requestMatchers(
+                                        "/api/login/**", "/api/register", "/").permitAll()
                                 .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
@@ -70,23 +71,13 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // 1. Allow specific origins (Avoid "*" in production!)
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://myfrontend.com"));
-
-        // 2. Allow specific HTTP methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-
-        // 3. Allow specific headers (e.g., Authorization, Content-Type)
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
-
-        // 4. Allow the browser to send cookies or auth headers
         configuration.setAllowCredentials(true);
-
-        // 5. How long the browser should cache this "preflight" response (1 hour)
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Apply this config to all paths in the API
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }

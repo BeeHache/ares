@@ -5,7 +5,6 @@ import net.blackhacker.ares.model.Role;
 import net.blackhacker.ares.repository.RoleRepository;
 import net.blackhacker.ares.dto.RoleDTO;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
