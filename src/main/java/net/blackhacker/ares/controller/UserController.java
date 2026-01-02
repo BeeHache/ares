@@ -24,31 +24,26 @@ import java.util.Optional;
 @RestController()
 @RequestMapping("/api/user")
 public class UserController {
+    private final UserService userService;
+    private final FeedService feedService;
+    private final UtilsService utilsService;
+    private final UserMapper userMapper;
+    private final FeedMapper feedMapper;
+    private final MultipartFileValidator multipartFileValidator;
+    private final URLValidator urlValidator;
 
-    @Autowired
-    private UserService userService;
 
-    @Autowired
-    private FeedService feedService;
-
-    @Autowired
-    private UtilsService utilsService;
-
-    @Autowired
-    private UserMapper userMapper;
-
-    @Autowired
-    private FeedMapper feedMapper;
-
-    @Autowired
-    private UserDTOValidator userDTOValidator;
-
-    @Autowired
-    private MultipartFileValidator multipartFileValidator;
-
-    @Autowired
-    private URLValidator urlValidator;
-
+    public UserController(UserService userService, FeedService feedService, UtilsService utilsService,
+                          UserMapper userMapper, FeedMapper feedMapper, MultipartFileValidator multipartFileValidator,
+                          URLValidator urlValidator){
+        this.userService = userService;
+        this.feedService = feedService;
+        this.utilsService = utilsService;
+        this.userMapper = userMapper;
+        this.feedMapper = feedMapper;
+        this.multipartFileValidator = multipartFileValidator;
+        this.urlValidator = urlValidator;
+    }
 
     @GetMapping("/")
     UserDTO getUser(@AuthenticationPrincipal UserDetails userDetails) {

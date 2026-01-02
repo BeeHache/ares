@@ -18,14 +18,15 @@ import java.net.URI;
 @RestController
 @RequestMapping("/api/register")
 public class RegistrationController {
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+    private final UserDTOValidator userDTOValidator;
+    private final UserMapper userMapper;
 
-    @Autowired
-    private UserDTOValidator userDTOValidator;
-
-    @Autowired
-    private UserMapper userMapper;
+    public RegistrationController(UserService userService, UserDTOValidator userDTOValidator, UserMapper userMapper){
+        this.userService = userService;
+        this.userDTOValidator = userDTOValidator;
+        this.userMapper = userMapper;
+    }
 
     @PostMapping
     ResponseEntity<UserDTO> registerUser(@RequestBody UserDTO userDTO) {
