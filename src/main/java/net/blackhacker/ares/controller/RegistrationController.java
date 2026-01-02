@@ -28,12 +28,18 @@ public class RegistrationController {
     private UserMapper userMapper;
 
     @PostMapping
-    ResponseEntity<User> registerUser(@RequestBody UserDTO userDTO) {
+    ResponseEntity<UserDTO> registerUser(@RequestBody UserDTO userDTO) {
         userDTOValidator.validateUserForRegistration(userDTO);
-        User user = userService.registerUser(userMapper.toModel(userDTO));
+        User registeredUser = userService.registerUser(userMapper.toModel(userDTO));
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/")
+                .build()
+                .toUri();
 
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/").build().toUri();
-        return ResponseEntity.created(location).body(user);
+        return ResponseEntity
+                .created(location)
+                .body(userMapper.toDTO(registeredUser));
     }
 
 
