@@ -2,10 +2,10 @@ package net.blackhacker.ares.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.servlet.http.Cookie;
 import net.blackhacker.ares.CustomAccessDeniedHandler;
 import net.blackhacker.ares.JwtAuthenticationEntryPoint;
 import net.blackhacker.ares.JwtAuthenticationFilter;
-import net.blackhacker.ares.dto.TokenDTO;
 import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.mapper.UserMapper;
 import net.blackhacker.ares.model.RefreshToken;
@@ -17,7 +17,9 @@ import net.blackhacker.ares.validation.UserDTOValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,20 +28,25 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.Duration;
 import java.util.Optional;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@WebMvcTest(LoginController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class LoginControllerTest {
 
-    private WebTestClient webTestClient;
+    @Autowired
+    private MockMvc mockMvc;
 
     @MockitoBean
     private UserDTOValidator userDTOValidator;
@@ -68,19 +75,13 @@ class LoginControllerTest {
     @MockitoBean
     private Authentication authentication;
 
-
-
     private ObjectMapper objectMapper;
+
 
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        webTestClient =
-                WebTestClient.bindToController(new LoginController(
-                        refreshTokenService, userDTOValidator, authenticationManager, jwtService, userMapper
-                )).build();
     }
-
 
     @Test
     void login_shouldReturnTokens_whenCredentialsAreValid() throws Exception {
@@ -88,37 +89,42 @@ class LoginControllerTest {
         loginDTO.setEmail("test@example.com");
         loginDTO.setPassword("password");
 
-        User loginModel = new User();
-        loginModel.setEmail(loginDTO.getEmail());
-        loginModel.setPassword(loginDTO.getPassword());
+        User userPrincipal = new User();
+        userPrincipal.setEmail(loginDTO.getEmail());
+        userPrincipal.setPassword(loginDTO.getPassword());
+
+        Authentication successfulAuth = new UsernamePasswordAuthenticationToken(userPrincipal, null, userPrincipal.getAuthorities());
+
 
         String accessTokenString = "access-token";
-
         RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setUser(loginModel);
+        refreshToken.setUser(userPrincipal);
         refreshToken.setToken("refresh-token");
 
         doNothing().when(userDTOValidator).validateUserForLogin(loginDTO);
-        when(userMapper.toModel(loginDTO)).thenReturn(loginModel);
-        when(authentication.getPrincipal()).thenReturn(loginModel);
+        when(userMapper.toModel(loginDTO)).thenReturn(userPrincipal);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenReturn(authentication);
+                .thenReturn(successfulAuth);
         when(jwtService.generateToken(any(UserDetails.class))).thenReturn(accessTokenString);
         when(refreshTokenService.createRefreshToken(anyString())).thenReturn(refreshToken);
 
-        webTestClient.post().uri("/api/login")
+        mockMvc.perform(
+            post("/api/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(objectMapper.writeValueAsString(loginDTO))
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectHeader().value(HttpHeaders.SET_COOKIE, containsString("refreshToken=refresh-token"))
-                .expectHeader().value(HttpHeaders.SET_COOKIE, containsString("Path=/api/login/refresh"))
-                .expectHeader().value(HttpHeaders.SET_COOKIE, containsString("HttpOnly"))
-                .expectHeader().value(HttpHeaders.SET_COOKIE, containsString("Secure"))
-                .expectHeader().value(HttpHeaders.SET_COOKIE, containsString("SameSite=Strict"))
-                .expectHeader().value(HttpHeaders.SET_COOKIE, containsString("Max-Age=604800"))
-                .expectBody(TokenDTO.class).value(dto -> assertThat(dto.getToken()).contains(accessTokenString));
+                .content(objectMapper.writeValueAsString(loginDTO)))
+
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("refreshToken=refresh-token")))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Path=/api/login/refresh")))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("HttpOnly")))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Secure")))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("SameSite=Strict")))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Max-Age=604800")))
+
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().string(containsString("token")))
+                .andExpect(content().string(containsString(accessTokenString)));
             }
 
     @Test
@@ -138,11 +144,10 @@ class LoginControllerTest {
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new BadCredentialsException("Invalid credentials"));
 
-        webTestClient.post().uri("/api/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(objectMapper.writeValueAsString(loginDTO))
-                        .exchange()
-                        .expectStatus().isUnauthorized();
+        mockMvc.perform(post("/api/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(loginDTO)))
+                    .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -163,12 +168,12 @@ class LoginControllerTest {
         when(jwtService.generateToken(user)).thenReturn(accessTokenString);
 
         // Act & Assert
-        webTestClient.post().uri("/api/login/refresh")
-                        .cookie("refreshToken", refreshTokenString)
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
-                .expectBody(TokenDTO.class).value(dto -> assertThat(dto.getToken()).contains(accessTokenString));
+        mockMvc.perform(get("/api/login/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .cookie(new Cookie("refreshToken", refreshTokenString)))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(content().string(containsString(accessTokenString)));
     }
 
     @Test
@@ -178,10 +183,11 @@ class LoginControllerTest {
         doNothing().when(refreshTokenService).deleteByToken(fakeRefreshToken);
 
         // Act & Assert
-        webTestClient.post().uri("/api/login/logout")
-                        .cookie("refreshToken", fakeRefreshToken)
-                .exchange()
-                .expectStatus().isOk()
-                .expectCookie().maxAge("refreshToken", Duration.ZERO);
+        mockMvc.perform(post("/api/login/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .cookie(new Cookie("refreshToken", fakeRefreshToken)))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("refreshToken=")))
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Max-Age=0")));
     }
 }

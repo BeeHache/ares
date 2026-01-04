@@ -8,6 +8,7 @@ import net.blackhacker.ares.service.JWTService;
 import net.blackhacker.ares.service.RefreshTokenService;
 import net.blackhacker.ares.validation.UserDTOValidator;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -39,13 +40,16 @@ public class LoginController {
     ResponseEntity<TokenDTO> login(@RequestBody UserDTO userDTO) {
         userDTOValidator.validateUserForLogin(userDTO);
         User user = userMapper.toModel(userDTO);
-
-
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user, userDTO.getPassword())
         );
 
         User userDetails = (User) authentication.getPrincipal();
+
+        if (userDetails == null){
+            return ResponseEntity.badRequest().build();
+        }
+
         String accessToken = jwtService.generateToken(userDetails);
         String refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername()).getToken();
         ResponseCookie cookie = createRefreshCookie(refreshToken);
@@ -53,12 +57,13 @@ public class LoginController {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, cookie.toString());
         return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
                 .headers(headers)
                 .body(accessTokenDTO);
     }
 
-    @PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(@CookieValue(name="refreshToken") String refreshToken) {
+    @GetMapping("/refresh")
+    public ResponseEntity<TokenDTO> refreshToken(@CookieValue(name="refreshToken") String refreshToken) {
         return refreshTokenService.findByToken(refreshToken)
                 .map(refreshTokenService::verifyExpiration)
                 .map(token -> {
@@ -66,6 +71,18 @@ public class LoginController {
                     return ResponseEntity.ok(TokenDTO.token(newAccessToken));
                 })
                 .orElseThrow(() -> new RuntimeException("Refresh token missing or invalid"));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
+        if (refreshToken != null) {
+            refreshTokenService.deleteByToken(refreshToken);
+        }
+
+        ResponseCookie cleanCookie = expireRefreshCookie();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cleanCookie.toString())
+                .body("Logged out successfully");
     }
 
     private ResponseCookie createRefreshCookie(String refreshToken) {
@@ -78,21 +95,11 @@ public class LoginController {
                 .build();
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
-        if (refreshToken != null) {
-            refreshTokenService.deleteByToken(refreshToken);
-        }
-
-        ResponseCookie cleanCookie = ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .secure(true)
-                .path("/api/login/refresh")
-                .maxAge(0) // Expires immediately
+    private ResponseCookie expireRefreshCookie() {
+        return ResponseCookie.from("refreshToken", "")
+                .maxAge(0)
                 .build();
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cleanCookie.toString())
-                .body("Logged out successfully");
     }
+
+
 }
