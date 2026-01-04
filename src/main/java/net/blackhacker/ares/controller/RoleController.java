@@ -5,7 +5,6 @@ import net.blackhacker.ares.model.Role;
 import net.blackhacker.ares.repository.RoleRepository;
 import net.blackhacker.ares.dto.RoleDTO;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,14 +14,12 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/roles")
 public class RoleController {
 
-    @Autowired
     private final RoleRepository roleRepository;
+    private final RoleMapper mapper;
 
-    @Autowired
-    private RoleMapper mapper;
-
-    public RoleController(RoleRepository roleRepository) {
+    public RoleController(RoleRepository roleRepository, RoleMapper mapper){
         this.roleRepository = roleRepository;
+        this.mapper = mapper;
     }
 
     // Get the full hierarchy

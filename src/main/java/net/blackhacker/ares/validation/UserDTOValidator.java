@@ -8,14 +8,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserDTOValidator {
 
-    @Autowired
-    private EmailValidator emailValidator;
+    private final EmailValidator emailValidator;
+    private final PasswordValidator passwordValidator;
+    private final UserService userService;
 
-    @Autowired
-    private PasswordValidator passwordValidator;
-
-    @Autowired
-    private UserService userService;
+    public UserDTOValidator(EmailValidator emailValidator, PasswordValidator passwordValidator, UserService userService) {
+        this.emailValidator = emailValidator;
+        this.passwordValidator = passwordValidator;
+        this.userService = userService;
+    }
 
     public void validateUserForLogin(UserDTO userDTO) {
         if (userDTO == null) {

@@ -7,6 +7,7 @@ import net.blackhacker.ares.mapper.UserMapper;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.service.FeedService;
+import net.blackhacker.ares.service.JWTService;
 import net.blackhacker.ares.service.UserService;
 import net.blackhacker.ares.service.UtilsService;
 import net.blackhacker.ares.validation.MultipartFileValidator;
@@ -47,6 +48,9 @@ class UserControllerTest {
 
     @MockitoBean
     private UtilsService utilsService;
+
+    @MockitoBean
+    private JWTService jwtService;
 
     @MockitoBean
     private UserMapper userMapper;

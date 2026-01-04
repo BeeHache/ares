@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.mapper.UserMapper;
 import net.blackhacker.ares.model.User;
+import net.blackhacker.ares.service.JWTService;
 import net.blackhacker.ares.service.UserService;
 import net.blackhacker.ares.validation.UserDTOValidator;
 import net.blackhacker.ares.validation.ValidationException;
@@ -34,6 +35,9 @@ public class RegistrationControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private JWTService jwtService;
 
     private ObjectMapper objectMapper;
 
