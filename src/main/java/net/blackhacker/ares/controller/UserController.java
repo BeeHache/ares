@@ -11,9 +11,9 @@ import net.blackhacker.ares.service.UserService;
 import net.blackhacker.ares.service.UtilsService;
 import net.blackhacker.ares.validation.MultipartFileValidator;
 import net.blackhacker.ares.validation.URLValidator;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,16 +42,17 @@ public class UserController {
     }
 
     @GetMapping("/")
-    UserDTO getUser(@AuthenticationPrincipal UserDetails userDetails) {
-        User user = userService.getUserByEmail(userDetails.getUsername());
-        return userMapper.toDTO(user);
+    ResponseEntity<UserDTO> getUser(@AuthenticationPrincipal User principal) {
+        User user = userService.getUserByUserDetails(principal);
+        UserDTO userDTO = userMapper.toDTO(user);
+        return ResponseEntity.ok(userDTO);
     }
 
-    @PostMapping()
-    ResponseEntity<Void> importOPML(@RequestParam("file") MultipartFile file, @AuthenticationPrincipal UserDetails userDetails) {
+    @PostMapping("/import")
+    ResponseEntity<Void> importOPML(@RequestParam("file") MultipartFile file, @AuthenticationPrincipal User principal) {
         multipartFileValidator.validateMultipartFile(file);
 
-        final User user = userService.getUserByUserDetails(userDetails);
+        final User user = userService.getUserByUserDetails(principal);
         utilsService.opml(file).handleAsync((feeds, throwable)->{
             if (throwable != null) {
                 throw new RuntimeException(throwable);
@@ -67,10 +68,10 @@ public class UserController {
     }
 
     @PutMapping("/addfeed")
-    ResponseEntity<FeedDTO> addFeed(@RequestParam("link") String link, @AuthenticationPrincipal UserDetails userDetails){
+    ResponseEntity<FeedDTO> addFeed(@RequestParam("link") String link, @AuthenticationPrincipal @NonNull User principal){
         urlValidator.validateURL(link);
 
-        User user = userService.getUserByUserDetails(userDetails);
+        User user = userService.getUserByUserDetails(principal);
         Feed feed = feedService.addFeed(link);
         user.getFeeds().add(feed);
         userService.saveUser(user);

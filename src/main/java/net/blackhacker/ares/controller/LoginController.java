@@ -2,7 +2,6 @@ package net.blackhacker.ares.controller;
 
 import net.blackhacker.ares.dto.TokenDTO;
 import net.blackhacker.ares.dto.UserDTO;
-import net.blackhacker.ares.mapper.UserMapper;
 import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.service.JWTService;
 import net.blackhacker.ares.service.RefreshTokenService;
@@ -24,24 +23,20 @@ public class LoginController {
     private final UserDTOValidator userDTOValidator;
     private final AuthenticationManager authenticationManager;
     private final JWTService jwtService; // Your custom service to sign tokens
-    private final UserMapper userMapper;
 
-    LoginController(RefreshTokenService refreshTokenService, UserDTOValidator userDTOValidator,
-                    AuthenticationManager authenticationManager, JWTService jwtService,
-                    UserMapper userMapper){
+    public LoginController(RefreshTokenService refreshTokenService, UserDTOValidator userDTOValidator,
+                    AuthenticationManager authenticationManager, JWTService jwtService){
         this.refreshTokenService = refreshTokenService;
         this.userDTOValidator = userDTOValidator;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
-        this.userMapper = userMapper;
     }
 
     @PostMapping
     ResponseEntity<TokenDTO> login(@RequestBody UserDTO userDTO) {
         userDTOValidator.validateUserForLogin(userDTO);
-        User user = userMapper.toModel(userDTO);
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(user, userDTO.getPassword())
+                new UsernamePasswordAuthenticationToken(userDTO.getEmail(), userDTO.getPassword())
         );
 
         User userDetails = (User) authentication.getPrincipal();

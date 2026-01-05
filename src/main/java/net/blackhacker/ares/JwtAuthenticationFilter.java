@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import net.blackhacker.ares.service.JWTService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,11 +19,8 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JWTService jwtService;
-
-    @Autowired
-    private UserDetailsService userDetailsService;
+    final private JWTService jwtService;
+    final private UserDetailsService userDetailsService;
 
     public JwtAuthenticationFilter(JWTService jwtService, UserDetailsService userDetailsService) {
         this.jwtService = jwtService;
