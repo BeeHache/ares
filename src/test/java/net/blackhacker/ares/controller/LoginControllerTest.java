@@ -72,9 +72,6 @@ class LoginControllerTest {
     @MockitoBean
     private CustomAccessDeniedHandler forbiddenHandler;
 
-    @MockitoBean
-    private Authentication authentication;
-
     private ObjectMapper objectMapper;
 
 
@@ -101,8 +98,8 @@ class LoginControllerTest {
         refreshToken.setUser(userPrincipal);
         refreshToken.setToken("refresh-token");
 
-        doNothing().when(userDTOValidator).validateUserForLogin(loginDTO);
-        when(userMapper.toModel(loginDTO)).thenReturn(userPrincipal);
+        doNothing().when(userDTOValidator).validateUserForLogin(any(UserDTO.class));
+        when(userMapper.toModel(any(UserDTO.class))).thenReturn(userPrincipal);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(successfulAuth);
         when(jwtService.generateToken(any(UserDetails.class))).thenReturn(accessTokenString);
@@ -139,8 +136,7 @@ class LoginControllerTest {
         loginModel.setPassword(loginDTO.getPassword());
 
         doNothing().when(userDTOValidator).validateUserForLogin(any(UserDTO.class));
-        when(userMapper.toModel(loginDTO)).thenReturn(loginModel);
-        when(authentication.getPrincipal()).thenReturn(loginModel);
+        when(userMapper.toModel(any(UserDTO.class))).thenReturn(loginModel);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new BadCredentialsException("Invalid credentials"));
 

@@ -8,8 +8,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 public class UserService implements UserDetailsService {
 
@@ -26,6 +24,8 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
+        return user.toUserDetails();
+      /*
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getEmail())
                 .password(user.getPassword()) // Must be already encoded (BCrypt)
@@ -33,6 +33,8 @@ public class UserService implements UserDetailsService {
                 .disabled(!user.isEnabled())
                 .accountExpired(false)
                 .build();
+                
+       */
     }
 
     public User registerUser(User user) {
@@ -40,10 +42,6 @@ public class UserService implements UserDetailsService {
             throw new RuntimeException("Email already taken!");
         }
         return userRepository.save(user);
-    }
-
-    public User loginUser(User user) {
-        return user;
     }
 
     public User getUserByEmail(String email){
@@ -56,9 +54,5 @@ public class UserService implements UserDetailsService {
 
     public void saveUser(User user){
         userRepository.save(user);
-    }
-
-    public Optional<User> findByEmail(String email){
-        return userRepository.findByEmail(email);
     }
 }
