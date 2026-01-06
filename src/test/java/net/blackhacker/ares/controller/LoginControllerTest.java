@@ -3,9 +3,9 @@ package net.blackhacker.ares.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.Cookie;
-import net.blackhacker.ares.CustomAccessDeniedHandler;
-import net.blackhacker.ares.JwtAuthenticationEntryPoint;
-import net.blackhacker.ares.JwtAuthenticationFilter;
+import net.blackhacker.ares.security.CustomAccessDeniedHandler;
+import net.blackhacker.ares.security.JwtAuthenticationEntryPoint;
+import net.blackhacker.ares.security.JwtAuthenticationFilter;
 import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.mapper.UserMapper;
 import net.blackhacker.ares.model.RefreshToken;

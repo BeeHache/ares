@@ -1,5 +1,8 @@
 package net.blackhacker.ares;
 
+import net.blackhacker.ares.security.CustomAccessDeniedHandler;
+import net.blackhacker.ares.security.JwtAuthenticationEntryPoint;
+import net.blackhacker.ares.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
