@@ -95,6 +95,4 @@ public class LoginController {
                 .maxAge(0)
                 .build();
     }
-
-
 }

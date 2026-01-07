@@ -9,10 +9,7 @@ import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.mapper.UserMapper;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
-import net.blackhacker.ares.service.FeedService;
-import net.blackhacker.ares.service.JWTService;
-import net.blackhacker.ares.service.UserService;
-import net.blackhacker.ares.service.UtilsService;
+import net.blackhacker.ares.service.*;
 import net.blackhacker.ares.validation.MultipartFileValidator;
 import net.blackhacker.ares.validation.URLValidator;
 import net.blackhacker.ares.validation.UserDTOValidator;
@@ -55,6 +52,10 @@ class UserControllerTest {
 
     @MockitoBean
     private UtilsService utilsService;
+
+    @MockitoBean
+    private OpmlService opmlService;
+
 
     @MockitoBean
     private JWTService jwtService;
@@ -135,7 +136,7 @@ class UserControllerTest {
                 "text/xml",
                 "<opml></opml>".getBytes());
         when(userService.getUserByUserDetails(any(UserDetails.class))).thenReturn(user);
-        when(utilsService.opml(any())).thenReturn(CompletableFuture.completedFuture(new ArrayList<>()));
+        when(opmlService.importFile(any())).thenReturn(new ArrayList<>());
 
         mockMvc.perform(multipart("/api/user/import")
                     .file(multipartFile))

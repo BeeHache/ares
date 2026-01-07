@@ -20,7 +20,7 @@ spring:
             password: password
 security:
     jwt:
-        secret: 1234567890123456789012345678901234567890123456789012345678901234
+        secret: aS1hbS1hLXNlY3JldC1rZXktZm9yLWFyZXMtdGhhdC1pcy1sb25nLWVub3VnaA==
         refresh_expiration_ms: 86400000 # 24 hr
         access_expiration_ms:  3600000  # 1 min
 logging:
