@@ -75,9 +75,9 @@ export class RegisterComponent {
       next: () => {
         this.router.navigate(['/login']);
       },
-      error: (error) => {
-        this.errorMessage = 'Registration failed. Please try again.';
-        console.error('Registration error:', error);
+      error: (err) => {
+        this.errorMessage = err.error?.message || 'An unexpected error occurred.';
+        console.error('Registration error:', err);
       }
     });
   }
