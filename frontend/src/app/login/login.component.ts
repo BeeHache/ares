@@ -20,7 +20,10 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
           <label for="password">Password:</label>
           <input type="password" id="password" [(ngModel)]="password" name="password" required>
         </div>
-        <button type="submit">Login</button>
+        <div class="button-group">
+          <button type="submit">Login</button>
+          <button type="button" class="cancel-btn" (click)="onCancel()">Cancel</button>
+        </div>
       </form>
       <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
     </div>
@@ -30,8 +33,11 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
     .form-group { margin-bottom: 15px; }
     label { display: block; margin-bottom: 5px; }
     input { width: 100%; padding: 8px; box-sizing: border-box; }
-    button { width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    .button-group { display: flex; gap: 10px; }
+    button { flex: 1; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
     button:hover { background-color: #218838; }
+    .cancel-btn { background-color: #6c757d; }
+    .cancel-btn:hover { background-color: #5a6268; }
     .error { color: red; margin-top: 10px; }
   `]
 })
@@ -57,5 +63,9 @@ export class LoginComponent {
         console.error('Login error:', error);
       }
     });
+  }
+
+  onCancel() {
+    this.router.navigate(['/']);
   }
 }
