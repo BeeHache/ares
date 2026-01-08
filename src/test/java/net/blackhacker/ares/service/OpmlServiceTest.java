@@ -4,7 +4,9 @@ import net.blackhacker.ares.model.Feed;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -15,12 +17,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+@SpringBootTest(classes = OpmlService.class)
 @ExtendWith(MockitoExtension.class)
 class OpmlServiceTest {
 
     @MockitoBean
     private URLFetchService urlFetchService;
 
+    @InjectMocks
     private OpmlService opmlService;
 
     @BeforeEach
