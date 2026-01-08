@@ -11,8 +11,8 @@ public class FeedDTO implements Serializable {
     private String title;
     private String description;
     private String link;
-    private String image;
     private boolean isPodcast;
     private LocalDateTime lastModified;
+    private ImageDTO image;
     private List<FeedItemDTO> items;
 }

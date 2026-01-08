@@ -32,7 +32,10 @@ create table feeds (
     description varchar(2048),
     link varchar(512) not null unique,
     is_podcast char(1) not null default 'N',
-    last_modified timestamp
+    last_modified timestamp,
+    image_id BIGINT,
+    CONSTRAINT check_is_podcast CHECK (is_podcast IN ('Y', 'N')),
+    CONSTRAINT fk_feed_image FOREIGN KEY (image_id) REFERENCES image(id) ON DELETE CASCADE
 );
 
 create index ix_feeds_last_mod on feeds (last_modified);
@@ -43,10 +46,11 @@ create table feed_item (
     title VARCHAR(255),
     description VARCHAR(2048),
     link VARCHAR(512),
-    image VARCHAR(512),
     date timestamp,
-    CONSTRAINT fk_feed FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE
-    );
+    image_id BIGINT,
+    CONSTRAINT fk_feed FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE,
+    CONSTRAINT fk_feed_item_image FOREIGN KEY (image_id) REFERENCES image(id) ON DELETE CASCADE
+);
 
 create table user_feeds (
     user_id BIGINT NOT NULL,
@@ -68,21 +72,5 @@ create table image(
     id BIGINT NOT NULL PRIMARY KEY  GENERATED ALWAYS AS IDENTITY,
     content_type varchar(32),
     data bytea not null
-);
-
-create table feed_image(
-    feed_id BIGINT NOT NULL,
-    image_id BIGINT NOT NULL,
-    PRIMARY KEY (feed_id, image_id),
-    CONSTRAINT fk_feed_image FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE,
-    CONSTRAINT fk_image FOREIGN KEY (image_id) REFERENCES image(id) ON DELETE CASCADE
-);
-
-create table feed_item_image(
-    feed_item_id BIGINT NOT NULL,
-    image_id BIGINT NOT NULL,
-    PRIMARY KEY (feed_item_id, image_id),
-    CONSTRAINT fk_feed_item_image FOREIGN KEY (feed_item_id) REFERENCES feed_item(id) ON DELETE CASCADE,
-    CONSTRAINT fk_image FOREIGN KEY (image_id) REFERENCES image(id) ON DELETE CASCADE
 );
 

@@ -2,6 +2,7 @@ package net.blackhacker.ares.service;
 
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.repository.FeedRepository;
+import net.blackhacker.ares.repository.ImageRepositry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,7 @@ import java.util.Collection;
 public class FeedService {
 
     private final FeedRepository feedRepository;
-    private final UtilsService utilsService;
+    private final RssService rssService;
 
     @Value("${feed.interval_seconds}")
     private long feedIntervalSeconds;
@@ -21,17 +22,18 @@ public class FeedService {
     @Value("${feed.query_limit}")
     private int queryLimit;
 
-    public FeedService(FeedRepository feedRepository, UtilsService utilsService) {
+    public FeedService(
+            FeedRepository feedRepository,
+           RssService rssService) {
         this.feedRepository = feedRepository;
-        this.utilsService = utilsService;
+        this.rssService = rssService;
     }
-
 
     public Feed addFeed(String link) {
         Feed feed = feedRepository.findByLink(link);
         if (feed != null)
             return feed;
-        feed = utilsService.readFeedUrl(link);
+        feed = rssService.feedFromUrl(link);
         return feedRepository.save(feed);
     }
 

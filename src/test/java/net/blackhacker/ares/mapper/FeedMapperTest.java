@@ -2,8 +2,10 @@ package net.blackhacker.ares.mapper;
 
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.FeedItemDTO;
+import net.blackhacker.ares.dto.ImageDTO;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.FeedItem;
+import net.blackhacker.ares.model.Image;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +22,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(classes = FeedMapper.class)
@@ -29,18 +32,25 @@ class FeedMapperTest {
     @MockitoBean
     FeedItemMapper feedItemMapper;
 
+    @MockitoBean
+    ImageMapper imageMapper;
+
     @InjectMocks
     private FeedMapper feedMapper;
 
     @Test
     void toDTO_shouldMapFeedToFeedDTO() {
         // Arrange
+        Image image = new Image();
+        image.setContentType("image/png");
+        image.setData(new byte[]{1, 2, 3});
+
         Feed feed = new Feed();
         feed.setId(1L);
         feed.setTitle("Test Feed");
         feed.setDescription("A test feed");
         feed.setLink("http://example.com");
-        feed.setImage("http://example.com/image.png");
+        feed.setImage(image);
         feed.setPodcast(false);
         feed.setLastModified(LocalDateTime.now());
 
@@ -58,8 +68,13 @@ class FeedMapperTest {
         FeedItemDTO feedItemDTO2 =  new FeedItemDTO();
         feedItemDTO2.setTitle(feedItem2.getTitle());
 
+        ImageDTO imageDTO = new ImageDTO();
+        imageDTO.setContentType("image/png");
+        imageDTO.setData(new byte[]{1, 2, 3});
+
         when(feedItemMapper.toDTO(feedItem1)).thenReturn(feedItemDTO1);
         when(feedItemMapper.toDTO(feedItem2)).thenReturn(feedItemDTO2);
+        when(imageMapper.toDTO(any(Image.class))).thenReturn(imageDTO);
 
         // Act
         FeedDTO dto = feedMapper.toDTO(feed);
@@ -69,7 +84,7 @@ class FeedMapperTest {
         assertEquals(feed.getTitle(), dto.getTitle());
         assertEquals(feed.getDescription(), dto.getDescription());
         assertEquals(feed.getLink(), dto.getLink());
-        assertEquals(feed.getImage(), dto.getImage());
+        assertEquals(imageDTO, dto.getImage());
         assertEquals(feed.isPodcast(), dto.isPodcast());
         assertNotNull(dto.getLastModified());
         assertNotNull(dto.getItems());
@@ -79,13 +94,23 @@ class FeedMapperTest {
     @Test
     void toModel_shouldMapFeedDTOToFeed() {
         // Arrange
+        ImageDTO imageDTO = new ImageDTO();
+        imageDTO.setContentType("image/jpeg");
+        imageDTO.setData(new byte[]{4, 5, 6});
+
         FeedDTO dto = new FeedDTO();
         dto.setTitle("Test Feed DTO");
         dto.setDescription("A test feed DTO");
         dto.setLink("http://example.com/dto");
-        dto.setImage("http://example.com/dto.png");
+        dto.setImage(imageDTO);
         dto.setPodcast(true);
         dto.setLastModified(LocalDateTime.now());
+
+        Image image = new Image();
+        image.setContentType("image/jpeg");
+        image.setData(new byte[]{4, 5, 6});
+
+        when(imageMapper.toModel(any(ImageDTO.class))).thenReturn(image);
 
         // Act
         Feed feed = feedMapper.toModel(dto);
@@ -95,7 +120,7 @@ class FeedMapperTest {
         assertEquals(dto.getTitle(), feed.getTitle());
         assertEquals(dto.getDescription(), feed.getDescription());
         assertEquals(dto.getLink(), feed.getLink());
-        assertEquals(dto.getImage(), feed.getImage());
+        assertEquals(image, feed.getImage());
         assertEquals(dto.isPodcast(), feed.isPodcast());
         assertNotNull(feed.getLastModified());
     }
