@@ -29,19 +29,20 @@ class RssServiceTest {
 
     @Test
     void feedDTOFromUrl_shouldReturnFeedDTO_whenRssIsValid() {
-        String rssContent = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
-                "<rss version=\"2.0\">\n" +
-                "<channel>\n" +
-                "  <title>Test Feed</title>\n" +
-                "  <description>Test Description</description>\n" +
-                "  <link>http://example.com</link>\n" +
-                "  <item>\n" +
-                "    <title>Item Title</title>\n" +
-                "    <description>Item Description</description>\n" +
-                "    <link>http://example.com/item</link>\n" +
-                "  </item>\n" +
-                "</channel>\n" +
-                "</rss>";
+        String rssContent = """
+                <?xml version="1.0" encoding="UTF-8" ?>
+                <rss version="2.0">
+                <channel>
+                  <title>Test Feed</title>
+                  <description>Test Description</description>
+                  <link>http://example.com</link>
+                  <item>
+                    <title>Item Title</title>
+                    <description>Item Description</description>
+                    <link>http://example.com/item</link>
+                  </item>
+                </channel>
+                </rss>""";
 
         when(urlFetchService.fetchImageBytes("http://example.com/rss")).thenReturn(rssContent.getBytes(StandardCharsets.UTF_8));
 
@@ -53,16 +54,17 @@ class RssServiceTest {
         assertEquals("http://example.com", result.getLink());
         assertNotNull(result.getItems());
         assertEquals(1, result.getItems().size());
-        assertEquals("Item Title", result.getItems().get(0).getTitle());
+        assertEquals("Item Title", result.getItems().getFirst().getTitle());
     }
 
     @Test
     void feedDTOFromUrl_shouldReturnNull_whenRssIsEmpty() {
-        String rssContent = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
-                "<rss version=\"2.0\">\n" +
-                "<channel>\n" +
-                "</channel>\n" +
-                "</rss>";
+        String rssContent = """
+                <?xml version="1.0" encoding="UTF-8" ?>
+                <rss version="2.0">
+                <channel>
+                </channel>
+                </rss>""";
         
         // RssReader returns empty list if no items are found, but RssService checks if list is empty.
         // However, RssReader.read() returns a stream of Items. If there are no items, the list is empty.
@@ -85,19 +87,20 @@ class RssServiceTest {
 
     @Test
     void feedFromUrl_shouldReturnFeed_whenRssIsValid() {
-        String rssContent = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
-                "<rss version=\"2.0\">\n" +
-                "<channel>\n" +
-                "  <title>Test Feed</title>\n" +
-                "  <description>Test Description</description>\n" +
-                "  <link>http://example.com</link>\n" +
-                "  <item>\n" +
-                "    <title>Item Title</title>\n" +
-                "    <description>Item Description</description>\n" +
-                "    <link>http://example.com/item</link>\n" +
-                "  </item>\n" +
-                "</channel>\n" +
-                "</rss>";
+        String rssContent = """
+                <?xml version="1.0" encoding="UTF-8" ?>
+                <rss version="2.0">
+                <channel>
+                  <title>Test Feed</title>
+                  <description>Test Description</description>
+                  <link>http://example.com</link>
+                  <item>
+                    <title>Item Title</title>
+                    <description>Item Description</description>
+                    <link>http://example.com/item</link>
+                  </item>
+                </channel>
+                </rss>""";
 
         when(urlFetchService.fetchImageBytes("http://example.com/rss")).thenReturn(rssContent.getBytes(StandardCharsets.UTF_8));
 
@@ -109,16 +112,17 @@ class RssServiceTest {
         assertEquals("http://example.com", result.getLink());
         assertNotNull(result.getItems());
         assertEquals(1, result.getItems().size());
-        assertEquals("Item Title", result.getItems().get(0).getTitle());
+        assertEquals("Item Title", result.getItems().getFirst().getTitle());
     }
 
     @Test
     void feedFromUrl_shouldReturnNull_whenRssIsEmpty() {
-        String rssContent = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
-                "<rss version=\"2.0\">\n" +
-                "<channel>\n" +
-                "</channel>\n" +
-                "</rss>";
+        String rssContent = """
+                <?xml version="1.0" encoding="UTF-8" ?>
+                <rss version="2.0">
+                <channel>
+                </channel>
+                </rss>""";
 
         when(urlFetchService.fetchImageBytes("http://example.com/rss")).thenReturn(rssContent.getBytes(StandardCharsets.UTF_8));
 

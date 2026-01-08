@@ -1,12 +1,9 @@
 package net.blackhacker.ares.mapper;
 
-import com.apptasticsoftware.rssreader.Channel;
-import com.apptasticsoftware.rssreader.Item;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.model.Feed;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Component

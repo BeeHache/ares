@@ -42,16 +42,17 @@ class OpmlServiceTest {
     }
 
     @Test
-    void importFile_shouldParseOpmlAndReturnFeeds() throws IOException {
-        String opmlContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<opml version=\"1.0\">\n" +
-                "    <head>\n" +
-                "        <title>Subscriptions</title>\n" +
-                "    </head>\n" +
-                "    <body>\n" +
-                "        <outline text=\"Tech\" title=\"Tech\" type=\"rss\" xmlUrl=\"http://example.com/rss\" htmlUrl=\"http://example.com\" imageUrl=\"http://example.com/image.png\"/>\n" +
-                "    </body>\n" +
-                "</opml>";
+    void importFile_shouldParseOpmlAndReturnFeeds() {
+        String opmlContent = """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <opml version="1.0">
+                    <head>
+                        <title>Subscriptions</title>
+                    </head>
+                    <body>
+                        <outline text="Tech" title="Tech" type="rss" xmlUrl="http://example.com/rss" htmlUrl="http://example.com" imageUrl="http://example.com/image.png"/>
+                    </body>
+                </opml>""";
         MockMultipartFile file = new MockMultipartFile("file", "test.opml", "text/xml", opmlContent.getBytes(StandardCharsets.UTF_8));
 
         when(urlFetchService.getContentType(anyString())).thenReturn("image/png");
@@ -71,15 +72,16 @@ class OpmlServiceTest {
 
     @Test
     void importFeed_shouldParseOpmlFromUrl() {
-        String opmlContent = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<opml version=\"1.0\">\n" +
-                "    <head>\n" +
-                "        <title>Subscriptions</title>\n" +
-                "    </head>\n" +
-                "    <body>\n" +
-                "        <outline text=\"Tech\" title=\"Tech\" type=\"rss\" xmlUrl=\"http://example.com/rss\" htmlUrl=\"http://example.com\" imageUrl=\"http://example.com/image.png\"/>\n" +
-                "    </body>\n" +
-                "</opml>";
+        String opmlContent = """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <opml version="1.0">
+                    <head>
+                        <title>Subscriptions</title>
+                    </head>
+                    <body>
+                        <outline text="Tech" title="Tech" type="rss" xmlUrl="http://example.com/rss" htmlUrl="http://example.com" imageUrl="http://example.com/image.png"/>
+                    </body>
+                </opml>""";
 
         // Mock the fetch for the OPML file itself
         when(urlFetchService.fetchImageBytes("http://example.com/opml")).thenReturn(opmlContent.getBytes(StandardCharsets.UTF_8));
