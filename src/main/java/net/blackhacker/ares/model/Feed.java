@@ -32,14 +32,15 @@ public class Feed {
     @Column(nullable = false)
     private String link;
 
-    @Column
-    private String image;
-
     @Column(nullable = false)
     private boolean isPodcast = false;
 
     @Column(nullable = false)
     private LocalDateTime lastModified;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "image_id")
+    private Image image;
 
     @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FeedItem> items = new ArrayList<>();

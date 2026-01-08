@@ -2,30 +2,24 @@ package net.blackhacker.ares.service;
 
 import be.ceau.opml.OpmlParser;
 import be.ceau.opml.entity.Opml;
-import net.blackhacker.ares.dto.FeedDTO;
-import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.model.Feed;
-import net.blackhacker.ares.repository.FeedRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import net.blackhacker.ares.model.Image;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 public class OpmlService {
-    private final FeedMapper feedMapper;
-    private final FeedRepository feedRepository;
 
-    @Autowired
-    public OpmlService(FeedMapper feedMapper, FeedRepository feedRepository){
-        this.feedMapper = feedMapper;
-        this.feedRepository = feedRepository;
+    private final URLFetchService urlFetchService;
+
+    OpmlService(URLFetchService urlFetchService) {
+        this.urlFetchService = urlFetchService;
     }
 
     public Collection<Feed> importFile(MultipartFile file){
@@ -35,7 +29,7 @@ public class OpmlService {
 
         try {
             try (InputStream is = file.getInputStream()) {
-                return readOPML(new OpmlParser().parse(is));
+                return parseOPML(is);
             }
         } catch (Exception e){
             throw new ServiceException("Couldn't parse from url " + file.getOriginalFilename(), e);
@@ -43,30 +37,45 @@ public class OpmlService {
     }
 
     public Collection<Feed> importFeed(String urlString) {
+
+        byte[] bytes = urlFetchService.fetchImageBytes(urlString);
+
         try {
-            URL url = new URI(urlString).toURL();
-            try(InputStream is = url.openStream()){
-                return readOPML(new OpmlParser().parse(is));
-            }
+            return parseOPML(bytes);
         } catch (Exception e){
             throw new ServiceException("Couldn't parse url " + urlString, e);
         }
     }
 
-    private Collection<Feed> readOPML(Opml opml){
+
+    private Collection<Feed> parseOPML(byte[] bytes) throws Exception{
+        try(InputStream is = new ByteArrayInputStream(bytes)){
+            return parseOPML(is);
+        }
+    }
+
+    private Collection<Feed> parseOPML(InputStream inputStream) throws Exception{
+        Opml opml = new OpmlParser().parse(inputStream);
+
         return opml.getBody().getOutlines().stream().map(outline -> {
+
             Map<String, String> attributes = outline.getAttributes();
 
-            Feed feed = feedRepository.findByLink(attributes.get("xmlUrl"));
-            if (feed == null) {
-                FeedDTO dto = new FeedDTO();
-                dto.setTitle(attributes.get("title"));
-                dto.setDescription(attributes.get("description"));
-                dto.setLink(attributes.get("xmlUrl"));
-                dto.setImage(attributes.get("imageUrl"));
-                feed = feedMapper.toModel(dto);
-            }
+            Feed feed = new Feed();
+            feed.setTitle(attributes.get("title"));
+            feed.setDescription(attributes.get("description"));
+            feed.setLink(attributes.get("xmlUrl"));
+
+            String contentType = urlFetchService.getContentType(attributes.get("xmlUrl"));
+            byte[] bytes = urlFetchService.fetchImageBytes(attributes.get("imageUrl"));
+            Image image = new Image();
+            image.setData(bytes);
+            image.setContentType(contentType);
+            feed.setImage(image);
+
             return feed;
+
         }).collect(Collectors.toList());
+
     }
 }

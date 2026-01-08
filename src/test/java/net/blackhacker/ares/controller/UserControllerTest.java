@@ -28,7 +28,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -51,7 +50,7 @@ class UserControllerTest {
     private FeedService feedService;
 
     @MockitoBean
-    private UtilsService utilsService;
+    private RssService rssService;
 
     @MockitoBean
     private OpmlService opmlService;

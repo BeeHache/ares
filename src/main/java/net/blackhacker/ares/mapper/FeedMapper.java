@@ -13,9 +13,13 @@ import java.util.stream.Collectors;
 public class FeedMapper implements ModelDTOMapper<Feed, FeedDTO> {
 
     private final FeedItemMapper feedItemMapper;
+    private final ImageMapper imageMapper;
 
-    public FeedMapper(FeedItemMapper feedItemMapper){
+
+    public FeedMapper(FeedItemMapper feedItemMapper, ImageMapper imageMapper)
+    {
         this.feedItemMapper = feedItemMapper;
+        this.imageMapper = imageMapper;
     }
 
 
@@ -27,7 +31,7 @@ public class FeedMapper implements ModelDTOMapper<Feed, FeedDTO> {
         dto.setTitle(feed.getTitle());
         dto.setDescription(feed.getDescription());
         dto.setLink(feed.getLink());
-        dto.setImage(feed.getImage());
+        dto.setImage(imageMapper.toDTO(feed.getImage()));
         dto.setPodcast(feed.isPodcast());
         dto.setLastModified(feed.getLastModified());
         if (feed.getItems() != null) {
@@ -46,7 +50,7 @@ public class FeedMapper implements ModelDTOMapper<Feed, FeedDTO> {
         feed.setTitle(dto.getTitle());
         feed.setDescription(dto.getDescription());
         feed.setLink(dto.getLink());
-        feed.setImage(dto.getImage());
+        feed.setImage(imageMapper.toModel(dto.getImage()));
         feed.setPodcast(dto.isPodcast());
         feed.setLastModified(dto.getLastModified());
 
@@ -56,38 +60,6 @@ public class FeedMapper implements ModelDTOMapper<Feed, FeedDTO> {
                     .collect(Collectors.toList()));
         }
 
-        return feed;
-    }
-
-    public FeedDTO toDTO(List<Item> items){
-        if (items == null || items.isEmpty()) {
-            return null;
-        }
-
-        FeedDTO dto = new FeedDTO();
-        Channel channel = items.getFirst().getChannel();
-        dto.setTitle(channel.getTitle());
-        dto.setDescription(channel.getDescription());
-        dto.setLink(channel.getLink());
-        if (channel.getImage().isPresent()) {
-            dto.setImage(channel.getImage().get().getLink());
-        }
-        return dto;
-    }
-
-    public Feed toModel(List<Item> items){
-        if (items == null || items.isEmpty()) {
-            return null;
-        }
-
-        Feed feed = new Feed();
-        Channel channel = items.getFirst().getChannel();
-        feed.setTitle(channel.getTitle());
-        feed.setDescription(channel.getDescription());
-        feed.setLink(channel.getLink());
-        if (channel.getImage().isPresent()) {
-            feed.setImage(channel.getImage().get().getLink());
-        }
         return feed;
     }
 }
