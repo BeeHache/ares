@@ -5,7 +5,9 @@ import net.blackhacker.ares.model.Feed;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.nio.charset.StandardCharsets;
@@ -14,12 +16,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+@SpringBootTest(classes = RssService.class)
 @ExtendWith(MockitoExtension.class)
 class RssServiceTest {
 
     @MockitoBean
     private URLFetchService urlFetchService;
 
+    @InjectMocks
     private RssService rssService;
 
     @BeforeEach
