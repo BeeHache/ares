@@ -2,7 +2,6 @@ package net.blackhacker.ares.service;
 
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.repository.FeedRepository;
-import net.blackhacker.ares.repository.ImageRepositry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
