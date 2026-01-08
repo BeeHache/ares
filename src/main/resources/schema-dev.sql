@@ -63,3 +63,26 @@ create table refresh_token (
     expiry_date timestamp NOT NULL,
     CONSTRAINT fk_user_refresh FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+create table image(
+    id BIGINT NOT NULL PRIMARY KEY  GENERATED ALWAYS AS IDENTITY,
+    content_type varchar(32),
+    data bytea not null
+);
+
+create table feed_image(
+    feed_id BIGINT NOT NULL,
+    image_id BIGINT NOT NULL,
+    PRIMARY KEY (feed_id, image_id),
+    CONSTRAINT fk_feed_image FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE,
+    CONSTRAINT fk_image FOREIGN KEY (image_id) REFERENCES image(id) ON DELETE CASCADE
+);
+
+create table feed_item_image(
+    feed_item_id BIGINT NOT NULL,
+    image_id BIGINT NOT NULL,
+    PRIMARY KEY (feed_item_id, image_id),
+    CONSTRAINT fk_feed_item_image FOREIGN KEY (feed_item_id) REFERENCES feed_item(id) ON DELETE CASCADE,
+    CONSTRAINT fk_image FOREIGN KEY (image_id) REFERENCES image(id) ON DELETE CASCADE
+);
+
