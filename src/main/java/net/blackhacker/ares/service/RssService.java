@@ -37,7 +37,7 @@ public class RssService {
             }
 
             FeedDTO feedDTO = new FeedDTO();
-            Channel channel = rssItems.getFirst().getChannel();
+            Channel channel = rssItems.get(0).getChannel();
             feedDTO.setTitle(channel.getTitle());
             feedDTO.setDescription(channel.getDescription());
             feedDTO.setLink(channel.getLink());
@@ -86,7 +86,7 @@ public class RssService {
             }
 
             Feed feed = new Feed();
-            Channel channel = rssItems.getFirst().getChannel();
+            Channel channel = rssItems.get(0).getChannel();
             feed.setTitle(channel.getTitle());
             feed.setDescription(channel.getDescription());
             feed.setLink(channel.getLink());

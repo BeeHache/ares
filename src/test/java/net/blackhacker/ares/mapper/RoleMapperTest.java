@@ -42,8 +42,8 @@ class RoleMapperTest {
         assertEquals("PARENT", dto.getName());
         assertNotNull(dto.getChildren());
         assertEquals(1, dto.getChildren().size());
-        assertEquals("CHILD", dto.getChildren().getFirst().getName());
-        assertTrue(dto.getChildren().getFirst().getChildren().isEmpty());
+        assertEquals("CHILD", dto.getChildren().get(0).getName());
+        assertTrue(dto.getChildren().get(0).getChildren().isEmpty());
     }
 
     @Test
@@ -69,7 +69,7 @@ class RoleMapperTest {
         assertNotNull(model.getSubRoles());
         assertEquals(1, model.getSubRoles().size());
 
-        Role childModel = model.getSubRoles().getFirst();
+        Role childModel = model.getSubRoles().get(0);
         assertEquals("CHILD_DTO", childModel.getName());
         assertNotNull(childModel.getParentRole());
         assertEquals("PARENT_DTO", childModel.getParentRole().getName());
