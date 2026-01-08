@@ -1,23 +1,19 @@
-HELP.md
 target/
-.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
 ### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
+
+### Eclipse ###
+.classpath
+.project
+.settings/
+.springBeans
 
 ### NetBeans ###
 /nbproject/private/
@@ -31,6 +27,18 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Mac OS ###
+.DS_Store
+
+### Logs ###
+*.log
+*.gz
+
+### Frontend ###
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
 
 ### Logs ###
 *.log
