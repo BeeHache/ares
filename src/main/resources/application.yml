@@ -3,8 +3,6 @@ spring:
         active: dev
     application:
         name: Ares
-    session:
-        store-type: redis
 user:
     password:
         min_length: 8

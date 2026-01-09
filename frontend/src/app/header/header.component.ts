@@ -12,8 +12,8 @@ import { AuthService } from '../auth.service';
       <nav>
         <a class="brand" routerLink="/">Ares</a>
         <div class="nav-links">
-          <ng-container *ngIf="authService.isLoggedIn(); else loggedOut">
-            <span class="username">{{ authService.getUsername() }}</span>
+          <ng-container *ngIf="authService.currentUser$ | async as username; else loggedOut">
+            <span class="username">{{ username }}</span>
             <a routerLink="/user" class="nav-link">Profile</a>
             <button (click)="authService.logout()" class="logout-btn">Logout</button>
           </ng-container>

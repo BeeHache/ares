@@ -3,6 +3,7 @@ import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { AuthService } from '../auth.service';
 
 @Component({
   selector: 'app-login',
@@ -55,6 +56,7 @@ export class LoginComponent implements OnInit {
     private http: HttpClient,
     private router: Router,
     private route: ActivatedRoute,
+    private authService: AuthService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
@@ -68,7 +70,7 @@ export class LoginComponent implements OnInit {
       this.http.post<any>('http://localhost:8080/api/login', loginData).subscribe({
         next: (response) => {
           if (response.token) {
-              localStorage.setItem('token', response.token);
+              this.authService.login(response.token);
               this.router.navigate([this.returnUrl]);
           }
         },
