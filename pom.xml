@@ -31,11 +31,12 @@
         <jackson.version>2.13.4.2</jackson.version>
         <rss-reader.version>3.12.0</rss-reader.version>
         <opml-parser.version>3.1.0</opml-parser.version>
-        <postgressql.version>42.7.8</postgressql.version>
+        <postgres.version>42.7.8</postgres.version>
         <derby.version>10.16.1.1</derby.version>
         <jjwt.version>0.13.0</jjwt.version>
         <compiler.version>3.8.1</compiler.version>
         <httpcompents.version>5.6</httpcompents.version>
+        <testcontainers.version>1.21.4</testcontainers.version>
     </properties>
     <dependencies>
         <dependency>
@@ -97,6 +98,12 @@
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgres.version}</version>
+            <scope>runtime</scope>
+        </dependency>
 
         <!-- Test dependencies -->
         <dependency>
@@ -115,21 +122,16 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.derby</groupId>
-            <artifactId>derby</artifactId>
-            <version>${derby.version}</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.derby</groupId>
-            <artifactId>derbytools</artifactId>
-            <version>${derby.version}</version>
-            <scope>runtime</scope>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -161,17 +163,6 @@
                     </excludes>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>properties</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
@@ -185,17 +176,6 @@
                 <dependency>
                     <groupId>org.hibernate.orm</groupId>
                     <artifactId>hibernate-community-dialects</artifactId>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>prod</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.postgresql</groupId>
-                    <artifactId>postgresql</artifactId>
-                    <version>${postgressql.version}</version>
-                    <scope>runtime</scope>
                 </dependency>
             </dependencies>
         </profile>

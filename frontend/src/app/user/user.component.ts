@@ -15,7 +15,7 @@ interface UserProfile {
     <div class="container" *ngIf="user; else loading">
       <h2>User Profile</h2>
       <p><strong>Email:</strong> {{ user.email }}</p>
-      <p><strong>Number of Feeds:</strong> {{ user.feeds?.length || 0 }}</p>
+      <p><strong>Number of Feeds:</strong> {{ user.feeds.length || 0 }}</p>
     </div>
     <ng-template #loading>
       <p>Loading user data...</p>

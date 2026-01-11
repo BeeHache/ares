@@ -1,0 +1,14 @@
+{
+    "Servers": {
+        "1": {
+            "Name": "Ares DB",
+            "Group": "Servers",
+            "Host": "postgres",
+            "Port": 5432,
+            "MaintenanceDB": "ares",
+            "Username": "ares",
+            "SSLMode": "prefer",
+            "PassFile": "/var/lib/pgadmin/pgpass"
+        }
+    }
+}

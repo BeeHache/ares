@@ -1,18 +1,14 @@
 spring:
-  profiles:
-    active: dev
   application:
     name: Ares
-  datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
-    driverClassName: org.h2.Driver
-    username: sa
-    password:
   jpa:
+    hibernate:
+      ddl-auto: update
     properties:
-        hibernate:
-          dialect: org.hibernate.dialect.H2Dialect
-          ddl-auto: create-drop
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  session:
+    store-type: none
 
 user:
   password:
@@ -20,3 +16,13 @@ user:
 feed:
   interval_seconds: 300 # 5 min
   query_limit: 1000
+
+security:
+  jwt:
+    secret: aS1hbS1hLXNlY3JldC1rZXktZm9yLWFyZXMtdGhhdC1pcy1sb25nLWVub3VnaA==
+    refresh_expiration_ms: 86400000 # 24 hr
+    access_expiration_ms: 3600000  # 1 hour
+
+logging:
+  level:
+    root: INFO

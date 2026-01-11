@@ -13,7 +13,7 @@ import java.util.*;
 
 
 @Entity
-@Table(name = "FEEDS")
+@Table(name = "feeds")
 @Getter
 @Setter
 @NoArgsConstructor
