@@ -30,11 +30,9 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
-    private final String role = "USER";
-
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "user_feed",
+            name = "user_feeds",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "feed_id")
     )
@@ -43,7 +41,7 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("USER_ROLE"));
+        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
     @Override

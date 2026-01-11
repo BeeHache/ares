@@ -1,11 +1,39 @@
 spring:
-    profiles:
-        active: dev
-    application:
-        name: Ares
+  application:
+    name: Ares
+  profiles:
+    active: ${ACTIVE_PROFILE:dev}
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+
 user:
-    password:
-        min_length: 8
+  password:
+    min_length: 8
 feed:
-    interval_seconds: 300 # 5 min
-    query_limit: 1000
+  interval_seconds: 300 # 5 min
+  query_limit: 1000
+
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+    refresh_expiration_ms: 86400000 # 24 hr
+    access_expiration_ms: 3600000  # 1 hour
+
+logging:
+  file:
+    name: ${spring.application.name}.log
+    path: ${HOME}/Projects/logs/
+  level:
+    web: DEBUG
+    org.springframework.security: DEBUG
