@@ -25,16 +25,6 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         return user.toUserDetails();
-      /*
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getPassword()) // Must be already encoded (BCrypt)
-                .roles(user.getRole())        // Spring adds "ROLE_" prefix automatically
-                .disabled(!user.isEnabled())
-                .accountExpired(false)
-                .build();
-                
-       */
     }
 
     public User registerUser(User user) {
@@ -52,7 +42,10 @@ public class UserService implements UserDetailsService {
         return userRepository.findByEmail(userDetails.getUsername()).orElse(null);
     }
 
-    public void saveUser(User user){
-        userRepository.save(user);
+    public User saveUser(User user){
+        return userRepository.save(user);
     }
+
+
+
 }

@@ -33,7 +33,7 @@ public class User implements UserDetails {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "feed_id")
     )
-    private Set<Feed> feeds = new HashSet<>();
+    private Collection<Feed> feeds = new ArrayList<>();
 
 
     @Override

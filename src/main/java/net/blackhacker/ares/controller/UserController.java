@@ -83,8 +83,31 @@ public class UserController {
         User user = userService.getUserByUserDetails(principal);
         Feed feed = feedService.addFeed(link);
         user.getFeeds().add(feed);
-        userService.saveUser(user);
         FeedDTO feedDTO = feedMapper.toDTO(feed);
         return ResponseEntity.ok(feedDTO);
+    }
+
+    @GetMapping("/feeds")
+    public ResponseEntity<Collection<FeedDTO>> getFeed(@AuthenticationPrincipal User principal) {
+
+        User user = userService.getUserByUserDetails(principal);
+        Collection<FeedDTO> feeds = user.getFeeds().stream().map(feedMapper::toDTO).toList();
+        return ResponseEntity.ok(feeds);
+    }
+
+    @DeleteMapping("/feeds/{id}")
+    public ResponseEntity<Void> deleteFeed(@PathVariable Long id, @AuthenticationPrincipal User principal) {
+        User user = userService.getUserByUserDetails(principal);
+        Feed feed = feedService.getFeedById(id);
+
+        if (feed == null){
+            return ResponseEntity.notFound().build();
+        }
+
+        user.getFeeds().remove(feed);
+        feed.getUsers().remove(user);
+        feedService.saveFeed(feed);
+        userService.saveUser(user);
+        return ResponseEntity.ok().build();
     }
 }

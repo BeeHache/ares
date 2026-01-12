@@ -46,6 +46,6 @@ public class Feed {
     private List<FeedItem> items = new ArrayList<>();
 
     @ManyToMany(mappedBy = "feeds")
-    private Set<User> users = new HashSet<>();
+    private List<User> users = new ArrayList<>();
 
 }
