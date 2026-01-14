@@ -1,7 +1,11 @@
 package net.blackhacker.ares.service;
 
 import be.ceau.opml.OpmlParser;
+import be.ceau.opml.OpmlWriter;
+import be.ceau.opml.entity.Body;
+import be.ceau.opml.entity.Head;
 import be.ceau.opml.entity.Opml;
+import be.ceau.opml.entity.Outline;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.Image;
 import org.springframework.stereotype.Service;
@@ -9,8 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -76,6 +79,32 @@ public class OpmlService {
             return feed;
 
         }).collect(Collectors.toList());
+    }
 
+    public String generateOPML(Collection<Feed> feeds) {
+        try {
+        Head head = new Head("Ares Export", new Date().toString(),
+                null,null,null,null,
+                null,null,null,null,
+                null,null,null);
+        Body body = new Body(
+            feeds.stream().map(feed -> {
+                Map<String, String> attributes = new HashMap<>();
+                attributes.put("text", feed.getTitle());
+                attributes.put("title", feed.getTitle());
+                attributes.put("type", "rss");
+                attributes.put("xmlUrl", feed.getLink());
+                if (feed.getDescription() != null) {
+                    attributes.put("description", feed.getDescription());
+                }
+                // Assuming htmlUrl is not stored in Feed, omitting it or could be same as link if appropriate
+                return new Outline(attributes, Collections.emptyList());
+            }).toList()
+        );
+
+        return new OpmlWriter().write(new Opml("2.0", head, body));
+        } catch (Exception e){
+            throw new ServiceException("Couldn't generate OPML", e);
+        }
     }
 }

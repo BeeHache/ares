@@ -1,6 +1,7 @@
 package net.blackhacker.ares.service;
 
 import net.blackhacker.ares.model.Feed;
+import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.repository.FeedRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -36,6 +37,14 @@ public class FeedService {
         return feedRepository.save(feed);
     }
 
+    public Feed getFeedById(Long id){
+        return feedRepository.findById(id).orElse(null);
+    }
+
+    public Feed saveFeed(Feed feed){
+        return feedRepository.save(feed);
+    }
+
 
 
     @Async
@@ -58,5 +67,4 @@ public class FeedService {
         }
 
     }
-
 }

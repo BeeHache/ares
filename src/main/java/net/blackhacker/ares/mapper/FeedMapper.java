@@ -25,6 +25,7 @@ public class FeedMapper implements ModelDTOMapper<Feed, FeedDTO> {
 
         if (feed == null) return null;
         FeedDTO dto = new FeedDTO();
+        dto.setId(feed.getId());
         dto.setTitle(feed.getTitle());
         dto.setDescription(feed.getDescription());
         dto.setLink(feed.getLink());
@@ -44,6 +45,7 @@ public class FeedMapper implements ModelDTOMapper<Feed, FeedDTO> {
     public Feed toModel(FeedDTO dto) {
         if (dto == null) return null;
         Feed feed = new Feed();
+        feed.setId(dto.getId());
         feed.setTitle(dto.getTitle());
         feed.setDescription(dto.getDescription());
         feed.setLink(dto.getLink());
