@@ -2,10 +2,11 @@ package net.blackhacker.ares.controller;
 
 import net.blackhacker.ares.dto.TokenDTO;
 import net.blackhacker.ares.dto.UserDTO;
-import net.blackhacker.ares.model.User;
+import net.blackhacker.ares.model.Account;
+import net.blackhacker.ares.service.AccountService;
 import net.blackhacker.ares.service.JWTService;
-import net.blackhacker.ares.service.RefreshTokenService;
 import net.blackhacker.ares.validation.UserDTOValidator;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
@@ -15,18 +16,27 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
+
 @RestController()
 @RequestMapping("/api/login")
 public class LoginController {
 
-    private final RefreshTokenService refreshTokenService;
+    @Value("${security.jwt.refresh_expiration_ms: 86400000}") // default 24 hrs
+    private Long refreshTokenDurationMs;
+
+    private final AccountService accountService;
     private final UserDTOValidator userDTOValidator;
     private final AuthenticationManager authenticationManager;
     private final JWTService jwtService; // Your custom service to sign tokens
 
-    public LoginController(RefreshTokenService refreshTokenService, UserDTOValidator userDTOValidator,
-                    AuthenticationManager authenticationManager, JWTService jwtService){
-        this.refreshTokenService = refreshTokenService;
+    public LoginController(AccountService accountService,
+                           UserDTOValidator userDTOValidator,
+                           AuthenticationManager authenticationManager, JWTService jwtService){
+        this.accountService = accountService;
         this.userDTOValidator = userDTOValidator;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
@@ -39,14 +49,23 @@ public class LoginController {
                 new UsernamePasswordAuthenticationToken(userDTO.getEmail(), userDTO.getPassword())
         );
 
-        User userDetails = (User) authentication.getPrincipal();
-
-        if (userDetails == null){
+        Account principal = (Account) authentication.getPrincipal();
+        if (principal == null){
             return ResponseEntity.badRequest().build();
         }
 
-        String accessToken = jwtService.generateToken(userDetails);
-        String refreshToken = refreshTokenService.createRefreshToken(userDetails.getUsername()).getToken();
+        String accessToken = jwtService.generateToken(principal);
+        Optional<Account> optionalAccount = accountService.findAccountByUsername(principal.getUsername());
+
+        if (optionalAccount.isEmpty()){
+            return ResponseEntity.badRequest().build();
+        }
+
+        Account account = optionalAccount.get();
+        String refreshToken = UUID.randomUUID().toString();
+        account.setToken(refreshToken);
+        account.setTokenExpiresAt(LocalDateTime.now().plus(Duration.ofMillis(refreshTokenDurationMs)));
+
         ResponseCookie cookie = createRefreshCookie(refreshToken);
         TokenDTO accessTokenDTO = TokenDTO.token(accessToken);
         HttpHeaders headers = new HttpHeaders();
@@ -59,19 +78,32 @@ public class LoginController {
 
     @GetMapping("/refresh")
     public ResponseEntity<TokenDTO> refreshToken(@CookieValue(name="refreshToken") String refreshToken) {
-        return refreshTokenService.findByToken(refreshToken)
-                .map(refreshTokenService::verifyExpiration)
-                .map(token -> {
-                    String newAccessToken = jwtService.generateToken(token.getUser());
-                    return ResponseEntity.ok(TokenDTO.token(newAccessToken));
-                })
-                .orElseThrow(() -> new RuntimeException("Refresh token missing or invalid"));
+
+        Optional<Account> optionalAccount = accountService.findByToken(refreshToken);
+        if (optionalAccount.isEmpty()){
+            new RuntimeException("Refresh token missing or invalid");
+        }
+
+        Account account = optionalAccount.get();
+        if (account.isTokenExpired()){
+            new RuntimeException("Refresh token missing or invalid");
+        }
+
+        String newAccessToken = jwtService.generateToken(account);
+        return ResponseEntity.ok(TokenDTO.token(newAccessToken));
+
     }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
         if (refreshToken != null) {
-            refreshTokenService.deleteByToken(refreshToken);
+            Optional<Account> optionalAccount = accountService.findByToken(refreshToken);
+            if (optionalAccount.isPresent()) {
+                Account account = optionalAccount.get();
+                account.setToken(null);
+                account.setTokenExpiresAt(LocalDateTime.now());
+                accountService.saveAccount(account);
+            }
         }
 
         ResponseCookie cleanCookie = expireRefreshCookie();

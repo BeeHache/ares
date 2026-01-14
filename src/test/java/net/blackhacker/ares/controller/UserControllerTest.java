@@ -1,5 +1,6 @@
 package net.blackhacker.ares.controller;
 
+import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.security.CustomAccessDeniedHandler;
 import net.blackhacker.ares.security.JwtAuthenticationEntryPoint;
 import net.blackhacker.ares.security.JwtAuthenticationFilter;
@@ -21,12 +22,12 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -83,6 +84,7 @@ class UserControllerTest {
     @MockitoBean
     private CustomAccessDeniedHandler forbiddenHandler;
 
+    private Account account;
     private User user;
     private UserDTO userDTO;
     private Feed feed;
@@ -96,10 +98,15 @@ class UserControllerTest {
         validUrl = "https://example.com/feed.xml";
         invalidUrl = "not-a-url";
 
+        account = new Account();
+        account.setUsername("test@example.com");
+        account.setPassword("password");
+        account.setRoles(new HashSet<>());
+
         user = new User();
         user.setEmail("test@example.com");
-        user.setPassword("password");
         user.setFeeds(new HashSet<>());
+        user.setAccount(account);
 
         userDTO = new UserDTO();
         userDTO.setEmail("test@example.com");
@@ -116,7 +123,7 @@ class UserControllerTest {
     @Test
     @WithMockUser(username = "test@example.com")
     void getUser_shouldReturnUserDTO_whenUserIsAuthenticated() throws Exception {
-        when(userService.getUserByUserDetails(any(UserDetails.class))).thenReturn(user);
+        when(userService.getUserByAccount(any(Account.class))).thenReturn(user);
         when(userMapper.toDTO(any(User.class))).thenReturn(userDTO);
 
         mockMvc.perform(get("/api/user/")
@@ -134,7 +141,7 @@ class UserControllerTest {
                 "feeds.opml",
                 "text/xml",
                 "<opml></opml>".getBytes());
-        when(userService.getUserByUserDetails(any(UserDetails.class))).thenReturn(user);
+        when(userService.getUserByAccount(any(Account.class))).thenReturn(user);
         when(opmlService.importFile(any())).thenReturn(new ArrayList<>());
 
         mockMvc.perform(multipart("/api/user/import")
@@ -149,7 +156,8 @@ class UserControllerTest {
     void addFeed_shouldReturnOk_whenUserIsLoggedInAndUrlIsValid() throws Exception {
 
         doNothing().when(urlValidator).validateURL(validUrl);
-        when(userService.getUserByUserDetails(any(UserDetails.class))).thenReturn(user);
+        when(userService.getUserByAccount(any(Account.class))).thenReturn(user);
+        when(userService.saveUser(any(User.class))).thenReturn(user);
         when(feedService.addFeed(anyString())).thenReturn(feed);
         when(feedMapper.toDTO(any(Feed.class))).thenReturn(feedDTO);
 
@@ -169,7 +177,7 @@ class UserControllerTest {
 
         mockMvc.perform(put("/api/user/addfeed")
                         .param("link", invalidUrl)
-                        .with(user(user)))
+                        .with(user(account)))
                 .andExpect(status().isBadRequest());
 
         verify(feedService, never()).addFeed(anyString());

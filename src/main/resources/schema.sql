@@ -5,6 +5,26 @@ create table if not exists admins (
     password varchar(60) not null
 );
 
+
+create table if not exists users (
+    id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    email VARCHAR(255) NOT NULL unique,
+    password varchar(60) not null
+);
+
+create table if not exists accounts (
+    id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    username VARCHAR(255) NOT NULL,
+    password varchar(60) not null,
+    type varchar(8) not null,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    account_expires_at timestamp,
+    password_expires_at timestamp,
+    account_locked_until timestamp,
+    CONSTRAINT check_type CHECK (type IN ('ADMIN', 'USER')),
+    CONSTRAINT username_type_unique UNIQUE (username, type)
+);
+
 create table if not exists roles (
     id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name VARCHAR(255) NOT NULL UNIQUE,
@@ -12,18 +32,12 @@ create table if not exists roles (
     CONSTRAINT fk_role_parent FOREIGN KEY (parent_id) REFERENCES roles(id) ON DELETE CASCADE
 );
 
-create table if not exists admins_roles (
-    admin_id BIGINT NOT NULL,
+create table if not exists account_roles (
+    account_id BIGINT NOT NULL,
     role_id BIGINT NOT NULL,
-    PRIMARY KEY (admin_id, role_id),
-    FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE,
+    PRIMARY KEY (account_id, role_id),
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
-);
-
-create table if not exists users (
-    id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    email VARCHAR(255) NOT NULL unique,
-    password varchar(60) not null
 );
 
 create table if not exists image(
@@ -64,12 +78,4 @@ create table if not exists user_feeds (
     PRIMARY KEY (user_id, feed_id), -- Prevents a user from subscribing to the same feed twice
     CONSTRAINT fk_user_link FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_feed_link FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE
-);
-
-create table if not exists refresh_token (
-    id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    token VARCHAR(255) NOT NULL UNIQUE,
-    user_id BIGINT NOT NULL,
-    expiry_date timestamp NOT NULL,
-    CONSTRAINT fk_user_refresh FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

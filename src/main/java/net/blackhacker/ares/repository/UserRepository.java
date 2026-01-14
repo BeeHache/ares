@@ -1,5 +1,6 @@
 package net.blackhacker.ares.repository;
 
+import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -13,4 +14,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Custom query method: Check if an email exists
     boolean existsByEmail(String email);
+
+    Optional<User> findByAccount(Account account);
 }

@@ -1,5 +1,6 @@
 package net.blackhacker.ares.service;
 
+import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.repository.UserRepository;
 import org.jspecify.annotations.NullMarked;
@@ -9,37 +10,19 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserService implements UserDetailsService {
+public class UserService {
 
     private final UserRepository userRepository;
+
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
 
-    @Override
-    @NullMarked
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-
-        return user.toUserDetails();
-      /*
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getPassword()) // Must be already encoded (BCrypt)
-                .roles(user.getRole())        // Spring adds "ROLE_" prefix automatically
-                .disabled(!user.isEnabled())
-                .accountExpired(false)
-                .build();
-                
-       */
-    }
-
     public User registerUser(User user) {
         if(userRepository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("Email already taken!");
+            return null;
         }
         return userRepository.save(user);
     }
@@ -48,11 +31,11 @@ public class UserService implements UserDetailsService {
         return userRepository.findByEmail(email).orElse(null);
     }
 
-    public User getUserByUserDetails(UserDetails userDetails){
-        return userRepository.findByEmail(userDetails.getUsername()).orElse(null);
+    public User getUserByAccount(Account account){
+        return userRepository.findByAccount(account).orElse(null);
     }
 
-    public void saveUser(User user){
-        userRepository.save(user);
+    public User saveUser(User user){
+        return userRepository.save(user);
     }
 }
