@@ -80,8 +80,8 @@ class LoginControllerTest {
     private Account account;
     private  User user;
 
-    private String refreshTokenString = "refresh-token";
-    private String accessTokenString = "access-token";
+    final private String refreshTokenString = "refresh-token";
+    final private String accessTokenString = "access-token";
 
     @BeforeEach
     void setUp() {
@@ -117,9 +117,6 @@ class LoginControllerTest {
                 .thenReturn(successfulAuth);
         when(jwtService.generateToken(any(Account.class))).thenReturn(accessTokenString);
         when(accountService.findAccountByUsername(any(String.class))).thenReturn(Optional.of(account));
-
-        //String UUID_PATTERN = "refreshToken=[0-9a-fA-F]{8}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{4}\\-[0-9a-fA-F]{12}";
-        String UUID_PATTERN = "refreshToken";
 
         // Act & Assert
         mockMvc.perform(

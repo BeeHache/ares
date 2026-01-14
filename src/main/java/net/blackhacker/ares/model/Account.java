@@ -1,10 +1,7 @@
 package net.blackhacker.ares.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -106,6 +103,7 @@ public class Account implements UserDetails {
     private Collection<Role> roles = new ArrayList<>();
 
     @Override
+    @NonNull
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // This maps your Role entities to Spring Security authorities
         return roles.stream()
