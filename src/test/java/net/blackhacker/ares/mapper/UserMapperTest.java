@@ -2,8 +2,10 @@ package net.blackhacker.ares.mapper;
 
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.UserDTO;
+import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -12,8 +14,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -31,27 +33,44 @@ class UserMapperTest {
     @InjectMocks
     private UserMapper userMapper;
 
-    @Test
-    void toDTO_shouldMapUserToUserDTO() {
-        // Arrange
-        User user = new User();
-        user.setEmail("test@example.com");
-        user.setPassword("hashedPassword"); // This should not be mapped
+    private List<Feed> feeds;
+    private Account account;
+    private User user;
+    private Feed feed1;
+    private Feed feed2;
+    private FeedDTO feedDTO1;
+    private FeedDTO feedDTO2;
 
-        Feed feed1 = new Feed();
+    @BeforeEach
+    void setUp() {
+        account = new Account();
+        account.setUsername("test@example.com");
+        account.setPassword("hashedPassword");
+
+        user = new User();
+        user.setEmail("test@example.com");
+        user.setAccount(account);
+
+        feed1 = new Feed();
         feed1.setTitle("Feed 1");
-        Feed feed2 = new Feed();
+        feed2 = new Feed();
         feed2.setTitle("Feed 2");
 
-        Set<Feed> feeds = new HashSet<>();
+        feeds = new ArrayList<>();
         feeds.add(feed1);
         feeds.add(feed2);
         user.setFeeds(feeds);
 
-        FeedDTO feedDTO1 = new  FeedDTO();
+        feedDTO1 = new FeedDTO();
         feedDTO1.setTitle(feed1.getTitle());
-        FeedDTO feedDTO2 = new  FeedDTO();
+        feedDTO2 = new FeedDTO();
         feedDTO2.setTitle(feed2.getTitle());
+    }
+
+    @Test
+    void toDTO_shouldMapUserToUserDTO() {
+        // Arrange
+
 
         when(feedMapper.toDTO(feed1)).thenReturn(feedDTO1);
         when(feedMapper.toDTO(feed2)).thenReturn(feedDTO2);
@@ -82,7 +101,7 @@ class UserMapperTest {
         // Assert
         assertNotNull(user);
         assertEquals("test@example.com", user.getEmail());
-        assertEquals("encodedPassword", user.getPassword());
+        assertEquals("encodedPassword", user.getAccount().getPassword());
         assertTrue(user.getFeeds().isEmpty(), "Feeds should not be mapped from DTO in this direction");
     }
 }

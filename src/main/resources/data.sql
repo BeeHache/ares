@@ -17,7 +17,7 @@ INSERT INTO roles (name, parent_id) VALUES ('JUNIOR_EDITOR', 4) ON CONFLICT (nam
 
 -- 3. Assign Roles to Admins
 -- Assign SUPER_ADMIN (ID 1) to admin@ares.com (ID 1)
-INSERT INTO admins_roles (admin_id, role_id) VALUES (1, 1) ON CONFLICT (admin_id, role_id) DO NOTHING;
+INSERT INTO account_roles (account_id, role_id) VALUES (1, 1) ON CONFLICT (admin_id, role_id) DO NOTHING;
 
 
 -- 4. Insert Users

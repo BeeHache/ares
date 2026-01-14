@@ -29,7 +29,7 @@ import java.util.Arrays;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Value("${spring.profiles.active}")
+    @Value("${spring.profiles.active:dev}")
     private String activeProfile;
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -86,7 +86,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config)  {
         return config.getAuthenticationManager();
     }
 }

@@ -1,5 +1,6 @@
 package net.blackhacker.ares.service;
 
+import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.repository.UserRepository;
 import org.jspecify.annotations.NullMarked;
@@ -9,27 +10,19 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserService implements UserDetailsService {
+public class UserService {
 
     private final UserRepository userRepository;
+
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
 
-    @Override
-    @NullMarked
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-
-        return user.toUserDetails();
-    }
-
     public User registerUser(User user) {
         if(userRepository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("Email already taken!");
+            return null;
         }
         return userRepository.save(user);
     }
@@ -38,8 +31,8 @@ public class UserService implements UserDetailsService {
         return userRepository.findByEmail(email).orElse(null);
     }
 
-    public User getUserByUserDetails(UserDetails userDetails){
-        return userRepository.findByEmail(userDetails.getUsername()).orElse(null);
+    public User getUserByAccount(Account account){
+        return userRepository.findByAccount(account).orElse(null);
     }
 
     public User saveUser(User user){
