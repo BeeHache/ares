@@ -22,7 +22,7 @@ public class UserService {
 
     public User registerUser(User user) {
         if(userRepository.existsByEmail(user.getEmail())) {
-            return null;
+            throw new ServiceException("Email already taken!");
         }
         return userRepository.save(user);
     }

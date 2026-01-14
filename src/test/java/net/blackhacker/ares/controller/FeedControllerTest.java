@@ -66,7 +66,7 @@ class FeedControllerTest {
         feedDTO.setTitle("Tech Blog");
         feedDTO.setLink("https://tech.blog/rss");
 
-        when(userService.getUserByUserDetails(any())).thenReturn(user);
+        when(userService.getUserByAccount(any())).thenReturn(user);
         when(feedMapper.toDTO(any(Feed.class))).thenReturn(feedDTO);
 
         Authentication auth = new TestingAuthenticationToken(principal, null, "ROLE_USER");
@@ -87,7 +87,7 @@ class FeedControllerTest {
         User user = new User();
         user.setFeeds(Collections.emptySet());
 
-        when(userService.getUserByUserDetails(any())).thenReturn(user);
+        when(userService.getUserByAccount(any())).thenReturn(user);
 
         Authentication auth = new TestingAuthenticationToken(principal, null, "ROLE_USER");
 
