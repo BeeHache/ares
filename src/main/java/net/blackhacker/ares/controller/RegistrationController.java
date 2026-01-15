@@ -41,6 +41,4 @@ public class RegistrationController {
                 .created(location)
                 .body(userMapper.toDTO(registeredUser));
     }
-
-
 }

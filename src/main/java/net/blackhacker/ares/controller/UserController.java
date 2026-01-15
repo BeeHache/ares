@@ -18,6 +18,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collection;
+
 @RestController()
 @RequestMapping("/api/user")
 public class UserController {
@@ -87,16 +89,16 @@ public class UserController {
     }
 
     @GetMapping("/feeds")
-    public ResponseEntity<Collection<FeedDTO>> getFeed(@AuthenticationPrincipal User principal) {
+    public ResponseEntity<Collection<FeedDTO>> getFeed(@AuthenticationPrincipal Account principal) {
 
-        User user = userService.getUserByUserDetails(principal);
+        User user = userService.getUserByAccount(principal);
         Collection<FeedDTO> feeds = user.getFeeds().stream().map(feedMapper::toDTO).toList();
         return ResponseEntity.ok(feeds);
     }
 
     @DeleteMapping("/feeds/{id}")
-    public ResponseEntity<Void> deleteFeed(@PathVariable Long id, @AuthenticationPrincipal User principal) {
-        User user = userService.getUserByUserDetails(principal);
+    public ResponseEntity<Void> deleteFeed(@PathVariable Long id, @AuthenticationPrincipal Account principal) {
+        User user = userService.getUserByAccount(principal);
         Feed feed = feedService.getFeedById(id);
 
         if (feed == null){

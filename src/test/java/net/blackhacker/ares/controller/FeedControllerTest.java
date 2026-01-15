@@ -2,12 +2,14 @@ package net.blackhacker.ares.controller;
 
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.mapper.FeedMapper;
+import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.security.JwtAuthenticationFilter;
 import net.blackhacker.ares.service.FeedService;
 import net.blackhacker.ares.service.JWTService;
 import net.blackhacker.ares.service.UserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -50,23 +52,31 @@ class FeedControllerTest {
     @MockitoBean
     private FeedMapper feedMapper;
 
-    @Test
-    void getFeed_shouldReturnFeedList_whenUserIsAuthenticated() throws Exception {
-        // Arrange
-        User principal = new User();
-        User user = new User();
-        
-        Feed feed = new Feed();
+    private User principal;
+    private User user;
+    private Feed feed;
+    private FeedDTO feedDTO;
+
+    @BeforeEach
+    void setup() {
+        principal = new User();
+        user = new User();
+
+        feed = new Feed();
         feed.setTitle("Tech Blog");
         feed.setLink("https://tech.blog/rss");
-        
+
         user.setFeeds(Set.of(feed));
-        
-        FeedDTO feedDTO = new FeedDTO();
+
+        feedDTO = new FeedDTO();
         feedDTO.setTitle("Tech Blog");
         feedDTO.setLink("https://tech.blog/rss");
+    }
 
-        when(userService.getUserByUserDetails(any())).thenReturn(user);
+    @Test
+    void getFeed_shouldReturnFeedList_whenUserIsAuthenticated() throws Exception {
+
+        when(userService.getUserByAccount(any(Account.class))).thenReturn(user);
         when(feedMapper.toDTO(any(Feed.class))).thenReturn(feedDTO);
 
         Authentication auth = new TestingAuthenticationToken(principal, null, "ROLE_USER");
@@ -83,11 +93,10 @@ class FeedControllerTest {
 
     @Test
     void getFeed_shouldReturnEmptyList_whenUserHasNoFeeds() throws Exception {
-        User principal = new User();
         User user = new User();
         user.setFeeds(Collections.emptySet());
 
-        when(userService.getUserByUserDetails(any())).thenReturn(user);
+        when(userService.getUserByAccount(any(Account.class))).thenReturn(user);
 
         Authentication auth = new TestingAuthenticationToken(principal, null, "ROLE_USER");
 

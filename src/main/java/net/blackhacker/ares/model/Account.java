@@ -1,7 +1,8 @@
 package net.blackhacker.ares.model;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Data;
+import lombok.NonNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,10 +13,7 @@ import java.util.stream.Collectors;
 
 @Entity
 @Table(name ="accounts")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Data
 public class Account implements UserDetails {
 
     public enum AccountType {

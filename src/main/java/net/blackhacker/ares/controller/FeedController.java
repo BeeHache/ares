@@ -2,6 +2,7 @@ package net.blackhacker.ares.controller;
 
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.mapper.FeedMapper;
+import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.service.FeedService;
 import net.blackhacker.ares.service.UserService;
@@ -28,9 +29,9 @@ public class FeedController {
     }
 
     @GetMapping
-    public ResponseEntity<Collection<FeedDTO>> getFeed(@AuthenticationPrincipal User principal) {
+    public ResponseEntity<Collection<FeedDTO>> getFeed(@AuthenticationPrincipal Account principal) {
 
-        User user = userService.getUserByUserDetails(principal);
+        User user = userService.getUserByAccount(principal);
         Collection<FeedDTO> feeds = user.getFeeds().stream().map(feedMapper::toDTO).toList();
         return ResponseEntity.ok(feeds);
     }

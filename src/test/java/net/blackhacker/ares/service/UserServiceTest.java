@@ -27,8 +27,10 @@ class UserServiceTest {
     @InjectMocks
     private UserService userService;
 
-    private User user;
-    private Account account;
+    private User user, existingUser;
+    private Account account, nonExistingAccount;
+    private String testEmail = "test@example.com";
+    private String takenEmail = "taken@example.com";
 
     @BeforeEach
     public void setUP() {
@@ -36,16 +38,24 @@ class UserServiceTest {
         account = new Account();
         account.setUsername("testuser");
 
+        nonExistingAccount = new Account();
+
         user = new User();
-        user.setEmail("test@example.com");
+        user.setEmail(testEmail);
         user.setAccount(account);
+
+        existingUser = new User();
+        existingUser.setEmail(takenEmail);
+        existingUser.setAccount(account);
+
+        reset(userRepository);
     }
 
     @Test
     void registerUser_shouldSaveUser_whenEmailIsAvailable() {
         // Arrange
 
-        when(userRepository.existsByEmail(user.getEmail())).thenReturn(false);
+        when(userRepository.existsByEmail(testEmail)).thenReturn(false);
         when(userRepository.save(user)).thenReturn(user);
 
         // Act
@@ -53,180 +63,66 @@ class UserServiceTest {
 
         // Assert
         assertNotNull(registeredUser);
-        assertEquals(user.getEmail(), registeredUser.getEmail());
-        verify(userRepository).existsByEmail(user.getEmail());
+        assertEquals(testEmail, registeredUser.getEmail());
+        verify(userRepository).existsByEmail(testEmail);
         verify(userRepository).save(user);
     }
 
     @Test
     void registerUser_shouldReturnNull_whenEmailIsTaken() {
-        when(userRepository.existsByEmail(user.getEmail())).thenReturn(true);
-        User registeredUser = userService.registerUser(user);
+
+        when(userRepository.existsByEmail(takenEmail)).thenReturn(true);
+        when(userRepository.save(existingUser)).thenReturn(existingUser);
+        User registeredUser = userService.registerUser(existingUser);
         assertNull(registeredUser);
+        verify(userRepository).existsByEmail(takenEmail);
+        verify(userRepository, never()).save(user);
     }
 
     @Test
     void getUserByEmail_shouldReturnUser_whenUserExists() {
-
-        String email = "test@example.com";
-
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-
-        // Act
-        User result = userService.getUserByEmail(email);
-
-        // Assert
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(user));
+        User result = userService.getUserByEmail(testEmail);
         assertNotNull(result);
-        assertEquals(email, result.getEmail());
+        assertEquals(testEmail, result.getEmail());
     }
 
     @Test
     void getUserByEmail_shouldReturnNull_whenUserDoesNotExist() {
-        // Arrange
         String email = "nonexistent@example.com";
         when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
-
-        // Act
         User result = userService.getUserByEmail(email);
-
-        // Assert
         assertNull(result);
     }
 
     @Test
     void getUserByAccount_shouldReturnUser_whenUserExists() {
         when(userRepository.findByAccount(account)).thenReturn(Optional.of(user));
-
-        // Act
         User result = userService.getUserByAccount(account);
-
-        // Assert
         assertNotNull(result);
         assertEquals(account, result.getAccount());
     }
 
     @Test
     void getUserByAccount_shouldReturnNull_whenUserDoesNotExist() {
-        // Arrange
-        Account account = new Account();
-        when(userRepository.findByAccount(account)).thenReturn(Optional.empty());
-
-        // Act
-        User result = userService.getUserByAccount(account);
-
-        // Assert
+        when(userRepository.findByAccount(nonExistingAccount)).thenReturn(Optional.empty());
+        User result = userService.getUserByAccount(nonExistingAccount);
         assertNull(result);
     }
 
     @Test
     void saveUser_shouldCallRepositorySave() {
         when(userRepository.save(user)).thenReturn(user);
-
-        // Act
         User result = userService.saveUser(user);
-
-        // Assert
         assertNotNull(result);
         verify(userRepository, times(1)).save(user);
     }
 
     @Test
-    void registerUser_shouldSaveUser_whenEmailIsAvailable() {
-        // Arrange
-        User user = new User();
-        user.setEmail("new@example.com");
-        user.setPassword("password");
-
-        when(userRepository.existsByEmail(user.getEmail())).thenReturn(false);
-        when(userRepository.save(user)).thenReturn(user);
-
-        // Act
-        User registeredUser = userService.registerUser(user);
-
-        // Assert
-        assertNotNull(registeredUser);
-        assertEquals(user.getEmail(), registeredUser.getEmail());
-        verify(userRepository).existsByEmail(user.getEmail());
-        verify(userRepository).save(user);
-    }
-
-    @Test
-    void registerUser_shouldThrowException_whenEmailIsTaken() {
-        // Arrange
-        User user = new User();
-        user.setEmail("taken@example.com");
-
-        when(userRepository.existsByEmail(user.getEmail())).thenReturn(true);
-
-        // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> userService.registerUser(user));
-        assertEquals("Email already taken!", exception.getMessage());
-
-        verify(userRepository).existsByEmail(user.getEmail());
-        verify(userRepository, never()).save(any(User.class));
-    }
-
-    @Test
-    void getUserByEmail_shouldReturnUser_whenUserExists() {
-        // Arrange
-        String email = "test@example.com";
-        User user = new User();
-        user.setEmail(email);
-
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-
-        // Act
-        User result = userService.getUserByEmail(email);
-
-        // Assert
+    void getUserByAccount_shouldReturnAccount_whenAccountExists() {
+        when(userRepository.findByAccount(any(Account.class))).thenReturn(Optional.of(user));
+        User result = userService.getUserByAccount(account);
         assertNotNull(result);
-        assertEquals(email, result.getEmail());
-    }
-
-    @Test
-    void getUserByEmail_shouldReturnNull_whenUserDoesNotExist() {
-        // Arrange
-        String email = "nonexistent@example.com";
-        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
-
-        // Act
-        User result = userService.getUserByEmail(email);
-
-        // Assert
-        assertNull(result);
-    }
-
-    @Test
-    void getUserByUserDetails_shouldReturnUser_whenUserExists() {
-        // Arrange
-        String email = "test@example.com";
-        User user = new User();
-        user.setEmail(email);
-        
-        // Create a mock UserDetails or use the User object itself since it implements UserDetails
-        UserDetails userDetails = mock(UserDetails.class);
-        when(userDetails.getUsername()).thenReturn(email);
-
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-
-        // Act
-        User result = userService.getUserByUserDetails(userDetails);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(email, result.getEmail());
-    }
-
-    @Test
-    void saveUser_shouldCallRepositorySave() {
-        // Arrange
-        User user = new User();
-        user.setEmail("test@example.com");
-
-        // Act
-        userService.saveUser(user);
-
-        // Assert
-        verify(userRepository, times(1)).save(user);
+        assertEquals(user, result);
     }
 }

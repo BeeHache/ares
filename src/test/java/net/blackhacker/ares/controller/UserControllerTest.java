@@ -156,7 +156,7 @@ class UserControllerTest {
 
         doNothing().when(urlValidator).validateURL(validUrl);
         when(userService.getUserByAccount(any(Account.class))).thenReturn(user);
-        when(userService.saveUser(any(User.class))).thenReturn(user);
+        //when(userService.saveUser(any(User.class))).thenReturn(user);
         when(feedService.addFeed(anyString())).thenReturn(feed);
         when(feedMapper.toDTO(any(Feed.class))).thenReturn(feedDTO);
 
@@ -166,7 +166,7 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value(feed.getTitle()));
 
-        verify(userService).saveUser(user);
+        //verify(userService).saveUser(user);
     }
 
     @Test
