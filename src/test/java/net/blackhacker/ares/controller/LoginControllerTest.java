@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.Cookie;
 import net.blackhacker.ares.model.Account;
+import net.blackhacker.ares.model.RefreshToken;
 import net.blackhacker.ares.security.CustomAccessDeniedHandler;
 import net.blackhacker.ares.security.JwtAuthenticationEntryPoint;
 import net.blackhacker.ares.security.JwtAuthenticationFilter;
@@ -12,6 +13,7 @@ import net.blackhacker.ares.mapper.UserMapper;
 import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.service.AccountService;
 import net.blackhacker.ares.service.JWTService;
+import net.blackhacker.ares.service.RefreshTokenService;
 import net.blackhacker.ares.validation.UserDTOValidator;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -60,8 +62,8 @@ class LoginControllerTest {
     @MockitoBean
     private JWTService jwtService; // Your custom service to sign tokens
 
-    //@MockitoBean
-    //private RefreshTokenService refreshTokenService;
+    @MockitoBean
+    private RefreshTokenService refreshTokenService;
 
     @MockitoBean
     private AccountService accountService;
@@ -78,7 +80,8 @@ class LoginControllerTest {
     private ObjectMapper objectMapper;
     private UserDTO loginDTO;
     private Account account;
-    private  User user;
+    private User user;
+    private RefreshToken refreshToken;
 
     final private String refreshTokenString = "refresh-token";
     final private String accessTokenString = "access-token";
@@ -96,12 +99,14 @@ class LoginControllerTest {
         account = new Account();
         account.setUsername(loginDTO.getEmail());
         account.setPassword(loginDTO.getPassword());
-        account.setToken(refreshTokenString);
-        account.setTokenExpiresAt(LocalDateTime.now().plusDays(1)); // expires tomorrow
 
         user = new User();
         user.setEmail(loginDTO.getEmail());
         user.setAccount(account);
+
+        refreshToken = new RefreshToken();
+        refreshToken.setToken(refreshTokenString);
+        refreshToken.setUsername(loginDTO.getEmail());
     }
 
     @Test
@@ -110,13 +115,13 @@ class LoginControllerTest {
 
 
         String accessTokenString = "access-token";
-        account.setToken("refresh-token");
 
         doNothing().when(userDTOValidator).validateUserForLogin(any(UserDTO.class));
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(successfulAuth);
         when(jwtService.generateToken(any(Account.class))).thenReturn(accessTokenString);
         when(accountService.findAccountByUsername(any(String.class))).thenReturn(Optional.of(account));
+        when(refreshTokenService.generateToken(account)).thenReturn(new RefreshToken());
 
         // Act & Assert
         mockMvc.perform(
@@ -154,7 +159,8 @@ class LoginControllerTest {
     void refreshToken_shouldReturnNewAccessToken_whenRefreshTokenIsValid() throws Exception {
         // Arrange
 
-        when(accountService.findByToken(any(String.class))).thenReturn(Optional.of(account));
+        when(refreshTokenService.findByToken(any(String.class))).thenReturn(Optional.of(refreshToken));
+        when(accountService.findAccountByUsername(any(String.class))).thenReturn(Optional.of(account));
         when(jwtService.generateToken(any(Account.class))).thenReturn(accessTokenString);
 
         // Act & Assert
@@ -169,8 +175,8 @@ class LoginControllerTest {
     @Test
     void logout_shouldClearCookie_whenCalled() throws Exception {
         // Arrange
-        when(accountService.findByToken(any(String.class))).thenReturn(Optional.of(account));
-        when(accountService.saveAccount(any(Account.class))).thenReturn(account);
+        when(refreshTokenService.findByToken(any(String.class))).thenReturn(Optional.of(refreshToken));
+        doNothing().when(refreshTokenService).deleteRefreshToken(any(String.class));
 
         // Act & Assert
         mockMvc.perform(post("/api/login/logout")

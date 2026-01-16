@@ -31,7 +31,7 @@ public class FeedController {
     @GetMapping
     public ResponseEntity<Collection<FeedDTO>> getFeed(@AuthenticationPrincipal Account principal) {
 
-        User user = userService.getUserByAccount(principal);
+        User user = userService.getUserByAccount(principal).get();
         Collection<FeedDTO> feeds = user.getFeeds().stream().map(feedMapper::toDTO).toList();
         return ResponseEntity.ok(feeds);
     }

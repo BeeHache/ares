@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collection;
+import java.util.Optional;
 
 @RestController()
 @RequestMapping("/api/user")
@@ -46,7 +47,7 @@ public class UserController {
 
     @GetMapping("/")
     ResponseEntity<UserDTO> getUser(@AuthenticationPrincipal Account account) {
-        User user = userService.getUserByAccount(account);
+        User user = userService.getUserByAccount(account).get();
         UserDTO userDTO = userMapper.toDTO(user);
         return ResponseEntity.ok(userDTO);
     }
@@ -55,7 +56,7 @@ public class UserController {
     ResponseEntity<Void> importOPML(@RequestParam("file") MultipartFile file, @AuthenticationPrincipal Account account) {
         multipartFileValidator.validateMultipartFile(file);
 
-        final User user = userService.getUserByAccount(account);
+        final User user = userService.getUserByAccount(account).get();
         opmlService.importFile(file).forEach(feed -> {
             feed.getUsers().add(user);
             user.getFeeds().add(feed);
@@ -68,7 +69,7 @@ public class UserController {
     ResponseEntity<Void> importOPML(@RequestParam("url") String url, @AuthenticationPrincipal Account account) {
         urlValidator.validateURL(url);
 
-        User user = userService.getUserByAccount(account);
+        final User user = userService.getUserByAccount(account).get();
         opmlService.importFeed(url).forEach(feed -> {
             feed.getUsers().add(user);
             user.getFeeds().add(feed);
@@ -81,7 +82,7 @@ public class UserController {
     ResponseEntity<FeedDTO> addFeed(@RequestParam("link") String link, @AuthenticationPrincipal @NonNull Account account){
         urlValidator.validateURL(link);
 
-        User user = userService.getUserByAccount(account);
+        User user = userService.getUserByAccount(account).get();
         Feed feed = feedService.addFeed(link);
         user.getFeeds().add(feed);
         FeedDTO feedDTO = feedMapper.toDTO(feed);
@@ -91,14 +92,14 @@ public class UserController {
     @GetMapping("/feeds")
     public ResponseEntity<Collection<FeedDTO>> getFeed(@AuthenticationPrincipal Account principal) {
 
-        User user = userService.getUserByAccount(principal);
+        User user = userService.getUserByAccount(principal).get();
         Collection<FeedDTO> feeds = user.getFeeds().stream().map(feedMapper::toDTO).toList();
         return ResponseEntity.ok(feeds);
     }
 
     @DeleteMapping("/feeds/{id}")
     public ResponseEntity<Void> deleteFeed(@PathVariable Long id, @AuthenticationPrincipal Account principal) {
-        User user = userService.getUserByAccount(principal);
+        User user = userService.getUserByAccount(principal).get();
         Feed feed = feedService.getFeedById(id);
 
         if (feed == null){

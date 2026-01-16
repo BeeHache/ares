@@ -9,6 +9,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
@@ -53,7 +55,8 @@ class UserDTOValidatorTest {
 
         doNothing().when(emailValidator).validateEmail(userDTO.getEmail());
         doNothing().when(passwordValidator).validatePassword(userDTO.getPassword());
-        when(userService.getUserByEmail(userDTO.getEmail())).thenReturn(new net.blackhacker.ares.model.User());
+        when(userService.getUserByEmail(userDTO.getEmail()))
+                .thenReturn(Optional.of(new net.blackhacker.ares.model.User()));
 
         // Act & Assert
         assertThrows(ValidationException.class, () -> userDTOValidator.validateUserForRegistration(userDTO));

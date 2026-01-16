@@ -28,6 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -122,7 +123,7 @@ class UserControllerTest {
     @Test
     @WithMockUser(username = "test@example.com")
     void getUser_shouldReturnUserDTO_whenUserIsAuthenticated() throws Exception {
-        when(userService.getUserByAccount(any(Account.class))).thenReturn(user);
+        when(userService.getUserByAccount(any(Account.class))).thenReturn(Optional.of(user));
         when(userMapper.toDTO(any(User.class))).thenReturn(userDTO);
 
         mockMvc.perform(get("/api/user/")
@@ -140,7 +141,7 @@ class UserControllerTest {
                 "feeds.opml",
                 "text/xml",
                 "<opml></opml>".getBytes());
-        when(userService.getUserByAccount(any(Account.class))).thenReturn(user);
+        when(userService.getUserByAccount(any(Account.class))).thenReturn(Optional.of(user));
         when(opmlService.importFile(any())).thenReturn(new ArrayList<>());
 
         mockMvc.perform(multipart("/api/user/import")
@@ -155,8 +156,7 @@ class UserControllerTest {
     void addFeed_shouldReturnOk_whenUserIsLoggedInAndUrlIsValid() throws Exception {
 
         doNothing().when(urlValidator).validateURL(validUrl);
-        when(userService.getUserByAccount(any(Account.class))).thenReturn(user);
-        //when(userService.saveUser(any(User.class))).thenReturn(user);
+        when(userService.getUserByAccount(any(Account.class))).thenReturn(Optional.of(user));
         when(feedService.addFeed(anyString())).thenReturn(feed);
         when(feedMapper.toDTO(any(Feed.class))).thenReturn(feedDTO);
 

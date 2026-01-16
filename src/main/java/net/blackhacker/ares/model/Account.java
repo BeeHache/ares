@@ -34,9 +34,6 @@ public class Account implements UserDetails {
     @Enumerated(EnumType.STRING)
     private AccountType type;
 
-    @Column(nullable = false, unique = true)
-    private String token;
-
     @Column
     private LocalDateTime accountExpiresAt;
 
@@ -49,8 +46,6 @@ public class Account implements UserDetails {
     @Column
     private LocalDateTime accountEnabledAt;
 
-    @Column
-    private LocalDateTime tokenExpiresAt;
 
     @Override
     public boolean isAccountNonExpired() {
@@ -84,14 +79,6 @@ public class Account implements UserDetails {
         return accountEnabledAt.isBefore(LocalDateTime.now());
     }
 
-    public boolean isTokenExpired(){
-        if (tokenExpiresAt == null){
-            return false;
-        }
-
-        return tokenExpiresAt.isBefore(LocalDateTime.now());
-    }
-
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "account_roles",
@@ -107,5 +94,13 @@ public class Account implements UserDetails {
         return roles.stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
                 .collect(Collectors.toList());
+    }
+
+    public void lockAccount(){
+        accountLockedUntil = LocalDateTime.now().plusMinutes(15);
+    }
+
+    public void enableAccount(){
+        accountEnabledAt = LocalDateTime.now();
     }
 }

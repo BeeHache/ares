@@ -26,36 +26,8 @@ class AccountServiceTest {
     @InjectMocks
     private AccountService accountService;
 
-    @Test
-    void findByToken_shouldReturnAccount_whenTokenExists() {
-        // Arrange
-        String token = "valid-token";
-        Account account = new Account();
-        account.setToken(token);
-        when(accountRepository.findByToken(token)).thenReturn(Optional.of(account));
 
-        // Act
-        Optional<Account> result = accountService.findByToken(token);
 
-        // Assert
-        assertTrue(result.isPresent());
-        assertEquals(token, result.get().getToken());
-        verify(accountRepository, times(1)).findByToken(token);
-    }
-
-    @Test
-    void findByToken_shouldReturnEmpty_whenTokenDoesNotExist() {
-        // Arrange
-        String token = "invalid-token";
-        when(accountRepository.findByToken(token)).thenReturn(Optional.empty());
-
-        // Act
-        Optional<Account> result = accountService.findByToken(token);
-
-        // Assert
-        assertTrue(result.isEmpty());
-        verify(accountRepository, times(1)).findByToken(token);
-    }
 
     @Test
     void findAccountByUsername_shouldReturnAccount_whenUsernameExists() {

@@ -17,6 +17,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Optional;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -67,7 +69,7 @@ public class RegistrationControllerTest {
         doNothing().when(userDTOValidator).validateUserForRegistration(any(UserDTO.class));
         when(userMapper.toModel(any(UserDTO.class))).thenReturn(user);
         when(userMapper.toDTO(any(User.class))).thenReturn(userDTO);
-        when(userService.registerUser(any(User.class))).thenReturn(user);
+        when(userService.registerUser(any(User.class))).thenReturn(Optional.of(user));
 
         // Act & Assert
         mockMvc.perform(post("/api/register")

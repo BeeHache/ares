@@ -9,6 +9,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @SpringBootApplication
 @EnableScheduling
 public class AresApplication implements WebMvcConfigurer {
+
+
     public static void main(String[] args) {
         SpringApplication.run(AresApplication.class, args);
     }

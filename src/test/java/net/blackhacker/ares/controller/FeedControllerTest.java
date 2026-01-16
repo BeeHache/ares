@@ -20,6 +20,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -52,6 +53,7 @@ class FeedControllerTest {
     @MockitoBean
     private FeedMapper feedMapper;
 
+    private Optional<User> optionalUser;
     private User principal;
     private User user;
     private Feed feed;
@@ -61,6 +63,8 @@ class FeedControllerTest {
     void setup() {
         principal = new User();
         user = new User();
+        optionalUser = Optional.of(user);
+
 
         feed = new Feed();
         feed.setTitle("Tech Blog");
@@ -76,7 +80,7 @@ class FeedControllerTest {
     @Test
     void getFeed_shouldReturnFeedList_whenUserIsAuthenticated() throws Exception {
 
-        when(userService.getUserByAccount(any(Account.class))).thenReturn(user);
+        when(userService.getUserByAccount(any(Account.class))).thenReturn(optionalUser);
         when(feedMapper.toDTO(any(Feed.class))).thenReturn(feedDTO);
 
         Authentication auth = new TestingAuthenticationToken(principal, null, "ROLE_USER");
@@ -96,7 +100,7 @@ class FeedControllerTest {
         User user = new User();
         user.setFeeds(Collections.emptySet());
 
-        when(userService.getUserByAccount(any(Account.class))).thenReturn(user);
+        when(userService.getUserByAccount(any(Account.class))).thenReturn(Optional.of(user));
 
         Authentication auth = new TestingAuthenticationToken(principal, null, "ROLE_USER");
 

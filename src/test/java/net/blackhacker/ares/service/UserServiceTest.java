@@ -2,6 +2,7 @@ package net.blackhacker.ares.service;
 
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.User;
+import net.blackhacker.ares.repository.EmailConfirmationRepository;
 import net.blackhacker.ares.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,7 +10,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.thymeleaf.TemplateEngine;
 
 import java.util.Optional;
 
@@ -23,6 +26,18 @@ class UserServiceTest {
 
     @MockitoBean
     private UserRepository userRepository;
+
+    @MockitoBean
+    private EmailConfirmationRepository emailConfirmationRepository;
+
+    @MockitoBean
+    private EmailSenderService emailSenderService;
+
+    @MockitoBean
+    private JavaMailSender javaMailSender;
+
+    @MockitoBean
+    private TemplateEngine templateEngine;
 
     @InjectMocks
     private UserService userService;
@@ -59,11 +74,11 @@ class UserServiceTest {
         when(userRepository.save(user)).thenReturn(user);
 
         // Act
-        User registeredUser = userService.registerUser(user);
+        Optional<User> registeredUser = userService.registerUser(user);
 
         // Assert
-        assertNotNull(registeredUser);
-        assertEquals(testEmail, registeredUser.getEmail());
+        assertTrue(registeredUser.isPresent());
+        assertEquals(testEmail, registeredUser.get().getEmail());
         verify(userRepository).existsByEmail(testEmail);
         verify(userRepository).save(user);
     }
@@ -73,8 +88,8 @@ class UserServiceTest {
 
         when(userRepository.existsByEmail(takenEmail)).thenReturn(true);
         when(userRepository.save(existingUser)).thenReturn(existingUser);
-        User registeredUser = userService.registerUser(existingUser);
-        assertNull(registeredUser);
+        Optional<User> registeredUser = userService.registerUser(existingUser);
+        assertFalse(registeredUser.isPresent());
         verify(userRepository).existsByEmail(takenEmail);
         verify(userRepository, never()).save(user);
     }
@@ -82,32 +97,32 @@ class UserServiceTest {
     @Test
     void getUserByEmail_shouldReturnUser_whenUserExists() {
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(user));
-        User result = userService.getUserByEmail(testEmail);
-        assertNotNull(result);
-        assertEquals(testEmail, result.getEmail());
+        Optional<User> result = userService.getUserByEmail(testEmail);
+        assertTrue(result.isPresent());
+        assertEquals(testEmail, result.get().getEmail());
     }
 
     @Test
     void getUserByEmail_shouldReturnNull_whenUserDoesNotExist() {
         String email = "nonexistent@example.com";
         when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
-        User result = userService.getUserByEmail(email);
-        assertNull(result);
+        Optional<User> result = userService.getUserByEmail(email);
+        assertFalse(result.isPresent());
     }
 
     @Test
     void getUserByAccount_shouldReturnUser_whenUserExists() {
         when(userRepository.findByAccount(account)).thenReturn(Optional.of(user));
-        User result = userService.getUserByAccount(account);
-        assertNotNull(result);
-        assertEquals(account, result.getAccount());
+        Optional<User> result = userService.getUserByAccount(account);
+        assertTrue(result.isPresent());
+        assertEquals(account, result.get().getAccount());
     }
 
     @Test
     void getUserByAccount_shouldReturnNull_whenUserDoesNotExist() {
         when(userRepository.findByAccount(nonExistingAccount)).thenReturn(Optional.empty());
-        User result = userService.getUserByAccount(nonExistingAccount);
-        assertNull(result);
+        Optional<User> result = userService.getUserByAccount(nonExistingAccount);
+        assertFalse(result.isPresent());
     }
 
     @Test
@@ -121,8 +136,8 @@ class UserServiceTest {
     @Test
     void getUserByAccount_shouldReturnAccount_whenAccountExists() {
         when(userRepository.findByAccount(any(Account.class))).thenReturn(Optional.of(user));
-        User result = userService.getUserByAccount(account);
-        assertNotNull(result);
-        assertEquals(user, result);
+        Optional<User> result = userService.getUserByAccount(account);
+        assertTrue(result.isPresent());
+        assertEquals(user, result.get());
     }
 }

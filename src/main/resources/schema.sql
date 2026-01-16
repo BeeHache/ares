@@ -1,28 +1,29 @@
-create table if not exists admins (
-    id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL unique,
-    password varchar(60) not null
-);
-
-
-create table if not exists users (
-    id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    email VARCHAR(255) NOT NULL unique,
-    password varchar(60) not null
-);
-
 create table if not exists accounts (
     id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     username VARCHAR(255) NOT NULL,
     password varchar(60) not null,
     type varchar(8) not null,
-    token VARCHAR(255) NOT NULL UNIQUE,
     account_expires_at timestamp,
     password_expires_at timestamp,
     account_locked_until timestamp,
+    account_enabled_at timestamp,
     CONSTRAINT check_type CHECK (type IN ('ADMIN', 'USER')),
     CONSTRAINT username_type_unique UNIQUE (username, type)
+);
+
+create table if not exists admins (
+    id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL unique,
+    account_id BIGINT,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+);
+
+create table if not exists users (
+    id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    email VARCHAR(255) NOT NULL unique,
+    account_id BIGINT,
+    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
 );
 
 create table if not exists roles (

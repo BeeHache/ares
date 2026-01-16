@@ -25,7 +25,7 @@ public class UserMapper implements ModelDTOMapper<User, UserDTO> {
 
         UserDTO dto = new UserDTO();
         dto.setEmail(user.getEmail());
-        // Password should generally not be mapped back to DTO for security
+        // Password should not be mapped back to DTO for security
         if (user.getFeeds() != null) {
             dto.setFeeds(user.getFeeds().stream()
                     .map(feedMapper::toDTO)

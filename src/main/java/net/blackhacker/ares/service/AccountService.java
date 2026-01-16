@@ -22,10 +22,6 @@ public class AccountService implements UserDetailsService {
         this.accountRepository = accountRepository;
     }
 
-    public Optional<Account> findByToken(String token){
-        return accountRepository.findByToken(token);
-    }
-
     public Optional<Account> findAccountByUsername(String username){
         return accountRepository.findByUsername(username);
     }
