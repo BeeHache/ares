@@ -8,6 +8,7 @@ import java.util.List;
 
 @Data
 public class FeedDTO implements Serializable {
+    private Long id;
     private String title;
     private String description;
     private String link;

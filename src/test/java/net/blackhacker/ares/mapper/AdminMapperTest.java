@@ -1,15 +1,20 @@
 package net.blackhacker.ares.mapper;
 
+import net.blackhacker.ares.dto.AccountDTO;
 import net.blackhacker.ares.dto.AdminDTO;
 import net.blackhacker.ares.dto.RoleDTO;
+import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Admins;
 import net.blackhacker.ares.model.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -18,20 +23,38 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+@SpringBootTest(classes = AdminMapper.class)
 @ExtendWith(MockitoExtension.class)
 class AdminMapperTest {
 
-    @Mock
-    private RoleMapper roleMapper;
 
-    @Mock
+    @MockitoBean
     private PasswordEncoder passwordEncoder;
 
+    @InjectMocks
     private AdminMapper adminMapper;
+
+    private Account account;
+    private Admins admin;
+    private  AdminDTO adminDTO;
+
 
     @BeforeEach
     void setUp() {
-        adminMapper = new AdminMapper(roleMapper, passwordEncoder);
+        account = new Account();
+        account.setUsername("admin@example.com");
+        account.setPassword("encodedPassword");
+        account.setType(Account.AccountType.ADMIN);
+
+        admin = new Admins();
+        admin.setName("Admin Name");
+        admin.setEmail("admin@example.com");
+        admin.setAccount(account);
+
+        adminDTO = new AdminDTO();
+        adminDTO.setName("Admin Name");
+        adminDTO.setEmail("admin@example.com");
+        adminDTO.setPassword("password");
     }
 
     @Test
@@ -42,21 +65,7 @@ class AdminMapperTest {
     @Test
     void toDTO_shouldMapAdminToAdminDTO() {
         // Arrange
-        Admins admin = new Admins();
-        admin.setName("Admin Name");
-        admin.setEmail("admin@example.com");
-        admin.setPassword("encodedPassword");
 
-        Role role = new Role();
-        role.setName("ADMIN");
-        Set<Role> roles = new HashSet<>();
-        roles.add(role);
-        admin.setRoles(roles);
-
-        RoleDTO roleDTO = new RoleDTO();
-        roleDTO.setName("ADMIN");
-
-        when(roleMapper.toDTO(any(Role.class))).thenReturn(roleDTO);
 
         // Act
         AdminDTO result = adminMapper.toDTO(admin);
@@ -66,19 +75,10 @@ class AdminMapperTest {
         assertEquals(admin.getName(), result.getName());
         assertEquals(admin.getEmail(), result.getEmail());
         assertNull(result.getPassword()); // Password should not be mapped to DTO
-        assertNotNull(result.getRoles());
-        assertEquals(1, result.getRoles().size());
-        assertTrue(result.getRoles().contains(roleDTO));
     }
 
     @Test
     void toDTO_shouldHandleNullRoles() {
-        // Arrange
-        Admins admin = new Admins();
-        admin.setName("Admin Name");
-        admin.setEmail("admin@example.com");
-        admin.setRoles(null);
-
         // Act
         AdminDTO result = adminMapper.toDTO(admin);
 
@@ -86,7 +86,7 @@ class AdminMapperTest {
         assertNotNull(result);
         assertEquals(admin.getName(), result.getName());
         assertEquals(admin.getEmail(), result.getEmail());
-        assertNull(result.getRoles());
+        assertNull(result.getPassword()); // Password should not be mapped to DTO
     }
 
     @Test
@@ -96,11 +96,6 @@ class AdminMapperTest {
 
     @Test
     void toModel_shouldMapAdminDTOToAdmin() {
-        // Arrange
-        AdminDTO adminDTO = new AdminDTO();
-        adminDTO.setName("Admin Name");
-        adminDTO.setEmail("admin@example.com");
-        adminDTO.setPassword("password");
 
         String encodedPassword = "encodedPassword";
         when(passwordEncoder.encode("password")).thenReturn(encodedPassword);
@@ -112,9 +107,8 @@ class AdminMapperTest {
         assertNotNull(result);
         assertEquals(adminDTO.getName(), result.getName());
         assertEquals(adminDTO.getEmail(), result.getEmail());
-        assertEquals(encodedPassword, result.getPassword());
-        // Roles are not mapped in toModel as per implementation
-        assertNotNull(result.getRoles());
-        assertTrue(result.getRoles().isEmpty());
-    }
+        assertEquals(encodedPassword, result.getAccount().getPassword());
+        assertNotNull(result.getAccount());
+        assertEquals(Account.AccountType.ADMIN, result.getAccount().getType());
+        }
 }

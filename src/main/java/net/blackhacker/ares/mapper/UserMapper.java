@@ -1,6 +1,7 @@
 package net.blackhacker.ares.mapper;
 
 import net.blackhacker.ares.dto.UserDTO;
+import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -24,7 +25,7 @@ public class UserMapper implements ModelDTOMapper<User, UserDTO> {
 
         UserDTO dto = new UserDTO();
         dto.setEmail(user.getEmail());
-        // Password should generally not be mapped back to DTO for security
+        // Password should not be mapped back to DTO for security
         if (user.getFeeds() != null) {
             dto.setFeeds(user.getFeeds().stream()
                     .map(feedMapper::toDTO)
@@ -39,8 +40,12 @@ public class UserMapper implements ModelDTOMapper<User, UserDTO> {
 
         User user = new User();
         user.setEmail(dto.getEmail());
-        user.setPassword(passwordEncoder.encode(dto.getPassword())); //encode password
-        // Feeds and Roles usually require looking up entities from repositories
+
+        Account account = new Account();
+        account.setUsername(dto.getEmail());
+        account.setPassword(passwordEncoder.encode(dto.getPassword())); //encode password
+        account.setType(Account.AccountType.USER);
+        user.setAccount(account);
         return user;
     }
 }

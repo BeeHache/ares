@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.mapper.UserMapper;
 import net.blackhacker.ares.model.User;
+import net.blackhacker.ares.service.AccountService;
 import net.blackhacker.ares.service.JWTService;
 import net.blackhacker.ares.service.UserService;
 import net.blackhacker.ares.validation.UserDTOValidator;
@@ -15,6 +16,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -39,6 +42,9 @@ public class RegistrationControllerTest {
     @MockitoBean
     private JWTService jwtService;
 
+    @MockitoBean
+    private AccountService accountService;
+
     private ObjectMapper objectMapper;
 
     @BeforeEach
@@ -57,14 +63,13 @@ public class RegistrationControllerTest {
         User user = new User();
         user.setId(1L);
         user.setEmail(userDTO.getEmail());
-        user.setPassword(userDTO.getPassword());
-        user.setFeeds(new java.util.HashSet<>());
+        user.setFeeds(new java.util.ArrayList<>());
 
         // Mock the validator to do nothing (pass the validation)
         doNothing().when(userDTOValidator).validateUserForRegistration(any(UserDTO.class));
         when(userMapper.toModel(any(UserDTO.class))).thenReturn(user);
         when(userMapper.toDTO(any(User.class))).thenReturn(userDTO);
-        when(userService.registerUser(any(User.class))).thenReturn(user);
+        when(userService.registerUser(any(User.class))).thenReturn(Optional.of(user));
 
         // Act & Assert
         mockMvc.perform(post("/api/register")

@@ -1,25 +1,32 @@
 package net.blackhacker.ares.model;
 
-import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.TimeToLive;
 
-import java.time.Instant;
+import java.io.Serializable;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
-@Entity
-@Table(name = "refresh_token")
-@Data
-public class RefreshToken {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+@EqualsAndHashCode
+@RedisHash("RefreshTokens")
+public class RefreshToken implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false, unique = true)
     private String token;
+    private String username;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private User user;
+    @TimeToLive(unit = TimeUnit.DAYS)
+    private Long ttl;
 
-    @Column(name = "expiry_date", nullable = false)
-    private Instant expiryDate;
+    public RefreshToken(String username, Long ttl) {
+        this.username = username;
+        this.ttl = ttl;
+        this.token = UUID.randomUUID().toString().replaceAll("-", "");
+    }
 }

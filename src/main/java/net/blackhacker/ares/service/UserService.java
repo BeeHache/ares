@@ -1,6 +1,9 @@
 package net.blackhacker.ares.service;
 
+import net.blackhacker.ares.model.Account;
+import net.blackhacker.ares.model.EmailConfirmationCode;
 import net.blackhacker.ares.model.User;
+import net.blackhacker.ares.repository.EmailConfirmationRepository;
 import net.blackhacker.ares.repository.UserRepository;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,51 +11,71 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
-public class UserService implements UserDetailsService {
+public class UserService {
 
     private final UserRepository userRepository;
+    private final EmailSenderService emailSenderService;
+    private final EmailConfirmationRepository emailConfirmationRepository;
 
-    public UserService(UserRepository userRepository) {
+
+    public UserService(UserRepository userRepository, EmailSenderService emailSenderService,
+                       EmailConfirmationRepository emailConfirmationRepository) {
         this.userRepository = userRepository;
+        this.emailSenderService = emailSenderService;
+        this.emailConfirmationRepository = emailConfirmationRepository;
     }
 
 
-    @Override
-    @NullMarked
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-
-        return user.toUserDetails();
-      /*
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getPassword()) // Must be already encoded (BCrypt)
-                .roles(user.getRole())        // Spring adds "ROLE_" prefix automatically
-                .disabled(!user.isEnabled())
-                .accountExpired(false)
-                .build();
-                
-       */
-    }
-
-    public User registerUser(User user) {
+    public Optional<User> registerUser(User user) {
         if(userRepository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("Email already taken!");
+            return Optional.empty();
         }
+        User savedUser = userRepository.save(user);
+        emailSenderService.sendEmail(
+                savedUser.getEmail(),
+                "noreply@ares.com",
+                "Confirm Your Email",
+                "email-verification",
+                "name", user.getEmail(),
+                "verificationLink", "http://localhost:8080/verify"
+                );
+        return Optional.of(savedUser);
+    }
+
+    public Optional<User> getUserByEmail(String email){
+        return userRepository.findByEmail(email);
+    }
+
+    public Optional<User> getUserByAccount(Account account){
+        return userRepository.findByAccount(account);
+    }
+
+    public User saveUser(User user){
         return userRepository.save(user);
     }
 
-    public User getUserByEmail(String email){
-        return userRepository.findByEmail(email).orElse(null);
-    }
+    public boolean confirm(String code){
 
-    public User getUserByUserDetails(UserDetails userDetails){
-        return userRepository.findByEmail(userDetails.getUsername()).orElse(null);
-    }
+        Optional<EmailConfirmationCode> optionalEcc = emailConfirmationRepository.findById(code);
+        if (optionalEcc.isEmpty()){
+            return false;
+        }
 
-    public void saveUser(User user){
+        EmailConfirmationCode ecc = optionalEcc.get();
+        String email = ecc.getEmail();
+
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if (optionalUser.isEmpty()){
+            return false;
+        }
+
+        User user = optionalUser.get();
+        user.getAccount().enableAccount();
         userRepository.save(user);
+        return true;
+
     }
 }

@@ -4,6 +4,7 @@ import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.mapper.UserMapper;
+import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.service.FeedService;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collection;
+import java.util.Optional;
 
 @RestController()
 @RequestMapping("/api/user")
@@ -44,17 +46,17 @@ public class UserController {
     }
 
     @GetMapping("/")
-    ResponseEntity<UserDTO> getUser(@AuthenticationPrincipal User principal) {
-        User user = userService.getUserByUserDetails(principal);
+    ResponseEntity<UserDTO> getUser(@AuthenticationPrincipal Account account) {
+        User user = userService.getUserByAccount(account).get();
         UserDTO userDTO = userMapper.toDTO(user);
         return ResponseEntity.ok(userDTO);
     }
 
     @PostMapping("/import")
-    ResponseEntity<Void> importOPML(@RequestParam("file") MultipartFile file, @AuthenticationPrincipal User principal) {
+    ResponseEntity<Void> importOPML(@RequestParam("file") MultipartFile file, @AuthenticationPrincipal Account account) {
         multipartFileValidator.validateMultipartFile(file);
 
-        final User user = userService.getUserByUserDetails(principal);
+        final User user = userService.getUserByAccount(account).get();
         opmlService.importFile(file).forEach(feed -> {
             feed.getUsers().add(user);
             user.getFeeds().add(feed);
@@ -64,10 +66,10 @@ public class UserController {
     }
 
     @PutMapping("/import")
-    ResponseEntity<Void> importOPML(@RequestParam("url") String url, @AuthenticationPrincipal User principal) {
+    ResponseEntity<Void> importOPML(@RequestParam("url") String url, @AuthenticationPrincipal Account account) {
         urlValidator.validateURL(url);
 
-        final User user = userService.getUserByUserDetails(principal);
+        final User user = userService.getUserByAccount(account).get();
         opmlService.importFeed(url).forEach(feed -> {
             feed.getUsers().add(user);
             user.getFeeds().add(feed);
@@ -77,14 +79,37 @@ public class UserController {
     }
 
     @PutMapping("/addfeed")
-    ResponseEntity<FeedDTO> addFeed(@RequestParam("link") String link, @AuthenticationPrincipal @NonNull User principal){
+    ResponseEntity<FeedDTO> addFeed(@RequestParam("link") String link, @AuthenticationPrincipal @NonNull Account account){
         urlValidator.validateURL(link);
 
-        User user = userService.getUserByUserDetails(principal);
+        User user = userService.getUserByAccount(account).get();
         Feed feed = feedService.addFeed(link);
         user.getFeeds().add(feed);
-        userService.saveUser(user);
         FeedDTO feedDTO = feedMapper.toDTO(feed);
         return ResponseEntity.ok(feedDTO);
+    }
+
+    @GetMapping("/feeds")
+    public ResponseEntity<Collection<FeedDTO>> getFeed(@AuthenticationPrincipal Account principal) {
+
+        User user = userService.getUserByAccount(principal).get();
+        Collection<FeedDTO> feeds = user.getFeeds().stream().map(feedMapper::toDTO).toList();
+        return ResponseEntity.ok(feeds);
+    }
+
+    @DeleteMapping("/feeds/{id}")
+    public ResponseEntity<Void> deleteFeed(@PathVariable Long id, @AuthenticationPrincipal Account principal) {
+        User user = userService.getUserByAccount(principal).get();
+        Feed feed = feedService.getFeedById(id);
+
+        if (feed == null){
+            return ResponseEntity.notFound().build();
+        }
+
+        user.getFeeds().remove(feed);
+        feed.getUsers().remove(user);
+        feedService.saveFeed(feed);
+        userService.saveUser(user);
+        return ResponseEntity.ok().build();
     }
 }
