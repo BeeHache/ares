@@ -11,7 +11,7 @@ public class SchedualerService {
     SchedualerService(FeedService feedService){
         this.feedService = feedService;
     }
-    @Scheduled(fixedRateString = "${feed.interval_seconds}")
+    @Scheduled(fixedRateString = "${feed.interval_ms}")
     void schedualFeedUpdates(){
         feedService.updateFeeds();
     }

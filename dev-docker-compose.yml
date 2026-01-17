@@ -35,8 +35,8 @@ services:
     ports:
       - "5050:80"
     volumes:
-      - ./docker/servers.json:/pgadmin4/servers.json
-      - ./docker/pgpass:/var/lib/pgadmin/pgpass
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json
+      - ./docker/pgadmin/pgpass:/var/lib/pgadmin/pgpass
       - pgadmin_data:/var/lib/pgadmin
     depends_on:
       - postgres
@@ -55,6 +55,8 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_MAIL_HOST: mailhog
       SPRING_MAIL_PORT: 1025
+      SPRING_MAIL_SMTP_AUTH: "false"
+      SPRING_MAIL_SMTP_STARTTLS_ENABLE: "false"
       JWT_SECRET: ${JWT_SECRET}
       JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
     depends_on:

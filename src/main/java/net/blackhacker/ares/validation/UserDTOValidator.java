@@ -30,7 +30,7 @@ public class UserDTOValidator {
     public void validateUserForRegistration(UserDTO userDTO) {
         validateUserForLogin(userDTO);
 
-        if (userService.getUserByEmail(userDTO.getEmail()) != null) {
+        if (userService.getUserByEmail(userDTO.getEmail()).isPresent()) {
             throw new ValidationException("User already exists");
         }
     }

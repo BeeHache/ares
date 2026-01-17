@@ -1,12 +1,16 @@
 package net.blackhacker.ares.service;
 
+import jakarta.mail.internet.MimeMessage;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+@Slf4j
 @Service
 public class EmailSenderService {
     private final JavaMailSender javaMailSender;
@@ -28,18 +32,25 @@ public class EmailSenderService {
      */
     public void sendEmail(@NonNull String to, @NonNull String from, @NonNull String subject,
                           @NonNull String template, String ...args ) {
-        Context context = new Context();
-        if (args != null && args.length > 0) {
-            for (int i = 0; i < args.length; i += 2) {
-                context.setVariable(args[i], args[i + 1]);
-            }
-        }
+        try {
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(to);
-        message.setFrom(from);
-        message.setSubject(subject);
-        message.setText(templateEngine.process("templates/"+template+".html", context));
-        javaMailSender.send(message);
+            // Create a Thymeleaf context
+            Context context = new Context();
+            if (args != null && args.length > 0) {
+                for (int i = 0; i < args.length; i += 2) {
+                    context.setVariable(args[i], args[i + 1]);
+                }
+            }
+
+            MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage,true);
+            helper.setTo(to);
+            helper.setFrom(from);
+            helper.setSubject(subject);
+            helper.setText(templateEngine.process(template, context), true);
+            javaMailSender.send(mimeMessage);
+        } catch (Exception e){
+            log.error("Error sending email", e);
+        }
     }
 }

@@ -1,4 +1,4 @@
-package net.blackhacker.ares.exception;
+package net.blackhacker.ares.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

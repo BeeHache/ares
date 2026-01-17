@@ -9,42 +9,8 @@ import { AuthService } from '../auth.service';
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule, FormsModule, HttpClientModule, RouterModule],
-  template: `
-    <div class="container">
-      <h2>Login</h2>
-      <form (ngSubmit)="onSubmit()">
-        <div class="form-group">
-          <label for="email">Email:</label>
-          <input type="email" id="email" [(ngModel)]="email" name="email" required>
-        </div>
-        <div class="form-group">
-          <label for="password">Password:</label>
-          <input type="password" id="password" [(ngModel)]="password" name="password" required>
-        </div>
-        <div class="button-group">
-          <button type="submit">Login</button>
-          <button type="button" class="cancel-btn" (click)="onCancel()">Cancel</button>
-        </div>
-      </form>
-      <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
-      <p class="register-link">
-        Don't have an account? <a routerLink="/register">Register here</a>
-      </p>
-    </div>
-  `,
-  styles: [`
-    .container { max-width: 400px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; }
-    input { width: 100%; padding: 8px; box-sizing: border-box; }
-    .button-group { display: flex; gap: 10px; }
-    button { flex: 1; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    button:hover { background-color: #218838; }
-    .cancel-btn { background-color: #6c757d; }
-    .cancel-btn:hover { background-color: #5a6268; }
-    .error { color: red; margin-top: 10px; }
-    .register-link { text-align: center; margin-top: 20px; }
-  `]
+  templateUrl: './login.component.html',
+  styleUrl: './login.component.css'
 })
 export class LoginComponent implements OnInit {
   email = '';

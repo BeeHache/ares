@@ -1,5 +1,6 @@
 package net.blackhacker.ares.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.dto.TokenDTO;
 import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.model.Account;
@@ -18,8 +19,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
+@Slf4j
 @RestController()
 @RequestMapping("/api/login")
 public class LoginController {
@@ -45,6 +50,7 @@ public class LoginController {
 
     @PostMapping
     ResponseEntity<TokenDTO> login(@RequestBody UserDTO userDTO) {
+        log.info("Login attempt for user: {}", userDTO.getEmail());
         userDTOValidator.validateUserForLogin(userDTO);
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(userDTO.getEmail(), userDTO.getPassword())
@@ -52,6 +58,7 @@ public class LoginController {
 
         Account principal = (Account) authentication.getPrincipal();
         if (principal == null){
+            log.warn("Login failed: Principal is null for user: {}", userDTO.getEmail());
             return ResponseEntity.badRequest().build();
         }
 
@@ -59,6 +66,7 @@ public class LoginController {
         Optional<Account> optionalAccount = accountService.findAccountByUsername(principal.getUsername());
 
         if (optionalAccount.isEmpty()){
+            log.error("Login failed: Account not found in DB for authenticated user: {}", principal.getUsername());
             return ResponseEntity.badRequest().build();
         }
 
@@ -69,6 +77,8 @@ public class LoginController {
         TokenDTO accessTokenDTO = TokenDTO.token(accessToken);
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, cookie.toString());
+        
+        log.info("Login successful for user: {}", userDTO.getEmail());
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .headers(headers)
@@ -77,7 +87,7 @@ public class LoginController {
 
     @GetMapping("/refresh")
     public ResponseEntity<TokenDTO> refreshToken(@CookieValue(name="refreshToken") String refreshToken) {
-
+        log.debug("Refresh token attempt");
         return refreshTokenService.findByToken(refreshToken)
                 .map(rt -> {
                     // Token exists in Redis, so it's valid (TTL handles expiration)
@@ -85,17 +95,27 @@ public class LoginController {
                     return accountService.findAccountByUsername(rt.getUsername())
                             .map(account -> {
                                 String newAccessToken = jwtService.generateToken(account);
+                                log.debug("Token refreshed for user: {}", account.getUsername());
                                 return ResponseEntity.ok(TokenDTO.token(newAccessToken));
                             })
-                            .orElseThrow(() -> new RuntimeException("Account not found for refresh token"));
+                            .orElseThrow(() -> {
+                                log.warn("Refresh failed: Account not found for token user: {}", rt.getUsername());
+                                return new RuntimeException("Account not found for refresh token");
+                            });
                 })
-                .orElseThrow(() -> new RuntimeException("Refresh token missing or invalid"));
+                .orElseThrow(() -> {
+                    log.warn("Refresh failed: Invalid or expired token");
+                    return new RuntimeException("Refresh token missing or invalid");
+                });
     }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
         if (refreshToken != null) {
+            log.debug("Logout request with token");
             refreshTokenService.deleteRefreshToken(refreshToken);
+        } else {
+            log.debug("Logout request without token");
         }
 
         ResponseCookie cleanCookie = expireRefreshCookie();

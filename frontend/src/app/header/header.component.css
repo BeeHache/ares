@@ -1,0 +1,9 @@
+header { background-color: #343a40; padding: 10px 20px; }
+nav { display: flex; justify-content: space-between; align-items: center; }
+.brand { color: white; font-weight: bold; text-decoration: none; font-size: 1.5rem; }
+.nav-links { display: flex; align-items: center; gap: 15px; }
+.nav-link { color: #f8f9fa; text-decoration: none; }
+.nav-link:hover { color: #adb5bd; }
+.username { color: #f8f9fa; }
+.logout-btn { background: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; }
+.logout-btn:hover { background: #c82333; }
