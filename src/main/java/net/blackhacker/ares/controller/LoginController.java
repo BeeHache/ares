@@ -10,10 +10,7 @@ import net.blackhacker.ares.service.JWTService;
 import net.blackhacker.ares.service.RefreshTokenService;
 import net.blackhacker.ares.validation.UserDTOValidator;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -51,7 +48,6 @@ public class LoginController {
     @PostMapping
     ResponseEntity<TokenDTO> login(@RequestBody UserDTO userDTO) {
         log.info("Login attempt for user: {}", userDTO.getEmail());
-        userDTOValidator.validateUserForLogin(userDTO);
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(userDTO.getEmail(), userDTO.getPassword())
         );
@@ -59,15 +55,14 @@ public class LoginController {
         Account principal = (Account) authentication.getPrincipal();
         if (principal == null){
             log.warn("Login failed: Principal is null for user: {}", userDTO.getEmail());
-            return ResponseEntity.badRequest().build();
+            throw new ControllerException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
 
         String accessToken = jwtService.generateToken(principal);
         Optional<Account> optionalAccount = accountService.findAccountByUsername(principal.getUsername());
-
         if (optionalAccount.isEmpty()){
             log.error("Login failed: Account not found in DB for authenticated user: {}", principal.getUsername());
-            return ResponseEntity.badRequest().build();
+            throw new ControllerException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
 
         Account account = optionalAccount.get();
@@ -86,27 +81,23 @@ public class LoginController {
     }
 
     @GetMapping("/refresh")
-    public ResponseEntity<TokenDTO> refreshToken(@CookieValue(name="refreshToken") String refreshToken) {
+    public ResponseEntity<TokenDTO> refreshToken(@CookieValue(name="refreshToken") String refreshTokenString) {
         log.debug("Refresh token attempt");
-        return refreshTokenService.findByToken(refreshToken)
-                .map(rt -> {
-                    // Token exists in Redis, so it's valid (TTL handles expiration)
-                    // We need to find the account associated with this token
-                    return accountService.findAccountByUsername(rt.getUsername())
-                            .map(account -> {
-                                String newAccessToken = jwtService.generateToken(account);
-                                log.debug("Token refreshed for user: {}", account.getUsername());
-                                return ResponseEntity.ok(TokenDTO.token(newAccessToken));
-                            })
-                            .orElseThrow(() -> {
-                                log.warn("Refresh failed: Account not found for token user: {}", rt.getUsername());
-                                return new RuntimeException("Account not found for refresh token");
-                            });
-                })
-                .orElseThrow(() -> {
-                    log.warn("Refresh failed: Invalid or expired token");
-                    return new RuntimeException("Refresh token missing or invalid");
-                });
+        Optional<RefreshToken>  optionalRefreshToken = refreshTokenService.findByToken(refreshTokenString);
+        if (optionalRefreshToken.isEmpty()){
+            log.warn("Refresh failed: Invalid or expired token");
+            throw new ControllerException(HttpStatus.UNAUTHORIZED, "Invalid or expired token");
+        }
+        RefreshToken rt = optionalRefreshToken.get();
+        Optional<Account> optionalAccount = accountService.findAccountByUsername(rt.getUsername());
+        if (optionalAccount.isEmpty()){
+            log.warn("Refresh failed: Account not found for token user: {}", rt.getUsername());
+            throw new ControllerException(HttpStatus.UNAUTHORIZED, "Invalid or expired token");
+        }
+        Account account = optionalAccount.get();
+        String newAccessToken = jwtService.generateToken(account);
+        log.debug("Token refreshed for user: {}", account.getUsername());
+        return ResponseEntity.ok(TokenDTO.token(newAccessToken));
     }
 
     @PostMapping("/logout")

@@ -37,11 +37,17 @@ export class LoginComponent implements OnInit {
         next: (response) => {
           if (response.token) {
               this.authService.login(response.token);
-              this.router.navigate([this.returnUrl]);
+              if (this.returnUrl) {
+                this.router.navigate([this.returnUrl]);
+                } else {
+                this.router.navigate(['/']);
+              }
           }
         },
         error: (err) => {
           this.errorMessage = err.error?.message || 'An unexpected error occurred.';
+          this.email = '';
+          this.password = '';
           console.error('Login error:', err);
         }
       });

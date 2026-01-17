@@ -2,6 +2,14 @@
   <nav>
     <a class="brand" routerLink="/">Ares</a>
     <div class="nav-links">
+
+      <div class="dropdown">
+        <button class="dropbtn">About</button>
+        <div class="dropdown-content">
+          <a routerLink="/about/licenses">Licenses</a>
+        </div>
+      </div>
+
       <ng-container *ngIf="authService.currentUser$ | async as username; else loggedOut">
         <span class="username">{{ username }}</span>
         <a routerLink="/user" class="nav-link">Profile</a>

@@ -18,17 +18,13 @@ public class UserDTOValidator {
         this.userService = userService;
     }
 
-    public void validateUserForLogin(UserDTO userDTO) {
+    public void validateUserForRegistration(UserDTO userDTO) {
         if (userDTO == null) {
             throw new ValidationException("User data must not be null.");
         }
 
         emailValidator.validateEmail(userDTO.getEmail());
         passwordValidator.validatePassword(userDTO.getPassword());
-    }
-
-    public void validateUserForRegistration(UserDTO userDTO) {
-        validateUserForLogin(userDTO);
 
         if (userService.getUserByEmail(userDTO.getEmail()).isPresent()) {
             throw new ValidationException("User already exists");

@@ -34,7 +34,7 @@ Ares is a robust RSS feed aggregator and podcast manager built with a modern tec
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/ares.git
+git clone https://github.com/BeeHache/ares.git
 cd ares
 ```
 

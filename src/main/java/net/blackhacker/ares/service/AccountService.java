@@ -35,6 +35,6 @@ public class AccountService implements UserDetailsService {
     @NullMarked
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return  accountRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User '"+username+"'not found with email."));
+                .orElseThrow(() -> new UsernameNotFoundException("User '"+username+"'not found."));
     }
 }

@@ -5,6 +5,7 @@ import net.blackhacker.ares.validation.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -14,6 +15,12 @@ import java.time.LocalDateTime;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ControllerException.class)
+    public ResponseEntity<ErrorResponse> handleControllerException(ControllerException ex, WebRequest request) {
+        log.warn("Controller error occurred: ", ex);
+        return new ResponseEntity<>(ex.getErrorResponse(), ex.getStatus());
+    }
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(ValidationException ex, WebRequest request) {
@@ -27,8 +34,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException ex, WebRequest request) {
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleaAuthenticationException(AuthenticationException ex, WebRequest request) {
         log.error("Authentication error occurred: ", ex);
 
         ErrorResponse errorResponse = new ErrorResponse(
