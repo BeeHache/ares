@@ -42,3 +42,8 @@ frontend/.angular/
 
 # where secrets are kept
 .env
+
+# SSL Certificates
+server.crt
+server.key
+docker/certs/
