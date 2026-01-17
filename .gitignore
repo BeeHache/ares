@@ -46,4 +46,3 @@ frontend/.angular/
 # SSL Certificates
 server.crt
 server.key
-docker/certs/
