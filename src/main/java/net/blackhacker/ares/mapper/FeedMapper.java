@@ -23,19 +23,20 @@ public class FeedMapper implements ModelDTOMapper<Feed, FeedDTO> {
     @Override
     public FeedDTO toDTO(Feed feed) {
 
-        if (feed == null) return null;
         FeedDTO dto = new FeedDTO();
-        dto.setId(feed.getId());
-        dto.setTitle(feed.getTitle());
-        dto.setDescription(feed.getDescription());
-        dto.setLink(feed.getLink());
-        dto.setImage(imageMapper.toDTO(feed.getImage()));
-        dto.setPodcast(feed.isPodcast());
-        dto.setLastModified(feed.getLastModified());
-        if (feed.getItems() != null) {
-            dto.setItems(feed.getItems().stream()
-                    .map(feedItemMapper::toDTO)
-                    .collect(Collectors.toList()));
+        if (feed != null) {
+            dto.setId(feed.getId());
+            dto.setTitle(feed.getTitle());
+            dto.setDescription(feed.getDescription());
+            dto.setLink(feed.getLink());
+            dto.setImage(imageMapper.toDTO(feed.getImage()));
+            dto.setPodcast(feed.isPodcast());
+            dto.setLastModified(feed.getLastModified());
+            if (feed.getItems() != null) {
+                dto.setItems(feed.getItems().stream()
+                        .map(feedItemMapper::toDTO)
+                        .collect(Collectors.toList()));
+            }
         }
         return dto;
 

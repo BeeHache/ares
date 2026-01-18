@@ -40,7 +40,7 @@ class UserDTOValidatorTest {
 
         doNothing().when(emailValidator).validateEmail(userDTO.getEmail());
         doNothing().when(passwordValidator).validatePassword(userDTO.getPassword());
-        when(userService.getUserByEmail(userDTO.getEmail())).thenReturn(null);
+        when(userService.getUserByEmail(userDTO.getEmail())).thenReturn(Optional.empty());
 
         // Act & Assert
         assertDoesNotThrow(() -> userDTOValidator.validateUserForRegistration(userDTO));

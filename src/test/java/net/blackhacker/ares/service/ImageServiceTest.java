@@ -36,11 +36,11 @@ class ImageServiceTest {
         when(imageRepositry.findById(id)).thenReturn(Optional.of(image));
 
         // Act
-        Image result = imageService.getImage(id);
+        Optional<Image> result = imageService.getImage(id);
 
         // Assert
-        assertNotNull(result);
-        assertEquals(id, result.getId());
+        assertTrue(result.isPresent());
+        assertEquals(id, result.get().getId());
     }
 
     @Test
@@ -50,10 +50,10 @@ class ImageServiceTest {
         when(imageRepositry.findById(id)).thenReturn(Optional.empty());
 
         // Act
-        Image result = imageService.getImage(id);
+        Optional<Image> result = imageService.getImage(id);
 
         // Assert
-        assertNull(result);
+        assertTrue(result.isEmpty());
     }
 
     @Test

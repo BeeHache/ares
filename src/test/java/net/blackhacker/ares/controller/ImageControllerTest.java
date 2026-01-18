@@ -15,6 +15,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -54,7 +57,7 @@ class ImageControllerTest {
         image.setData(imageData);
         image.setContentType(contentType);
 
-        when(imageService.getImage(id)).thenReturn(image);
+        when(imageService.getImage(id)).thenReturn(Optional.of(image));
 
         // Act & Assert
         mockMvc.perform(get("/api/image/{id}", id))
@@ -66,11 +69,10 @@ class ImageControllerTest {
     @Test
     void getImage_shouldReturnNotFound_whenImageDoesNotExist() throws Exception {
         // Arrange
-        Long id = 1L;
-        when(imageService.getImage(id)).thenReturn(null);
+        when(imageService.getImage(anyLong())).thenReturn(Optional.empty());
 
         // Act & Assert
-        mockMvc.perform(get("/api/image/{id}", id))
+        mockMvc.perform(get("/api/image/{id}", 1L))
                 .andExpect(status().isNotFound());
     }
 }

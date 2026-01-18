@@ -1,5 +1,6 @@
 package net.blackhacker.ares.service;
 
+import jakarta.mail.Message;
 import jakarta.mail.internet.MimeMessage;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -42,12 +43,14 @@ public class EmailSenderService {
                 }
             }
 
+            String processedContent = templateEngine.process(template, context);
+
             MimeMessage mimeMessage = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage,true);
             helper.setTo(to);
             helper.setFrom(from);
             helper.setSubject(subject);
-            helper.setText(templateEngine.process(template, context), true);
+            helper.setText(processedContent, true);
             javaMailSender.send(mimeMessage);
         } catch (Exception e){
             log.error("Error sending email", e);
