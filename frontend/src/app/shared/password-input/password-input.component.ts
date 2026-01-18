@@ -1,11 +1,12 @@
 import { Component, Input, forwardRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
+import { CapsLockDirective } from '../caps-lock.directive';
 
 @Component({
   selector: 'app-password-input',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CapsLockDirective],
   templateUrl: './password-input.component.html',
   styleUrl: './password-input.component.css',
   providers: [
@@ -27,6 +28,7 @@ export class PasswordInputComponent implements ControlValueAccessor {
   value: string = '';
   showPassword = false;
   disabled = false;
+  capsLockOn = false;
 
   onChange: any = () => {};
   onTouched: any = () => {};
