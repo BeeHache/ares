@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
@@ -17,7 +17,8 @@ export class VerifyEmailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -36,10 +37,12 @@ export class VerifyEmailComponent implements OnInit {
         next: (response) => {
           this.status = 'success';
           this.message = 'Email verified successfully! You can now login.';
+          this.cdr.detectChanges();
         },
         error: (err) => {
           this.status = 'error';
           this.message = err.error || 'Verification failed. The link may be invalid or expired.';
+          this.cdr.detectChanges();
         }
       });
   }

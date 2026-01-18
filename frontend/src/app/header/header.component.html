@@ -1,23 +1,30 @@
 <header>
   <nav>
-    <a class="brand" routerLink="/">Ares</a>
-    <div class="nav-links">
+    <a class="brand" routerLink="/" (click)="closeMenu()">Ares</a>
+
+    <button class="hamburger" (click)="toggleMenu()" aria-label="Toggle navigation">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+
+    <div class="nav-links" [class.active]="isMenuOpen">
 
       <div class="dropdown">
         <button class="dropbtn">About</button>
         <div class="dropdown-content">
-          <a routerLink="/about/licenses">Licenses</a>
+          <a routerLink="/about/licenses" (click)="closeMenu()">Licenses</a>
         </div>
       </div>
 
       <ng-container *ngIf="authService.currentUser$ | async as username; else loggedOut">
         <span class="username">{{ username }}</span>
-        <a routerLink="/user" class="nav-link">Profile</a>
-        <button (click)="authService.logout()" class="logout-btn">Logout</button>
+        <a routerLink="/user" class="nav-link" (click)="closeMenu()">Profile</a>
+        <button (click)="authService.logout(); closeMenu()" class="logout-btn">Logout</button>
       </ng-container>
       <ng-template #loggedOut>
-        <a routerLink="/login" class="nav-link">Login</a>
-        <a routerLink="/register" class="nav-link">Register</a>
+        <a routerLink="/login" class="nav-link" (click)="closeMenu()">Login</a>
+        <a routerLink="/register" class="nav-link" (click)="closeMenu()">Register</a>
       </ng-template>
     </div>
   </nav>

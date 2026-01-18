@@ -1,6 +1,8 @@
-header { background-color: #343a40; padding: 10px 20px; }
+header { background-color: #343a40; padding: 10px 20px; position: relative; }
 nav { display: flex; justify-content: space-between; align-items: center; }
 .brand { color: white; font-weight: bold; text-decoration: none; font-size: 1.5rem; }
+
+/* Nav Links (Desktop) */
 .nav-links { display: flex; align-items: center; gap: 15px; }
 .nav-link { color: #f8f9fa; text-decoration: none; }
 .nav-link:hover { color: #adb5bd; }
@@ -18,13 +20,11 @@ nav { display: flex; justify-content: space-between; align-items: center; }
   cursor: pointer;
 }
 
-/* The container <div> - needed to position the dropdown content */
 .dropdown {
   position: relative;
   display: inline-block;
 }
 
-/* Dropdown Content (Hidden by Default) */
 .dropdown-content {
   display: none;
   position: absolute;
@@ -34,7 +34,6 @@ nav { display: flex; justify-content: space-between; align-items: center; }
   z-index: 1;
 }
 
-/* Links inside the dropdown */
 .dropdown-content a {
   color: black;
   padding: 12px 16px;
@@ -42,10 +41,80 @@ nav { display: flex; justify-content: space-between; align-items: center; }
   display: block;
 }
 
-/* Change color of dropdown links on hover */
 .dropdown-content a:hover {background-color: #f1f1f1}
+.dropdown:hover .dropdown-content { display: block; }
 
-/* Show the dropdown menu on hover */
-.dropdown:hover .dropdown-content {
-  display: block;
+/* Hamburger Menu (Hidden on Desktop) */
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.bar {
+  width: 25px;
+  height: 3px;
+  background-color: white;
+  transition: 0.3s;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+  }
+
+  .nav-links {
+    display: none; /* Hidden by default on mobile */
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: #343a40;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    z-index: 100;
+    border-top: 1px solid #495057;
+  }
+
+  .nav-links.active {
+    display: flex; /* Show when active */
+  }
+
+  .nav-links > * {
+    margin: 10px 0;
+  }
+
+  /* Adjust dropdown for mobile */
+  .dropdown {
+    width: 100%;
+    text-align: center;
+  }
+
+  .dropbtn {
+    width: 100%;
+  }
+
+  .dropdown-content {
+    position: static; /* Stack normally in the flow */
+    width: 100%;
+    box-shadow: none;
+    background-color: #495057;
+  }
+
+  .dropdown-content a {
+    color: white;
+  }
+
+  /* Make hover work on click/tap for mobile usually requires JS,
+     but keeping hover logic for simplicity or adding a class.
+     For now, the hover might be tricky on touch.
+     Ideally, we'd toggle a class on the dropdown too. */
+  .dropdown:hover .dropdown-content {
+      display: block;
+  }
 }
