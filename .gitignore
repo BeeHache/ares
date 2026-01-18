@@ -46,3 +46,8 @@ frontend/.angular/
 # SSL Certificates
 server.crt
 server.key
+docker/certs/
+
+# pgAdmin credentials
+pgpass
+docker/pgadmin/servers.json

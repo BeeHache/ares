@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   postgres:
     image: postgres:15-alpine
@@ -27,16 +29,17 @@ services:
       - "8025:8025"
 
   pgadmin:
-    image: dpage/pgadmin4
+    build: ./pgadmin
     container_name: ares-pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5050:80"
     volumes:
-      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json
-      - ./docker/pgadmin/pgpass:/var/lib/pgadmin/pgpass
       - pgadmin_data:/var/lib/pgadmin
     depends_on:
       - postgres
