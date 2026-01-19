@@ -31,7 +31,7 @@ class FeedServiceTest {
         // Arrange
         String link = "http://example.com/feed";
         Feed existingFeed = new Feed();
-        existingFeed.setLink(link);
+        existingFeed.setLinkString(link);
 
         when(feedRepository.findByLink(link)).thenReturn(existingFeed);
 
@@ -51,7 +51,7 @@ class FeedServiceTest {
         // Arrange
         String link = "http://example.com/new-feed";
         Feed newFeed = new Feed();
-        newFeed.setLink(link);
+        newFeed.setLinkString(link);
 
         when(feedRepository.findByLink(link)).thenReturn(null);
         when(rssService.feedFromUrl(link)).thenReturn(newFeed);

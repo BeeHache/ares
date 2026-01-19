@@ -4,11 +4,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
-public class SchedualerService {
+public class SchedulerService {
 
     final private FeedService feedService;
 
-    SchedualerService(FeedService feedService){
+    SchedulerService(FeedService feedService){
         this.feedService = feedService;
     }
     @Scheduled(fixedRateString = "${feed.interval_ms}")

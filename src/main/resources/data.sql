@@ -45,13 +45,13 @@ INSERT INTO account_roles (account_id, role_id) VALUES (1, 1) ON CONFLICT (accou
 
 
 -- 6. Insert Feeds
-INSERT INTO feeds (title, description, link, is_podcast, last_modified)
-VALUES ('BBC News', 'World News from London', 'https://feeds.bbci.co.uk/news/rss.xml', 'N', CURRENT_TIMESTAMP)
-ON CONFLICT (link) DO NOTHING;
+INSERT INTO feeds (url, title, description, link, is_podcast, last_modified)
+VALUES ('https://feeds.bbci.co.uk/news/rss.xml', 'BBC News', 'World News from London', 'https://www.bbc.co.uk/news', 'N', CURRENT_TIMESTAMP)
+ON CONFLICT (url) DO NOTHING;
 
-INSERT INTO feeds (title, description, link, is_podcast, last_modified)
-VALUES ('The Daily', 'A New York Times Podcast', 'https://feeds.simplecast.com/54nAGpIl', 'Y', CURRENT_TIMESTAMP)
-ON CONFLICT (link) DO NOTHING;
+INSERT INTO feeds (url, title, description, link, is_podcast, last_modified)
+VALUES ('https://feeds.simplecast.com/54nAGpIl', 'The Daily', 'A New York Times Podcast', 'https://feeds.simplecast.com/54nAGpIl', 'Y', CURRENT_TIMESTAMP)
+ON CONFLICT (url) DO NOTHING;
 
 
 -- 7. Link Users to Feeds

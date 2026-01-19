@@ -7,6 +7,7 @@ import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.FeedItem;
 import net.blackhacker.ares.model.Image;
 
+import net.blackhacker.ares.utils.URLConverter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -16,6 +17,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +39,10 @@ class FeedMapperTest {
     @MockitoBean
     ImageMapper imageMapper;
 
+    @MockitoBean
+    URLConverter urlConverter;
+
+
     @InjectMocks
     private FeedMapper feedMapper;
 
@@ -49,7 +57,7 @@ class FeedMapperTest {
         feed.setId(1L);
         feed.setTitle("Test Feed");
         feed.setDescription("A test feed");
-        feed.setLink("http://example.com");
+        feed.setLinkString("http://example.com");
         feed.setImage(image);
         feed.setPodcast(false);
         feed.setLastModified(LocalDateTime.now());
@@ -83,7 +91,7 @@ class FeedMapperTest {
         assertNotNull(dto);
         assertEquals(feed.getTitle(), dto.getTitle());
         assertEquals(feed.getDescription(), dto.getDescription());
-        assertEquals(feed.getLink(), dto.getLink());
+        assertEquals(feed.getLink().toString(), dto.getLink());
         assertEquals(imageDTO, dto.getImage());
         assertEquals(feed.isPodcast(), dto.isPodcast());
         assertNotNull(dto.getLastModified());
@@ -106,11 +114,19 @@ class FeedMapperTest {
         dto.setPodcast(true);
         dto.setLastModified(LocalDateTime.now());
 
+        URL linkURL;
+        try {
+            linkURL = URI.create(dto.getLink()).toURL();
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+
         Image image = new Image();
         image.setContentType("image/jpeg");
         image.setData(new byte[]{4, 5, 6});
 
         when(imageMapper.toModel(any(ImageDTO.class))).thenReturn(image);
+        when(urlConverter.convertToEntityAttribute(any(String.class))).thenReturn(linkURL);
 
         // Act
         Feed feed = feedMapper.toModel(dto);
@@ -119,7 +135,7 @@ class FeedMapperTest {
         assertNotNull(feed);
         assertEquals(dto.getTitle(), feed.getTitle());
         assertEquals(dto.getDescription(), feed.getDescription());
-        assertEquals(dto.getLink(), feed.getLink());
+        assertEquals(dto.getLink(), feed.getLink().toString());
         assertEquals(image, feed.getImage());
         assertEquals(dto.isPodcast(), feed.isPodcast());
         assertNotNull(feed.getLastModified());

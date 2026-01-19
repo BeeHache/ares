@@ -10,18 +10,18 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class SchedualerServiceTest {
+class SchedulerServiceTest {
 
     @Mock
     private FeedService feedService;
 
     @InjectMocks
-    private SchedualerService schedualerService;
+    private SchedulerService schedulerService;
 
     @Test
-    void schedualFeedUpdates_shouldCallUpdateFeeds() {
+    void scheduleFeedUpdates_shouldCallUpdateFeeds() {
         // Act
-        schedualerService.schedualFeedUpdates();
+        schedulerService.schedualFeedUpdates();
 
         // Assert
         verify(feedService, times(1)).updateFeeds();

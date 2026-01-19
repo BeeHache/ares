@@ -1,18 +1,24 @@
 package net.blackhacker.ares.service;
 
 import net.blackhacker.ares.model.Feed;
+import net.blackhacker.ares.utils.URLConverter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.util.MultiValueMap;
 
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -25,12 +31,41 @@ class OpmlServiceTest {
     @MockitoBean
     private URLFetchService urlFetchService;
 
+    @MockitoBean
+    private URLConverter urlConverter;
+
+
     @InjectMocks
     private OpmlService opmlService;
 
+    String opmlContentString;
+    ResponseEntity<String> opmlResponseString;
+    ResponseEntity<byte[]> imageResponseBytes;
+
     @BeforeEach
     void setUp() {
-        opmlService = new OpmlService(urlFetchService);
+
+        opmlService = new OpmlService(urlFetchService, urlConverter);
+        opmlContentString = """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <opml version="1.0">
+                    <head>
+                        <title>Subscriptions</title>
+                    </head>
+                    <body>
+                        <outline text="Tech" title="Tech" type="rss" xmlUrl="http://example.com/rss" htmlUrl="http://example.com" imageUrl="http://example.com/image.png"/>
+                    </body>
+                </opml>""";
+        byte[] opmlContentStringBytes = opmlContentString.getBytes(StandardCharsets.UTF_8);
+
+        HttpHeaders headers = new HttpHeaders(MultiValueMap.fromSingleValue(Map.of("Content-Type", "image/png")));
+
+
+        imageResponseBytes = new ResponseEntity<>(new byte[]{1, 2, 3}, headers, 200);
+        opmlResponseString = new ResponseEntity<>(opmlContentString,
+                new HttpHeaders(MultiValueMap.fromSingleValue(Map.of("Content-Type", "text/xml"))),
+                200);
+
     }
 
     @Test
@@ -47,20 +82,15 @@ class OpmlServiceTest {
 
     @Test
     void importFile_shouldParseOpmlAndReturnFeeds() {
-        String opmlContent = """
-                <?xml version="1.0" encoding="UTF-8"?>
-                <opml version="1.0">
-                    <head>
-                        <title>Subscriptions</title>
-                    </head>
-                    <body>
-                        <outline text="Tech" title="Tech" type="rss" xmlUrl="http://example.com/rss" htmlUrl="http://example.com" imageUrl="http://example.com/image.png"/>
-                    </body>
-                </opml>""";
-        MockMultipartFile file = new MockMultipartFile("file", "test.opml", "text/xml", opmlContent.getBytes(StandardCharsets.UTF_8));
+;
+        MockMultipartFile file = new MockMultipartFile("file", "test.opml", "text/xml", opmlContentString.getBytes(StandardCharsets.UTF_8));
 
-        when(urlFetchService.getContentType(anyString())).thenReturn("image/png");
-        when(urlFetchService.fetchImageBytes(anyString())).thenReturn(new byte[]{1, 2, 3});
+
+        try {
+            when(urlFetchService.fetchBytes(anyString())).thenReturn(imageResponseBytes);
+            when(urlConverter.convertToEntityAttribute(anyString())).thenReturn(new URI("http://example.com/rss").toURL());
+        }catch (Exception e) {}
+
 
         Collection<Feed> result = opmlService.importFile(file);
 
@@ -68,7 +98,7 @@ class OpmlServiceTest {
         assertEquals(1, result.size());
         Feed feed = result.iterator().next();
         assertEquals("Tech", feed.getTitle());
-        assertEquals("http://example.com/rss", feed.getLink());
+        assertEquals("http://example.com/rss", feed.getLink().toString());
         assertNotNull(feed.getImage());
         assertEquals("image/png", feed.getImage().getContentType());
         assertArrayEquals(new byte[]{1, 2, 3}, feed.getImage().getData());
@@ -76,23 +106,13 @@ class OpmlServiceTest {
 
     @Test
     void importFeed_shouldParseOpmlFromUrl() {
-        String opmlContent = """
-                <?xml version="1.0" encoding="UTF-8"?>
-                <opml version="1.0">
-                    <head>
-                        <title>Subscriptions</title>
-                    </head>
-                    <body>
-                        <outline text="Tech" title="Tech" type="rss" xmlUrl="http://example.com/rss" htmlUrl="http://example.com" imageUrl="http://example.com/image.png"/>
-                    </body>
-                </opml>""";
 
         // Mock the fetch for the OPML file itself
-        when(urlFetchService.fetchImageBytes("http://example.com/opml")).thenReturn(opmlContent.getBytes(StandardCharsets.UTF_8));
+        when(urlFetchService.fetchString("http://example.com/opml")).thenReturn(opmlResponseString);
+        when(urlFetchService.fetchBytes("http://example.com/image.png")).thenReturn(imageResponseBytes);
         
         // Mock the fetch for the image inside the OPML
-        when(urlFetchService.getContentType("http://example.com/rss")).thenReturn("image/png");
-        when(urlFetchService.fetchImageBytes("http://example.com/image.png")).thenReturn(new byte[]{1, 2, 3});
+        when(urlFetchService.fetchBytes(anyString())).thenReturn(imageResponseBytes);
 
         Collection<Feed> result = opmlService.importFeed("http://example.com/opml");
 
@@ -100,7 +120,7 @@ class OpmlServiceTest {
         assertEquals(1, result.size());
         Feed feed = result.iterator().next();
         assertEquals("Tech", feed.getTitle());
-        assertEquals("http://example.com/rss", feed.getLink());
+        assertEquals("http://example.com/rss", feed.getLink().toString());
         assertNotNull(feed.getImage());
         assertEquals("image/png", feed.getImage().getContentType());
         assertArrayEquals(new byte[]{1, 2, 3}, feed.getImage().getData());
@@ -118,12 +138,12 @@ class OpmlServiceTest {
         // Arrange
         Feed feed1 = new Feed();
         feed1.setTitle("Feed 1");
-        feed1.setLink("http://example.com/feed1");
+        feed1.setLinkString("http://example.com/feed1");
         feed1.setDescription("Description 1");
 
         Feed feed2 = new Feed();
         feed2.setTitle("Feed 2");
-        feed2.setLink("http://example.com/feed2");
+        feed2.setLinkString("http://example.com/feed2");
         // Description is null
 
         Collection<Feed> feeds = List.of(feed1, feed2);

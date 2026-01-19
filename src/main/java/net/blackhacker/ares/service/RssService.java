@@ -3,12 +3,14 @@ package net.blackhacker.ares.service;
 import com.apptasticsoftware.rssreader.Channel;
 import com.apptasticsoftware.rssreader.Item;
 import com.apptasticsoftware.rssreader.RssReader;
+import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.FeedItemDTO;
 import net.blackhacker.ares.dto.ImageDTO;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.FeedItem;
 import net.blackhacker.ares.model.Image;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
+@Slf4j
 @Service
 public class RssService {
 
@@ -31,7 +34,7 @@ public class RssService {
 
     public FeedDTO feedDTOFromUrl(String urlString) {
         try {
-            List<Item> rssItems = pareRss(urlString);
+            List<Item> rssItems = parseRss(urlString);
             if (rssItems.isEmpty()) {
                 return null;
             }
@@ -79,7 +82,7 @@ public class RssService {
 
     public Feed feedFromUrl(String urlString) {
         try {
-            List<Item> rssItems = pareRss(urlString);
+            List<Item> rssItems = parseRss(urlString);
 
             if (rssItems.isEmpty()) {
                 return null;
@@ -89,7 +92,7 @@ public class RssService {
             Channel channel = rssItems.get(0).getChannel();
             feed.setTitle(channel.getTitle());
             feed.setDescription(channel.getDescription());
-            feed.setLink(channel.getLink());
+            feed.setLink(new URI(channel.getLink()).toURL());
             if (channel.getImage().isPresent()) {
                 URL url = new URI(channel.getImage().get().getLink()).toURL();
                 URLConnection connection = url.openConnection();
@@ -125,9 +128,18 @@ public class RssService {
         }
     }
 
-    private List<Item> pareRss(String urlString){
-        byte[] bytes = urlFetchService.fetchImageBytes(urlString);
-        return  new RssReader().read(new ByteArrayInputStream(bytes)).toList();
+    private List<Item> parseRss(String urlString) {
+        ResponseEntity<byte[]> response = urlFetchService.fetchBytes(urlString);
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            log.warn("Problem fetching {}: {}", urlString, response.getStatusCode());
+            return List.of();
+        }
+        if (response.getBody() == null) {
+            log.warn("Response Body of {} is empty",urlString);
+            return List.of();
+        }
+
+        return new RssReader().read(new ByteArrayInputStream(response.getBody())).toList();
     }
 
 }

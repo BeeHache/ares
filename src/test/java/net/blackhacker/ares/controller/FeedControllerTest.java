@@ -68,7 +68,7 @@ class FeedControllerTest {
 
         feed = new Feed();
         feed.setTitle("Tech Blog");
-        feed.setLink("https://tech.blog/rss");
+        feed.setLinkString("https://tech.blog/rss");
 
         user.setFeeds(Set.of(feed));
 

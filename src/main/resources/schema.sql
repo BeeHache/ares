@@ -49,9 +49,10 @@ create table if not exists image(
 
 create table if not exists feeds (
     id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    url varchar(512) not null unique,
     title varchar(255) not null,
     description varchar(2048),
-    link varchar(512) not null unique,
+    link varchar(512),
     is_podcast char(1) not null default 'N',
     last_modified timestamp,
     image_id BIGINT,

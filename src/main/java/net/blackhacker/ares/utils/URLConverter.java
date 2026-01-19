@@ -1,0 +1,36 @@
+package net.blackhacker.ares.utils;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+
+@Slf4j
+@Converter(autoApply = true)
+@Component
+public class URLConverter implements AttributeConverter<URL, String> {
+
+    @Override
+    public String convertToDatabaseColumn(URL url) {
+        if (url == null) {
+            return null;
+        }
+        return url.toString();
+    }
+
+    @Override
+    public URL convertToEntityAttribute(String s) {
+        if (s == null || s.isEmpty()) {
+            return null;
+        }
+        try {
+            return new URL(s);
+        } catch (MalformedURLException e) {
+            log.error("Could not convert database string '{}' to URL object", s, e);
+            return null;
+        }
+    }
+}

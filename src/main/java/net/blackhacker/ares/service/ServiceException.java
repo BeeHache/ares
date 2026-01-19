@@ -9,4 +9,7 @@ public class ServiceException extends RuntimeException {
         super(message, cause);
     }
 
+    public ServiceException(String message, Object... cause) {
+        super(String.format(message, cause));
+    }
 }
