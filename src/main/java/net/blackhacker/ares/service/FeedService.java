@@ -2,12 +2,18 @@ package net.blackhacker.ares.service;
 
 import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.model.Feed;
+import net.blackhacker.ares.model.FeedItem;
 import net.blackhacker.ares.repository.FeedRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 
 @Slf4j
@@ -16,6 +22,7 @@ public class FeedService {
 
     private final FeedRepository feedRepository;
     private final RssService rssService;
+    private final TransactionTemplate transactionTemplate;
 
     @Value("${feed.interval_ms}")
     private long feedIntervalMs;
@@ -25,9 +32,11 @@ public class FeedService {
 
     public FeedService(
             FeedRepository feedRepository,
-           RssService rssService) {
+           RssService rssService,
+           TransactionTemplate transactionTemplate) {
         this.feedRepository = feedRepository;
         this.rssService = rssService;
+        this.transactionTemplate = transactionTemplate;
     }
 
     public Feed addFeed(String link) {
@@ -61,37 +70,68 @@ public class FeedService {
     @Async
     void updateFeeds() {
         log.info("Starting feed update cycle");
-        LocalDateTime fiveMinutesAgo = LocalDateTime.now().minusSeconds(feedIntervalMs / 1000);
+        ZonedDateTime fiveMinutesAgo = ZonedDateTime.now().minusSeconds(feedIntervalMs / 1000);
         log.debug("Five minutes ago:      {}", fiveMinutesAgo);
-        LocalDateTime fiveMinutesFromNow = LocalDateTime.now().plusSeconds(feedIntervalMs / 1000);
+        ZonedDateTime fiveMinutesFromNow = ZonedDateTime.now().plusSeconds(feedIntervalMs / 1000);
         log.debug("Five minutes from now: {}", fiveMinutesFromNow);
 
-        boolean notDone = true;
-
-        while(notDone && LocalDateTime.now().isBefore(fiveMinutesFromNow)) {
-            Collection<Feed> feeds  = feedRepository.findByLastModifiedAfter(fiveMinutesAgo, queryLimit);
+        for (int page=0; true; page++) {
+            Pageable pageable = PageRequest.of(page, queryLimit, Sort.by("lastTouched"));
+            Page<Feed> feeds  = feedRepository.findTouchedBefore(fiveMinutesAgo, pageable);
             if (feeds.isEmpty()){
                 log.debug("No feeds to update");
                 break;
             }
 
-            log.debug("Found {} feeds to update", feeds.size());
+            log.debug("Found {} feeds to update", feeds.getNumberOfElements());
 
-
-
-
-            // Logic to update feeds would go here (currently missing in the loop body?)
-            // Assuming rssService.update(feed) or similar should be called.
-            
-            notDone = feeds.size() < queryLimit;
-            if (notDone) {
+            int processed = 0;
+            for (Feed feed : feeds) {
                 try {
-                    Thread.sleep(1000); // sleep for 1 sec
-                } catch (InterruptedException e) {
-                    log.warn("Feed update interrupted");
-                    break;
+                    transactionTemplate.execute(status -> {
+                        // Re-fetch the feed to ensure it's attached to the current transaction/session
+                        // This allows lazy loading of items to work
+                        Feed attachedFeed = feedRepository.findById(feed.getId()).orElseThrow();
+                        
+                        Feed newFeed = rssService.feedFromUrl(attachedFeed.getUrl().toString());
+                        if (newFeed != null) {
+                            Collection<FeedItem> feedItems = attachedFeed.getItems();
+    
+                            //re-parent the newFeed items
+                            for (FeedItem item : newFeed.getItems()) {
+                                item.setFeed(attachedFeed);
+                                feedItems.add(item);
+                            }
+                        }
+    
+                        attachedFeed.touch();
+                        feedRepository.save(attachedFeed);
+                        return null;
+                    });
+                    processed++;
+                } catch (Exception e) {
+                    log.error("Error updating feed {}", feed.getId(), e);
                 }
             }
+
+            log.debug("Processed {} feeds", processed);
+
+            if (feeds.getTotalElements() < queryLimit){
+                break;
+            }
+
+            if (ZonedDateTime.now().isAfter(fiveMinutesFromNow)){
+                break;
+            }
+
+            try {
+                log.debug("Sleeping for {} ms", 3000);
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                log.error("Error sleeping", e);
+                break;
+            }
+
         }
         log.info("Feed update cycle completed");
     }

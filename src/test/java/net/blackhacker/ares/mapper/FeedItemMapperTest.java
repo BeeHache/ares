@@ -11,6 +11,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -30,7 +32,7 @@ class FeedItemMapperTest {
     @Test
     void toDTO_shouldMapFeedItemToFeedItemDTO() {
 
-        final LocalDateTime LDT = LocalDateTime.of(2025, 1, 1, 0, 0);
+        final ZonedDateTime LDT = ZonedDateTime.of(2025, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
 
         // Arrange
         Image image = new Image();
@@ -66,7 +68,7 @@ class FeedItemMapperTest {
     @Test
     void toModel_shouldMapFeedItemDTOToFeedItem() {
 
-        final LocalDateTime LDT = LocalDateTime.of(2025, 2, 2, 0, 0);
+        final ZonedDateTime LDT = ZonedDateTime.of(2025, 2, 2, 0, 0, 0, 0, ZoneOffset.UTC);
 
         // Arrange
         ImageDTO imageDTO = new ImageDTO();

@@ -8,6 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,16 +36,16 @@ public class Account implements UserDetails {
     private AccountType type;
 
     @Column
-    private LocalDateTime accountExpiresAt;
+    private ZonedDateTime accountExpiresAt;
 
     @Column
-    private LocalDateTime passwordExpiresAt;
+    private ZonedDateTime passwordExpiresAt;
 
     @Column
-    private LocalDateTime accountLockedUntil;
+    private ZonedDateTime accountLockedUntil;
 
     @Column
-    private LocalDateTime accountEnabledAt;
+    private ZonedDateTime accountEnabledAt;
 
 
     @Override
@@ -52,7 +53,7 @@ public class Account implements UserDetails {
         if (accountExpiresAt == null) {
             return true;
         }
-        return accountExpiresAt.isAfter(LocalDateTime.now());
+        return accountExpiresAt.isAfter(ZonedDateTime.now());
     }
 
     @Override
@@ -60,7 +61,7 @@ public class Account implements UserDetails {
         if (accountLockedUntil == null) {
             return true;
         }
-        return accountLockedUntil.isAfter(LocalDateTime.now());
+        return accountLockedUntil.isAfter(ZonedDateTime.now());
     }
 
     @Override
@@ -68,7 +69,7 @@ public class Account implements UserDetails {
         if (passwordExpiresAt == null) {
             return true;
         }
-        return passwordExpiresAt.isAfter(LocalDateTime.now());
+        return passwordExpiresAt.isAfter(ZonedDateTime.now());
     }
 
     @Override
@@ -76,7 +77,7 @@ public class Account implements UserDetails {
         if (accountEnabledAt == null) {
             return false;
         }
-        return accountEnabledAt.isBefore(LocalDateTime.now());
+        return accountEnabledAt.isBefore(ZonedDateTime.now());
     }
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -97,10 +98,10 @@ public class Account implements UserDetails {
     }
 
     public void lockAccount(){
-        accountLockedUntil = LocalDateTime.now().plusMinutes(15);
+        accountLockedUntil = ZonedDateTime.now().plusMinutes(15);
     }
 
     public void enableAccount(){
-        accountEnabledAt = LocalDateTime.now();
+        accountEnabledAt = ZonedDateTime.now();
     }
 }

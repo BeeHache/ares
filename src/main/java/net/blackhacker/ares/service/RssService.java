@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.FeedItemDTO;
 import net.blackhacker.ares.dto.ImageDTO;
+import net.blackhacker.ares.model.Enclosure;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.FeedItem;
 import net.blackhacker.ares.model.Image;
@@ -19,6 +20,7 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -106,7 +108,7 @@ public class RssService {
                     feed.setImage(image);
                 }
             }
-            List<FeedItem> feedItems = rssItems.stream().map(rssItem -> {
+            Set<FeedItem> feedItems = rssItems.stream().map(rssItem -> {
                 FeedItem feedItem = new FeedItem();
                 if (rssItem.getTitle().isPresent()) {
                     feedItem.setTitle(rssItem.getTitle().get());
@@ -118,8 +120,29 @@ public class RssService {
                     feedItem.setLink(rssItem.getLink().get());
                 }
 
+                if (rssItem.getUpdatedAsZonedDateTime().isPresent()){
+                    feedItem.setDate(rssItem.getUpdatedAsZonedDateTime().get());
+                } else if (rssItem.getPubDateAsZonedDateTime().isPresent()) {
+                    feedItem.setDate(rssItem.getPubDateAsZonedDateTime().get());
+                }
+
+                rssItem.getEnclosures().forEach(
+                    enclosure -> {
+                        try {
+                            Enclosure enclosureModel = new Enclosure();
+                            enclosureModel.setUrl(new URI(enclosure.getUrl()).toURL());
+                            enclosureModel.setLength(enclosure.getLength().isPresent() ? enclosure.getLength().get() : null);
+                            enclosureModel.setType(enclosure.getType());
+                            enclosureModel.setFeedItem(feedItem);
+                            feedItem.getEnclosures().add(enclosureModel);
+                        } catch (Exception e) {
+                            log.error(e.getMessage(), e);
+                        }
+                    }
+                );
+
                 return feedItem;
-            }).collect(Collectors.toList());
+            }).collect(Collectors.toSet());
             feed.setItems(feedItems);
             return feed;
 

@@ -3,10 +3,10 @@ create table if not exists accounts (
     username VARCHAR(255) NOT NULL,
     password varchar(60) not null,
     type varchar(8) not null,
-    account_expires_at timestamp,
-    password_expires_at timestamp,
-    account_locked_until timestamp,
-    account_enabled_at timestamp,
+    account_expires_at timestamp with time zone,
+    password_expires_at timestamp with time zone,
+    account_locked_until timestamp with time zone,
+    account_enabled_at timestamp with time zone,
     CONSTRAINT check_type CHECK (type IN ('ADMIN', 'USER')),
     CONSTRAINT username_type_unique UNIQUE (username, type)
 );
@@ -54,7 +54,8 @@ create table if not exists feeds (
     description varchar(2048),
     link varchar(512),
     is_podcast char(1) not null default 'N',
-    last_modified timestamp,
+    last_modified timestamp with time zone,
+    last_touched timestamp with time zone,
     image_id BIGINT,
     CONSTRAINT check_is_podcast CHECK (is_podcast IN ('Y', 'N')),
     CONSTRAINT fk_feed_image FOREIGN KEY (image_id) REFERENCES image(id) ON DELETE CASCADE
@@ -68,10 +69,20 @@ create table if not exists feed_item (
     title VARCHAR(255),
     description VARCHAR(2048),
     link VARCHAR(512) UNIQUE,
-    date timestamp,
+    date timestamp with time zone,
     image_id BIGINT,
     CONSTRAINT fk_feed FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE,
     CONSTRAINT fk_feed_item_image FOREIGN KEY (image_id) REFERENCES image(id) ON DELETE CASCADE
+);
+
+create table if not exists enclosures
+(
+    id           BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    feed_item_id BIGINT NOT NULL,
+    url          varchar(512) not null unique,
+    length       BIGINT,
+    type         varchar(32),
+    CONSTRAINT fk_feed_item FOREIGN KEY (feed_item_id) REFERENCES feed_item (id) ON DELETE CASCADE
 );
 
 create table if not exists user_feeds (
@@ -80,4 +91,14 @@ create table if not exists user_feeds (
     PRIMARY KEY (user_id, feed_id), -- Prevents a user from subscribing to the same feed twice
     CONSTRAINT fk_user_link FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_feed_link FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE
+);
+
+create table if not exists user_feed_item (
+    user_id BIGINT NOT NULL,
+    feed_item_id BIGINT NOT NULL,
+    read_at timestamp with time zone,
+    archive_at timestamp with time zone,
+    PRIMARY KEY (user_id, feed_item_id), -- Prevents a user from reading the same feed item twice
+    CONSTRAINT fk_user_link FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_feed_item_link FOREIGN KEY (feed_item_id) REFERENCES feed_item(id) ON DELETE CASCADE
 );

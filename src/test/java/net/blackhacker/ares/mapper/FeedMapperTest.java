@@ -20,9 +20,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.ZonedDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -60,9 +60,9 @@ class FeedMapperTest {
         feed.setLinkString("http://example.com");
         feed.setImage(image);
         feed.setPodcast(false);
-        feed.setLastModified(LocalDateTime.now());
+        feed.setLastModified(ZonedDateTime.now());
 
-        List<FeedItem> items = new ArrayList<>();
+        Set<FeedItem> items = new HashSet<>();
         FeedItem feedItem1 = new FeedItem();
         feedItem1.setTitle("Item 1");
         FeedItem feedItem2 = new FeedItem();
@@ -112,7 +112,7 @@ class FeedMapperTest {
         dto.setLink("http://example.com/dto");
         dto.setImage(imageDTO);
         dto.setPodcast(true);
-        dto.setLastModified(LocalDateTime.now());
+        dto.setLastModified(ZonedDateTime.now());
 
         URL linkURL;
         try {

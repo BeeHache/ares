@@ -60,7 +60,7 @@ public class FeedMapper implements ModelDTOMapper<Feed, FeedDTO> {
         if (dto.getItems() != null) {
             feed.setItems(dto.getItems().stream()
                     .map(feedItemMapper::toModel)
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toSet()));
         }
 
         return feed;

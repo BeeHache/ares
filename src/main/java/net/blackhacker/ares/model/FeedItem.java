@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.util.Collection;
+import java.util.Objects;
 
 @Entity
 @Table(name = "feed_item")
@@ -31,13 +34,31 @@ public class FeedItem {
     private String link;
 
     @Column
-    private LocalDateTime date;
+    private ZonedDateTime date;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "image_id")
     private Image image;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "feed_id", nullable = false)
     private Feed feed;
+
+    @OneToMany(mappedBy = "feedItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Collection<Enclosure> enclosures;
+
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FeedItem feedItem = (FeedItem) o;
+        if (link != null && feedItem.link != null) return link.equals(feedItem.link);
+        if (id != null && feedItem.id != null) return id.equals(feedItem.id);
+        return super.equals(o);
+    }
+
+    public int hashCode() {
+        if (link != null) return link.hashCode();
+        if (id != null) return id.hashCode();
+        return super.hashCode();
+    }
 }

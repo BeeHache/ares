@@ -4,12 +4,13 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Data
 public class FeedItemDTO implements Serializable {
     private String title;
     private String description;
     private String link;
-    private LocalDateTime date;
+    private ZonedDateTime date;
     private ImageDTO image;
 }
