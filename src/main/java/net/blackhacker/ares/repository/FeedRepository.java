@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Pageable;
 
 import java.time.ZonedDateTime;
-import java.util.List;
 
 @Repository
 public interface FeedRepository extends JpaRepository<Feed, Long> {

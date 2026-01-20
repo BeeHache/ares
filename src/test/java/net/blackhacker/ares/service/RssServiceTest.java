@@ -2,7 +2,6 @@ package net.blackhacker.ares.service;
 
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.model.Feed;
-import net.blackhacker.ares.model.FeedItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

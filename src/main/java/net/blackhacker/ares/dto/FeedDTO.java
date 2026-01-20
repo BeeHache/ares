@@ -3,7 +3,6 @@ package net.blackhacker.ares.dto;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 
