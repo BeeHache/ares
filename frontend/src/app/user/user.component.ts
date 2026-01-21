@@ -1,34 +1,59 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { FeedListComponent } from '../feed-list/feed-list.component';
+import { AuthService } from '../auth.service';
+import { filter, take } from 'rxjs/operators';
 
 interface UserProfile {
   email: string;
-  feeds: any[];
+  // Feeds will no longer be directly displayed here
 }
 
 @Component({
   selector: 'app-user',
   standalone: true,
-  imports: [CommonModule, FeedListComponent],
+  imports: [CommonModule], // Removed FeedListComponent, FeedItemsComponent
   templateUrl: './user.component.html',
   styleUrl: './user.component.css'
 })
 export class UserComponent implements OnInit {
   user: UserProfile | null = null;
   error: string | null = null;
+  // selectedFeed: Feed | null = null; // Removed selectedFeed
 
-  constructor(private http: HttpClient) {}
+  constructor(
+      private http: HttpClient,
+      private authService: AuthService,
+      private cdr: ChangeDetectorRef
+  ) {
+    console.log('UserComponent: Constructor called');
+  }
 
   ngOnInit(): void {
+    console.log('UserComponent: ngOnInit called');
+
+    this.authService.currentUser$.pipe(
+      filter(user => user !== null),
+      take(1)
+    ).subscribe(() => {
+      console.log('UserComponent: Auth confirmed, loading user profile...');
+      this.loadUserProfile();
+    });
+
+    // Removed feedService subscription
+  }
+
+  loadUserProfile(): void {
     this.http.get<UserProfile>('http://localhost:8080/api/user/').subscribe({
       next: (data) => {
+        console.log('UserComponent: User profile loaded');
         this.user = data;
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        this.error = 'Failed to load user data. Please try logging in again.';
+        this.error = `Failed to load user data. Status: ${err.status}. Please try logging in again.`;
         console.error('User profile error:', err);
+        this.cdr.detectChanges();
       }
     });
   }

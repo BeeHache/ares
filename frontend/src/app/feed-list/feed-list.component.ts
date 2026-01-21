@@ -16,9 +16,12 @@ export class FeedListComponent implements OnInit {
   constructor(
     private feedService: FeedService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    console.log('FeedListComponent: Constructor called'); // Debug log
+  }
 
   ngOnInit(): void {
+    console.log('FeedListComponent: ngOnInit called'); // Debug log
     this.loadFeeds();
   }
 
@@ -31,6 +34,11 @@ export class FeedListComponent implements OnInit {
       },
       error: (err) => console.error('Error loading feeds', err)
     });
+  }
+
+  selectFeed(feed: Feed) {
+      console.log('FeedListComponent: selectFeed called with:', feed); // Debug log
+      this.feedService.selectFeed(feed);
   }
 
   addFeed() {

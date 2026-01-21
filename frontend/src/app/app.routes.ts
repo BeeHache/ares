@@ -5,6 +5,7 @@ import { RegisterComponent } from './register/register.component';
 import { UserComponent } from './user/user.component';
 import { VerifyEmailComponent } from './verify-email/verify-email.component';
 import { LicensesComponent } from './about/licenses/licenses.component';
+import { FeedsPageComponent } from './feeds-page/feeds-page.component';
 import { authGuard } from './auth.guard';
 
 export const routes: Routes = [
@@ -14,5 +15,6 @@ export const routes: Routes = [
   { path: 'verify/:code', component: VerifyEmailComponent },
   { path: 'about/licenses', component: LicensesComponent },
   { path: 'user', component: UserComponent, canActivate: [authGuard] },
+  { path: 'feeds', component: FeedsPageComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: '' }
 ];

@@ -1,14 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-interface FeedItem {
-  id: number;
-  title: string;
-  feedName: string;
-  date: Date;
-  snippet: string;
-  isRead: boolean;
-}
+import { Feed, FeedItem } from '../feed.service';
 
 @Component({
   selector: 'app-feed-items',
@@ -17,15 +9,30 @@ interface FeedItem {
   templateUrl: './feed-items.component.html',
   styleUrl: './feed-items.component.css'
 })
-export class FeedItemsComponent implements OnInit {
+export class FeedItemsComponent {
+  private _feed: Feed | null = null;
   items: FeedItem[] = [];
 
-  ngOnInit(): void {
-    // Mock data
-    this.items = [
-      { id: 1, title: 'Breaking News: Something Happened', feedName: 'BBC News', date: new Date(), snippet: 'A major event occurred today, shaking the foundations of...', isRead: false },
-      { id: 2, title: 'TechCrunch Weekly: AI Advances', feedName: 'TechCrunch', date: new Date(Date.now() - 86400000), snippet: 'New developments in artificial intelligence are set to change the industry...', isRead: true },
-      { id: 3, title: 'Another Story from BBC', feedName: 'BBC News', date: new Date(Date.now() - 172800000), snippet: 'In other news, a local cat has been elected mayor...', isRead: false },
-    ];
+  @Input()
+  set feed(value: Feed | null) {
+    console.log('FeedItemsComponent setter called with:', value); // Debug log
+    this._feed = value;
+    if (value) {
+      this.items = value.items || [];
+      console.log('Items to display:', this.items);
+
+      // Sort by date descending if needed
+      this.items.sort((a, b) => {
+          const dateA = a.date ? new Date(a.date).getTime() : 0;
+          const dateB = b.date ? new Date(b.date).getTime() : 0;
+          return dateB - dateA;
+      });
+    } else {
+        this.items = [];
+    }
+  }
+
+  get feed(): Feed | null {
+    return this._feed;
   }
 }

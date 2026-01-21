@@ -1,16 +1,4 @@
-<div class="home-container">
-  <ng-container *ngIf="authService.isLoggedIn(); else guestHome">
-    <div class="dashboard-layout">
-      <app-feed-list class="feed-list-pane"></app-feed-list>
-      <app-feed-items class="feed-items-pane"></app-feed-items>
-    </div>
-  </ng-container>
-
-  <ng-template #guestHome>
-    <div class="guest-home-container">
-      <h1>Welcome to Ares</h1>
-      <p>Your personal RSS reader.</p>
-      <p>Please <a routerLink="/login">Login</a> or <a routerLink="/register">Register</a> to get started.</p>
-    </div>
-  </ng-template>
+<div class="container">
+  <h1>Welcome to Ares</h1>
+  <p>Your personal RSS reader.</p>
 </div>

@@ -28,7 +28,8 @@ export class LoginComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
-    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+    // If a returnUrl is provided, use it. Otherwise, default to the '/feeds' page.
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/feeds';
   }
 
   ngOnInit(): void {}

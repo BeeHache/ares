@@ -1,6 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
+
+export interface FeedItem {
+  id?: number;
+  title: string;
+  description?: string;
+  link: string;
+  date?: string;
+  // Add other fields as needed
+}
 
 export interface Feed {
   id?: number;
@@ -9,11 +18,10 @@ export interface Feed {
   link: string;
   isPodcast: boolean;
   lastModified?: string;
-  image?: any; // Add type if needed
-  items?: any[]; // Add type if needed
+  image?: any;
+  items?: FeedItem[];
   enclosures?: any[];
-  date: string;
-
+  date?: string;
 }
 
 @Injectable({
@@ -22,7 +30,26 @@ export interface Feed {
 export class FeedService {
   private apiUrl = 'http://localhost:8080/api/user';
 
-  constructor(private http: HttpClient) {}
+  private selectedFeedSubject = new BehaviorSubject<Feed | null>(null);
+  selectedFeed$ = this.selectedFeedSubject.asObservable();
+
+  constructor(private http: HttpClient) {
+      console.log('FeedService instance created');
+      this.selectedFeed$.subscribe(feed => {
+          console.log('FeedService: selectedFeed$ emitted:', feed);
+      });
+  }
+
+  selectFeed(feed: Feed | null) {
+      console.log('FeedService: selectFeed() method called with:', feed);
+      if (feed) {
+          console.log('FeedService: Calling .next() with a valid feed object.');
+          this.selectedFeedSubject.next(feed);
+      } else {
+          console.log('FeedService: Calling .next() with null.');
+          this.selectedFeedSubject.next(null);
+      }
+  }
 
   getFeeds(): Observable<Feed[]> {
     return this.http.get<Feed[]>(`${this.apiUrl}/feeds`);

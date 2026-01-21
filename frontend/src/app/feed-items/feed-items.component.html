@@ -1,30 +1,27 @@
-<div class="feed-items-container">
-  <div class="header-bar">
-    <h2>All Items</h2>
-    <div class="filters">
-      <button class="filter-btn active">All</button>
-      <button class="filter-btn">Unread</button>
-      <button class="filter-btn">Read</button>
-    </div>
-    <div class="sort">
-      <label for="sort-by">Sort by:</label>
-      <select id="sort-by">
-        <option value="newest">Newest</option>
-        <option value="oldest">Oldest</option>
-      </select>
-    </div>
+<div class="feed-items-container" *ngIf="feed; else noFeed">
+  <div class="feed-header">
+    <h3>{{ feed.title }}</h3>
+    <p class="feed-description" *ngIf="feed.description">{{ feed.description }}</p>
+    <a [href]="feed.link" target="_blank" class="feed-source-link">Visit Website</a>
   </div>
 
-  <div class="item-list">
-    <div *ngFor="let item of items" class="item-card" [class.read]="item.isRead">
-      <h3><a href="#">{{ item.title }}</a></h3>
+  <div class="items-list">
+    <div *ngFor="let item of items" class="item-card">
+      <h4><a [href]="item.link" target="_blank">{{ item.title }}</a></h4>
       <div class="item-meta">
-        <span class="feed-source">{{ item.feedName }}</span>
-        <span class="item-date">{{ item.date | date:'mediumDate' }}</span>
+        <span *ngIf="item.date">{{ item.date | date:'medium' }}</span>
       </div>
-      <p class="item-snippet">{{ item.snippet }}</p>
+      <p class="item-description" *ngIf="item.description" [innerHTML]="item.description"></p>
+    </div>
+
+    <div *ngIf="items.length === 0" class="no-items">
+        <p>No items found in this feed.</p>
     </div>
   </div>
-
-  <button class="load-more-btn">Load More</button>
 </div>
+
+<ng-template #noFeed>
+  <div class="placeholder">
+    <p>Select a feed from the list to view its articles.</p>
+  </div>
+</ng-template>

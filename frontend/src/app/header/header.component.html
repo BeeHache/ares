@@ -18,6 +18,7 @@
       </div>
 
       <ng-container *ngIf="authService.currentUser$ | async as username; else loggedOut">
+        <a routerLink="/feeds" class="nav-link" (click)="closeMenu()">Feeds</a>
         <span class="username"><a routerLink="/user" class="nav-link" (click)="closeMenu()">{{ username }}</a></span>
         <button (click)="authService.logout(); closeMenu()" class="logout-btn">Logout</button>
       </ng-container>

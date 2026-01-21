@@ -1,0 +1,26 @@
+.feeds-page-container {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+.dashboard {
+  display: flex;
+  gap: 20px;
+  min-height: 70vh; /* Ensure it takes up vertical space */
+}
+
+.sidebar {
+  width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.main-content {
+  flex-grow: 1;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 0; /* FeedItemsComponent has its own padding */
+  background-color: #fff;
+}
