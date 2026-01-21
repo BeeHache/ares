@@ -4,7 +4,6 @@ package net.blackhacker.ares.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import net.blackhacker.ares.utils.URLConverter;
-import org.springframework.data.annotation.Id;
 
 import java.net.URL;
 

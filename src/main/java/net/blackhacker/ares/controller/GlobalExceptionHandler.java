@@ -36,7 +36,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponse> handleaAuthenticationException(AuthenticationException ex, WebRequest request) {
-        log.error("Authentication error occurred: ", ex);
+        log.error("Authentication error occurred: {}", ex.getMessage());
+        log.trace(ex.getMessage(), ex);
 
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.UNAUTHORIZED.value(),

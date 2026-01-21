@@ -6,7 +6,7 @@ Ares is a robust RSS feed aggregator and podcast manager built with a modern tec
 
 ### Backend
 *   **Java 17+**
-*   **Spring Boot 3.x**: Core framework
+*   **Spring Boot 4.x**: Core framework
 *   **Spring Security**: JWT-based authentication & RBAC
 *   **Spring Data JPA**: Database interaction
 *   **PostgreSQL**: Primary relational database

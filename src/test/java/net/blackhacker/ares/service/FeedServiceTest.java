@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -22,6 +23,10 @@ class FeedServiceTest {
 
     @MockitoBean
     private RssService rssService;
+
+    @MockitoBean
+    private TransactionTemplate transactionTemplate;
+
 
     @InjectMocks
     private FeedService feedService;

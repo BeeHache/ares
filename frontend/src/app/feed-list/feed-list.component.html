@@ -1,0 +1,22 @@
+<div class="feed-list-container">
+  <h2>My Feeds</h2>
+
+  <div class="actions">
+    <button class="btn">Add Feed</button>
+    <button class="btn secondary">Import OPML</button>
+  </div>
+
+  <div class="summary">
+    <a href="#" class="summary-link active">All Feeds ({{ feeds.length }})</a>
+    <a href="#" class="summary-link">Unread ({{ totalUnread }})</a>
+  </div>
+
+  <ul class="feed-items">
+    <li *ngFor="let feed of feeds" class="feed-item">
+      <a href="#">
+        <span class="feed-name">{{ feed.name }}</span>
+        <span *ngIf="feed.unreadCount > 0" class="unread-count">{{ feed.unreadCount }}</span>
+      </a>
+    </li>
+  </ul>
+</div>

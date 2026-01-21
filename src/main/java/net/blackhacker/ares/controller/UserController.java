@@ -13,6 +13,7 @@ import net.blackhacker.ares.service.UserService;
 import net.blackhacker.ares.validation.MultipartFileValidator;
 import net.blackhacker.ares.validation.URLValidator;
 import org.jspecify.annotations.NonNull;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -91,10 +92,12 @@ public class UserController {
 
     @GetMapping("/feeds")
     public ResponseEntity<Collection<FeedDTO>> getFeed(@AuthenticationPrincipal Account principal) {
-
         User user = userService.getUserByAccount(principal).get();
         Collection<FeedDTO> feeds = user.getFeeds().stream().map(feedMapper::toDTO).toList();
-        return ResponseEntity.ok(feeds);
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(feeds);
     }
 
     @DeleteMapping("/feeds/{id}")

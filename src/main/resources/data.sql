@@ -4,12 +4,12 @@ INSERT INTO accounts (username, password, type)
 VALUES ('admin@ares.com', 'admin_pass', 'ADMIN')
 ON CONFLICT (username, type) DO NOTHING;
 
-INSERT INTO accounts (username, password, type)
-VALUES ('user1@ares.com', 'user1_pass', 'USER')
+INSERT INTO accounts (username, password, type, account_enabled_at)
+VALUES ('user1@ares.com', 'user1_pass', 'USER', '2023-01-01 00:00:00')
 ON CONFLICT (username, type) DO NOTHING;
 
-INSERT INTO accounts (username, password, type)
-VALUES ('user2@ares.com', 'user2_pass', 'USER')
+INSERT INTO accounts (username, password, type, account_enabled_at)
+VALUES ('user2@ares.com', 'user2_pass', 'USER', '2023-01-01 00:00:00')
 ON CONFLICT (username, type) DO NOTHING;
 
 

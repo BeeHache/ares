@@ -1,0 +1,103 @@
+.feed-list-container {
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-right: 1px solid #e9ecef;
+  height: 100%;
+  overflow-y: auto;
+}
+
+h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #343a40;
+}
+
+.actions {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  flex-grow: 1;
+}
+
+.btn.secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn.secondary:hover {
+  background-color: #5a6268;
+}
+
+.btn:not(.secondary) {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn:not(.secondary):hover {
+  background-color: #0056b3;
+}
+
+.summary {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 10px;
+  display: flex;
+  gap: 15px;
+}
+
+.summary-link {
+  text-decoration: none;
+  color: #007bff;
+  font-weight: bold;
+}
+
+.summary-link.active {
+  color: #343a40;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 8px;
+}
+
+.feed-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.feed-item {
+  margin-bottom: 8px;
+}
+
+.feed-item a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  text-decoration: none;
+  color: #343a40;
+  border-radius: 4px;
+}
+
+.feed-item a:hover {
+  background-color: #e9ecef;
+}
+
+.feed-name {
+  flex-grow: 1;
+}
+
+.unread-count {
+  background-color: #dc3545;
+  color: white;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 0.8em;
+  margin-left: 10px;
+}

@@ -1,0 +1,30 @@
+<div class="feed-items-container">
+  <div class="header-bar">
+    <h2>All Items</h2>
+    <div class="filters">
+      <button class="filter-btn active">All</button>
+      <button class="filter-btn">Unread</button>
+      <button class="filter-btn">Read</button>
+    </div>
+    <div class="sort">
+      <label for="sort-by">Sort by:</label>
+      <select id="sort-by">
+        <option value="newest">Newest</option>
+        <option value="oldest">Oldest</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="item-list">
+    <div *ngFor="let item of items" class="item-card" [class.read]="item.isRead">
+      <h3><a href="#">{{ item.title }}</a></h3>
+      <div class="item-meta">
+        <span class="feed-source">{{ item.feedName }}</span>
+        <span class="item-date">{{ item.date | date:'mediumDate' }}</span>
+      </div>
+      <p class="item-snippet">{{ item.snippet }}</p>
+    </div>
+  </div>
+
+  <button class="load-more-btn">Load More</button>
+</div>
