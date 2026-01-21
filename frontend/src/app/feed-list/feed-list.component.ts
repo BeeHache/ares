@@ -1,11 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-interface Feed {
-  id: number;
-  name: string;
-  unreadCount: number;
-}
+import { FeedService, Feed } from '../feed.service';
 
 @Component({
   selector: 'app-feed-list',
@@ -16,15 +11,60 @@ interface Feed {
 })
 export class FeedListComponent implements OnInit {
   feeds: Feed[] = [];
-  totalUnread = 0;
+  totalUnread = 0; // Not yet supported by backend
+
+  constructor(
+    private feedService: FeedService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-    // Mock data for now
-    this.feeds = [
-      { id: 1, name: 'BBC News', unreadCount: 3 },
-      { id: 2, name: 'The Daily', unreadCount: 0 },
-      { id: 3, name: 'TechCrunch', unreadCount: 2 },
-    ];
-    this.totalUnread = this.feeds.reduce((sum, feed) => sum + feed.unreadCount, 0);
+    this.loadFeeds();
+  }
+
+  loadFeeds() {
+    this.feedService.getFeeds().subscribe({
+      next: (data) => {
+        console.log('Feeds received from backend:', data); // Debug log
+        this.feeds = data;
+        this.cdr.detectChanges(); // Force update
+      },
+      error: (err) => console.error('Error loading feeds', err)
+    });
+  }
+
+  addFeed() {
+    const link = prompt('Enter RSS Feed URL:');
+    if (link) {
+      this.feedService.addFeed(link).subscribe({
+        next: (newFeed) => {
+          console.log('Feed added:', newFeed); // Debug log
+          this.feeds.push(newFeed);
+          this.cdr.detectChanges(); // Force update
+        },
+        error: (err) => alert('Failed to add feed: ' + (err.error?.message || err.message))
+      });
+    }
+  }
+
+  deleteFeed(id: number | undefined) {
+    if (id === undefined) {
+        console.error('Cannot delete feed without ID');
+        return;
+    }
+    if (confirm('Are you sure you want to unsubscribe?')) {
+      this.feedService.deleteFeed(id).subscribe({
+        next: () => {
+          this.feeds = this.feeds.filter(f => f.id !== id);
+          this.cdr.detectChanges(); // Force update
+        },
+        error: (err) => alert('Failed to delete feed')
+      });
+    }
+  }
+
+  importOpml() {
+      // Simple file input trigger could be added here
+      alert('OPML Import UI not implemented yet');
   }
 }

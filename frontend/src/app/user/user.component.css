@@ -1,2 +1,38 @@
-.container { max-width: 600px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
-.error { color: red; margin-top: 10px; }
+.container {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+.profile-header {
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ccc;
+}
+
+.dashboard {
+  display: flex;
+  gap: 20px;
+  height: 70vh; /* Fixed height for dashboard area */
+}
+
+.sidebar {
+  width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.main-content {
+  flex-grow: 1;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 20px;
+  background-color: #fff;
+}
+
+.error {
+  color: red;
+  margin-top: 10px;
+  text-align: center;
+}

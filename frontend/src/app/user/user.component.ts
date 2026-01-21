@@ -1,16 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { FeedListComponent } from '../feed-list/feed-list.component';
 
 interface UserProfile {
   email: string;
-  feeds: any[]; // You can create a more specific type for feeds later
+  feeds: any[];
 }
 
 @Component({
   selector: 'app-user',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FeedListComponent],
   templateUrl: './user.component.html',
   styleUrl: './user.component.css'
 })

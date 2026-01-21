@@ -1,11 +1,23 @@
 <div class="container" *ngIf="user; else loading">
-  <h2>User Profile</h2>
-  <p><strong>Email:</strong> {{ user.email }}</p>
-  <p><strong>Number of Feeds:</strong> {{ user.feeds.length || 0 }}</p>
+  <div class="profile-header">
+    <h2>User Profile</h2>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+  </div>
+
+  <div class="dashboard">
+    <div class="sidebar">
+      <app-feed-list></app-feed-list>
+    </div>
+    <div class="main-content">
+      <p>Select a feed to view items (Coming Soon)</p>
+    </div>
+  </div>
 </div>
+
 <ng-template #loading>
   <p>Loading user data...</p>
 </ng-template>
+
 <div *ngIf="error" class="error">
   <p>{{ error }}</p>
 </div>

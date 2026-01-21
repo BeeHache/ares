@@ -2,21 +2,28 @@
   <h2>My Feeds</h2>
 
   <div class="actions">
-    <button class="btn">Add Feed</button>
-    <button class="btn secondary">Import OPML</button>
+    <button class="btn" (click)="addFeed()">Add Feed</button>
+    <button class="btn secondary" (click)="importOpml()">Import OPML</button>
   </div>
 
   <div class="summary">
     <a href="#" class="summary-link active">All Feeds ({{ feeds.length }})</a>
-    <a href="#" class="summary-link">Unread ({{ totalUnread }})</a>
+    <!-- <a href="#" class="summary-link">Unread ({{ totalUnread }})</a> -->
   </div>
 
   <ul class="feed-items">
     <li *ngFor="let feed of feeds" class="feed-item">
-      <a href="#">
-        <span class="feed-name">{{ feed.name }}</span>
-        <span *ngIf="feed.unreadCount > 0" class="unread-count">{{ feed.unreadCount }}</span>
-      </a>
+      <div class="feed-row">
+        <a href="#" class="feed-link">
+          <span class="feed-name">{{ feed.title || feed.link }}</span>
+          <!-- <span *ngIf="feed.unreadCount > 0" class="unread-count">{{ feed.unreadCount }}</span> -->
+        </a>
+        <button class="delete-btn" (click)="deleteFeed(feed.id)" title="Unsubscribe">×</button>
+      </div>
     </li>
   </ul>
+
+  <div *ngIf="feeds.length === 0" class="no-feeds">
+      <p>No feeds found. Add one to get started!</p>
+  </div>
 </div>
