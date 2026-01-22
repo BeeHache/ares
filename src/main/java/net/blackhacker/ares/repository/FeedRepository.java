@@ -18,5 +18,5 @@ public interface FeedRepository extends JpaRepository<Feed, UUID> {
     @Query("SELECT f FROM Feed f WHERE f.lastTouched < :dt OR f.lastTouched IS NULL")
     Page<Feed> findTouchedBefore(@Param("dt") ZonedDateTime zonedDateTime, Pageable pageable);
 
-    Feed findByLink(@Param("link") URL link);
+    Feed findByUrl(@Param("url") URL url);
 }

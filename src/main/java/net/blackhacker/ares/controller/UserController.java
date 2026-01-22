@@ -86,6 +86,7 @@ public class UserController {
         User user = userService.getUserByAccount(account).get();
         Feed feed = feedService.addFeed(link);
         user.getFeeds().add(feed);
+        userService.saveUser(user);
         FeedDTO feedDTO = feedMapper.toDTO(feed);
         return ResponseEntity.ok(feedDTO);
     }
@@ -101,7 +102,7 @@ public class UserController {
     }
 
     @DeleteMapping("/feeds/{id}")
-    public ResponseEntity<Void> deleteFeed(@PathVariable UUID id, @AuthenticationPrincipal Account principal) {
+    public ResponseEntity<Void> deleteFeed(@PathVariable("id") UUID id, @AuthenticationPrincipal Account principal) {
         User user = userService.getUserByAccount(principal).get();
         Feed feed = feedService.getFeedById(id);
 

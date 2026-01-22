@@ -68,10 +68,6 @@
 .item-description {
   color: #444;
   line-height: 1.5;
-  /* Limit description height if needed */
-  max-height: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* Handle images in description */

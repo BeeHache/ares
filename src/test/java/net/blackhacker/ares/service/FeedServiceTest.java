@@ -5,7 +5,6 @@ import net.blackhacker.ares.repository.FeedRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -42,7 +41,7 @@ class FeedServiceTest {
         Feed existingFeed = new Feed();
         existingFeed.setLinkString(link);
 
-        when(feedRepository.findByLink(new URI(link).toURL())).thenReturn(existingFeed);
+        when(feedRepository.findByUrl(new URI(link).toURL())).thenReturn(existingFeed);
 
         // Act
         Feed result = feedService.addFeed(link);
@@ -50,7 +49,7 @@ class FeedServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(existingFeed, result);
-        verify(feedRepository, times(1)).findByLink(new URI(link).toURL());
+        verify(feedRepository, times(1)).findByUrl(new URI(link).toURL());
         verify(rssService, never()).feedFromUrl(anyString());
         verify(feedRepository, never()).save(any(Feed.class));
     }
@@ -62,7 +61,7 @@ class FeedServiceTest {
         Feed newFeed = new Feed();
         newFeed.setLinkString(link);
 
-        when(feedRepository.findByLink(new URI(link).toURL())).thenReturn(null);
+        when(feedRepository.findByUrl(new URI(link).toURL())).thenReturn(null);
         when(rssService.feedFromUrl(link)).thenReturn(newFeed);
         when(feedRepository.save(newFeed)).thenReturn(newFeed);
 
@@ -72,7 +71,7 @@ class FeedServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(newFeed, result);
-        verify(feedRepository, times(1)).findByLink(new URI(link).toURL());
+        verify(feedRepository, times(1)).findByUrl(new URI(link).toURL());
         verify(rssService, times(1)).feedFromUrl(link);
         verify(feedRepository, times(1)).save(newFeed);
     }

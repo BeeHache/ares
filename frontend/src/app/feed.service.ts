@@ -3,13 +3,20 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { environment } from '../environments/environment';
 
+export interface Enclosure {
+  id: string;
+  url: string;
+  length?: number;
+  type?: string;
+}
+
 export interface FeedItem {
   id: string;
   title: string;
   description?: string;
   link: string;
   date?: string;
-  // Add other fields as needed
+  enclosures?: Enclosure[];
 }
 
 export interface Feed {
@@ -21,7 +28,6 @@ export interface Feed {
   lastModified?: string;
   image?: any;
   items?: FeedItem[];
-  enclosures?: any[];
   date?: string;
 }
 

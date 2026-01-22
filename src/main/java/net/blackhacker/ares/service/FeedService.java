@@ -46,7 +46,7 @@ public class FeedService {
         log.info("Adding feed: {}", link);
         try {
             URL url = new URL(link);
-            Feed feed = feedRepository.findByLink(url);
+            Feed feed = feedRepository.findByUrl(url);
             if (feed != null) {
                 log.debug("Feed already exists: {}", link);
                 return feed;

@@ -1,7 +1,7 @@
 package net.blackhacker.ares.service;
 
 import net.blackhacker.ares.model.Image;
-import net.blackhacker.ares.repository.ImageRepositry;
+import net.blackhacker.ares.repository.ImageRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,13 +19,13 @@ import static org.mockito.Mockito.*;
 class ImageServiceTest {
 
     @Mock
-    private ImageRepositry imageRepositry;
+    private ImageRepository imageRepository;
 
     private ImageService imageService;
 
     @BeforeEach
     void setUp() {
-        imageService = new ImageService(imageRepositry);
+        imageService = new ImageService(imageRepository);
     }
 
     @Test
@@ -34,7 +34,7 @@ class ImageServiceTest {
         UUID id = UUID.randomUUID();
         Image image = new Image();
         image.setId(id);
-        when(imageRepositry.findById(id)).thenReturn(Optional.of(image));
+        when(imageRepository.findById(id)).thenReturn(Optional.of(image));
 
         // Act
         Optional<Image> result = imageService.getImage(id);
@@ -48,7 +48,7 @@ class ImageServiceTest {
     void getImage_shouldReturnNull_whenImageDoesNotExist() {
         // Arrange
         UUID id = UUID.randomUUID();
-        when(imageRepositry.findById(id)).thenReturn(Optional.empty());
+        when(imageRepository.findById(id)).thenReturn(Optional.empty());
 
         // Act
         Optional<Image> result = imageService.getImage(id);
@@ -61,7 +61,7 @@ class ImageServiceTest {
     void saveImage_shouldReturnSavedImage() {
         // Arrange
         Image image = new Image();
-        when(imageRepositry.save(image)).thenReturn(image);
+        when(imageRepository.save(image)).thenReturn(image);
 
         // Act
         Image result = imageService.saveImage(image);
@@ -80,7 +80,7 @@ class ImageServiceTest {
         imageService.deleteImage(id);
 
         // Assert
-        verify(imageRepositry, times(1)).deleteById(id);
+        verify(imageRepository, times(1)).deleteById(id);
     }
 
     @Test
@@ -96,8 +96,8 @@ class ImageServiceTest {
         newImage.setContentType("image/jpeg");
         newImage.setData(new byte[]{4, 5, 6});
 
-        when(imageRepositry.findById(id)).thenReturn(Optional.of(existingImage));
-        when(imageRepositry.save(any(Image.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(imageRepository.findById(id)).thenReturn(Optional.of(existingImage));
+        when(imageRepository.save(any(Image.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
         Image result = imageService.updateImage(id, newImage);
@@ -117,8 +117,8 @@ class ImageServiceTest {
         newImage.setContentType("image/jpeg");
         newImage.setData(new byte[]{4, 5, 6});
 
-        when(imageRepositry.findById(id)).thenReturn(Optional.empty());
-        when(imageRepositry.save(newImage)).thenReturn(newImage);
+        when(imageRepository.findById(id)).thenReturn(Optional.empty());
+        when(imageRepository.save(newImage)).thenReturn(newImage);
 
         // Act
         Image result = imageService.updateImage(id, newImage);
