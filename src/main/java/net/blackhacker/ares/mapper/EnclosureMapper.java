@@ -16,6 +16,7 @@ public class EnclosureMapper implements  ModelDTOMapper<Enclosure, EnclosureDTO>
     public EnclosureDTO toDTO(Enclosure enclosure) {
         if (enclosure == null) return null;
         EnclosureDTO enclosureDTO = new EnclosureDTO();
+        enclosureDTO.setId(enclosure.getId());
         enclosureDTO.setUrl(enclosure.getUrl().toString());
         enclosureDTO.setLength(enclosure.getLength());
         enclosureDTO.setType(enclosure.getType());
@@ -26,6 +27,7 @@ public class EnclosureMapper implements  ModelDTOMapper<Enclosure, EnclosureDTO>
     public Enclosure toModel(EnclosureDTO enclosureDTO) {
         if (enclosureDTO == null) return null;
         Enclosure enclosure = new Enclosure();
+        enclosure.setId(enclosureDTO.getId());
 
         try {
             enclosure.setUrl(new URI(enclosureDTO.getUrl()).toURL());

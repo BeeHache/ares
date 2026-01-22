@@ -6,6 +6,7 @@ import lombok.Data;
 import net.blackhacker.ares.utils.URLConverter;
 
 import java.net.URL;
+import java.util.UUID;
 
 
 @Entity
@@ -13,8 +14,8 @@ import java.net.URL;
 @Data
 public class Enclosure {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(nullable = false, unique = true)
     @Convert(converter = URLConverter.class)

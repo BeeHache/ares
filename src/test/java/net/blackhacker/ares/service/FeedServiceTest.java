@@ -11,6 +11,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -32,13 +36,13 @@ class FeedServiceTest {
     private FeedService feedService;
 
     @Test
-    void addFeed_shouldReturnExistingFeed_whenFeedExists() {
+    void addFeed_shouldReturnExistingFeed_whenFeedExists() throws URISyntaxException, MalformedURLException {
         // Arrange
         String link = "http://example.com/feed";
         Feed existingFeed = new Feed();
         existingFeed.setLinkString(link);
 
-        when(feedRepository.findByLink(link)).thenReturn(existingFeed);
+        when(feedRepository.findByLink(new URI(link).toURL())).thenReturn(existingFeed);
 
         // Act
         Feed result = feedService.addFeed(link);
@@ -46,19 +50,19 @@ class FeedServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(existingFeed, result);
-        verify(feedRepository, times(1)).findByLink(link);
+        verify(feedRepository, times(1)).findByLink(new URI(link).toURL());
         verify(rssService, never()).feedFromUrl(anyString());
         verify(feedRepository, never()).save(any(Feed.class));
     }
 
     @Test
-    void addFeed_shouldFetchAndSaveNewFeed_whenFeedDoesNotExist() {
+    void addFeed_shouldFetchAndSaveNewFeed_whenFeedDoesNotExist() throws URISyntaxException, MalformedURLException {
         // Arrange
         String link = "http://example.com/new-feed";
         Feed newFeed = new Feed();
         newFeed.setLinkString(link);
 
-        when(feedRepository.findByLink(link)).thenReturn(null);
+        when(feedRepository.findByLink(new URI(link).toURL())).thenReturn(null);
         when(rssService.feedFromUrl(link)).thenReturn(newFeed);
         when(feedRepository.save(newFeed)).thenReturn(newFeed);
 
@@ -68,7 +72,7 @@ class FeedServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(newFeed, result);
-        verify(feedRepository, times(1)).findByLink(link);
+        verify(feedRepository, times(1)).findByLink(new URI(link).toURL());
         verify(rssService, times(1)).feedFromUrl(link);
         verify(feedRepository, times(1)).save(newFeed);
     }

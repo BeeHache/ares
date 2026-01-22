@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/image")
@@ -23,7 +24,7 @@ public class ImageController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<byte[]> getImage(@PathVariable("id") Long id) {
+    public ResponseEntity<byte[]> getImage(@PathVariable("id") UUID id) {
         Optional<Image> image = imageService.getImage(id);
         if (image.isEmpty()) {
             throw new ControllerException(HttpStatus.NOT_FOUND, "Image not found");

@@ -16,18 +16,18 @@ ON CONFLICT (username, type) DO NOTHING;
 -- 2. Insert Admins (Linked to Account)
 -- Assuming ID 1 is the admin account
 INSERT INTO admins (name, email, account_id)
-VALUES ('Admin User', 'admin@ares.com', 1)
+VALUES ('Admin User', 'admin@ares.com', (SELECT id FROM accounts WHERE username = 'admin@ares.com'))
 ON CONFLICT (email) DO NOTHING;
 
 
 -- 3. Insert Users (Linked to Account)
 -- Assuming ID 2 and 3 are user accounts
 INSERT INTO users (email, account_id)
-VALUES ('user1@ares.com', 2)
+VALUES ('user1@ares.com', (SELECT id FROM accounts WHERE username = 'user1@ares.com'))
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO users (email, account_id)
-VALUES ('user2@ares.com', 3)
+VALUES ('user2@ares.com', (SELECT id FROM accounts WHERE username = 'user2@ares.com'))
 ON CONFLICT (email) DO NOTHING;
 
 
@@ -41,7 +41,9 @@ INSERT INTO roles (name, parent_id) VALUES ('JUNIOR_EDITOR', 4) ON CONFLICT (nam
 
 -- 5. Assign Roles to Accounts
 -- Assign SUPER_ADMIN (ID 1) to admin account (ID 1)
-INSERT INTO account_roles (account_id, role_id) VALUES (1, 1) ON CONFLICT (account_id, role_id) DO NOTHING;
+INSERT INTO account_roles (account_id, role_id)
+VALUES ((SELECT id FROM accounts WHERE username = 'admin@ares.com'), (SELECT id FROM roles WHERE name = 'SUPER_ADMIN'))
+ON CONFLICT (account_id, role_id) DO NOTHING;
 
 
 -- 6. Insert Feeds
@@ -55,18 +57,41 @@ ON CONFLICT (url) DO NOTHING;
 
 
 -- 7. Link Users to Feeds
--- User 1 (ID 1) follows both
-INSERT INTO user_feeds (user_id, feed_id) VALUES (1, 1) ON CONFLICT (user_id, feed_id) DO NOTHING;
-INSERT INTO user_feeds (user_id, feed_id) VALUES (1, 2) ON CONFLICT (user_id, feed_id) DO NOTHING;
--- User 2 (ID 2) only follows BBC News
-INSERT INTO user_feeds (user_id, feed_id) VALUES (2, 1) ON CONFLICT (user_id, feed_id) DO NOTHING;
+-- User 1 follows both
+INSERT INTO user_feeds (user_id, feed_id)
+VALUES (
+    (SELECT id FROM users WHERE email = 'user1@ares.com'),
+    (SELECT id FROM feeds WHERE url = 'https://feeds.bbci.co.uk/news/rss.xml')
+)
+ON CONFLICT (user_id, feed_id) DO NOTHING;
+
+INSERT INTO user_feeds (user_id, feed_id)
+VALUES (
+    (SELECT id FROM users WHERE email = 'user1@ares.com'),
+    (SELECT id FROM feeds WHERE url = 'https://feeds.simplecast.com/54nAGpIl')
+)
+ON CONFLICT (user_id, feed_id) DO NOTHING;
+
+-- User 2 only follows BBC News
+INSERT INTO user_feeds (user_id, feed_id)
+VALUES (
+    (SELECT id FROM users WHERE email = 'user2@ares.com'),
+    (SELECT id FROM feeds WHERE url = 'https://feeds.bbci.co.uk/news/rss.xml')
+)
+ON CONFLICT (user_id, feed_id) DO NOTHING;
 
 
 -- 8. Insert Feed Items
 INSERT INTO feed_item (feed_id, title, description, link, date)
-VALUES (1, 'Breaking News', 'Something big happened today.', 'https://bbc.com/news/1', '2025-12-21 12:00:00')
+VALUES (
+    (SELECT id FROM feeds WHERE url = 'https://feeds.bbci.co.uk/news/rss.xml'),
+    'Breaking News', 'Something big happened today.', 'https://bbc.com/news/1', '2025-12-21 12:00:00'
+)
 ON CONFLICT (link) DO NOTHING;
 
 INSERT INTO feed_item (feed_id, title, description, link, date)
-VALUES (2, 'The Sunday Read', 'A deep dive into politics.', 'https://nytimes.com/podcast/1', '2025-12-21 08:00:00')
+VALUES (
+    (SELECT id FROM feeds WHERE url = 'https://feeds.simplecast.com/54nAGpIl'),
+    'The Sunday Read', 'A deep dive into politics.', 'https://nytimes.com/podcast/1', '2025-12-21 08:00:00'
+)
 ON CONFLICT (link) DO NOTHING;

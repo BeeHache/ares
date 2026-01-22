@@ -5,6 +5,7 @@ import net.blackhacker.ares.repository.ImageRepositry;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ImageService {
@@ -15,7 +16,7 @@ public class ImageService {
         this.imageRepositry = imageRepositry;
     }
 
-    public Optional<Image> getImage(Long id){
+    public Optional<Image> getImage(UUID id){
         return imageRepositry.findById(id);
     }
 
@@ -23,11 +24,11 @@ public class ImageService {
         return imageRepositry.save(image);
     }
 
-    public void deleteImage(Long id){
+    public void deleteImage(UUID id){
         imageRepositry.deleteById(id);
     }
 
-    public Image updateImage(Long id, Image image){
+    public Image updateImage(UUID id, Image image){
         Optional<Image> oldImageOption = imageRepositry.findById(id);
         if(oldImageOption.isPresent()) {
             Image oldImage = oldImageOption.get();

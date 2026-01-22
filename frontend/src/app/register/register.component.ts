@@ -3,12 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { PasswordInputComponent } from '../shared/password-input/password-input.component';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule, PasswordInputComponent],
+  imports: [CommonModule, FormsModule, HttpClientModule],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
@@ -29,7 +29,7 @@ export class RegisterComponent {
     }
 
     const registerData = { email: this.email, password: this.password };
-    this.http.post('http://localhost:8080/api/register', registerData).subscribe({
+    this.http.post(`${environment.apiUrl}/register`, registerData).subscribe({
       next: () => {
         this.router.navigate(['/login']);
       },

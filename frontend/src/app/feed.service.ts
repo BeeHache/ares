@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
+import { environment } from '../environments/environment';
 
 export interface FeedItem {
-  id?: number;
+  id: string;
   title: string;
   description?: string;
   link: string;
@@ -12,7 +13,7 @@ export interface FeedItem {
 }
 
 export interface Feed {
-  id?: number;
+  id: string;
   title: string;
   description?: string;
   link: string;
@@ -28,7 +29,7 @@ export interface Feed {
   providedIn: 'root'
 })
 export class FeedService {
-  private apiUrl = 'http://localhost:8080/api/user';
+  private apiUrl = `${environment.apiUrl}/user`;
 
   private selectedFeedSubject = new BehaviorSubject<Feed | null>(null);
   selectedFeed$ = this.selectedFeedSubject.asObservable();
@@ -59,7 +60,7 @@ export class FeedService {
     return this.http.put<Feed>(`${this.apiUrl}/addfeed`, null, { params: { link } });
   }
 
-  deleteFeed(id: number): Observable<void> {
+  deleteFeed(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/feeds/${id}`);
   }
 

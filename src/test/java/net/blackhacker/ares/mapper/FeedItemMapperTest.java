@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -39,7 +40,7 @@ class FeedItemMapperTest {
         image.setData(new byte[]{1, 2, 3});
 
         FeedItem item = new FeedItem();
-        item.setId(1L);
+        item.setId(UUID.randomUUID());
         item.setTitle("Test Item");
         item.setDescription("A test item");
         item.setLink("http://example.com/item");

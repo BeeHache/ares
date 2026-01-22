@@ -5,6 +5,7 @@ import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../auth.service';
 import { PasswordInputComponent } from '../shared/password-input/password-input.component';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -39,7 +40,7 @@ export class LoginComponent implements OnInit {
 
     if (isPlatformBrowser(this.platformId)) {
       const loginData = { email: this.email, password: this.password };
-      this.http.post<any>('http://localhost:8080/api/login', loginData).subscribe({
+      this.http.post<any>(`${environment.apiUrl}/login`, loginData).subscribe({
         next: (response) => {
           if (response.token) {
               this.authService.login(response.token);

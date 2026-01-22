@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 create table if not exists accounts (
     id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     username VARCHAR(255) NOT NULL,
@@ -42,13 +44,13 @@ create table if not exists account_roles (
 );
 
 create table if not exists image(
-    id BIGINT NOT NULL PRIMARY KEY  GENERATED ALWAYS AS IDENTITY,
+    id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     content_type varchar(32),
     data bytea not null
 );
 
 create table if not exists feeds (
-    id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     url varchar(512) not null unique,
     title varchar(255) not null,
     description varchar(2048),
@@ -56,7 +58,7 @@ create table if not exists feeds (
     is_podcast char(1) not null default 'N',
     last_modified timestamp with time zone,
     last_touched timestamp with time zone,
-    image_id BIGINT,
+    image_id UUID,
     CONSTRAINT check_is_podcast CHECK (is_podcast IN ('Y', 'N')),
     CONSTRAINT fk_feed_image FOREIGN KEY (image_id) REFERENCES image(id) ON DELETE CASCADE
 );
@@ -64,21 +66,21 @@ create table if not exists feeds (
 create index if not exists ix_feeds_last_mod on feeds (last_modified);
 
 create table if not exists feed_item (
-    id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    feed_id BIGINT NOT NULL,
+    id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    feed_id UUID NOT NULL,
     title VARCHAR(255),
     description VARCHAR(2048),
     link VARCHAR(512) UNIQUE,
     date timestamp with time zone,
-    image_id BIGINT,
+    image_id UUID,
     CONSTRAINT fk_feed FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE,
     CONSTRAINT fk_feed_item_image FOREIGN KEY (image_id) REFERENCES image(id) ON DELETE CASCADE
 );
 
 create table if not exists enclosures
 (
-    id           BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    feed_item_id BIGINT NOT NULL,
+    id           UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    feed_item_id UUID NOT NULL,
     url          varchar(512) not null unique,
     length       BIGINT,
     type         varchar(32),
@@ -87,7 +89,7 @@ create table if not exists enclosures
 
 create table if not exists user_feeds (
     user_id BIGINT NOT NULL,
-    feed_id BIGINT NOT NULL,
+    feed_id UUID NOT NULL,
     PRIMARY KEY (user_id, feed_id), -- Prevents a user from subscribing to the same feed twice
     CONSTRAINT fk_user_link FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_feed_link FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE
@@ -95,7 +97,7 @@ create table if not exists user_feeds (
 
 create table if not exists user_feed_item (
     user_id BIGINT NOT NULL,
-    feed_item_id BIGINT NOT NULL,
+    feed_item_id UUID NOT NULL,
     read_at timestamp with time zone,
     archive_at timestamp with time zone,
     PRIMARY KEY (user_id, feed_item_id), -- Prevents a user from reading the same feed item twice

@@ -13,8 +13,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.ZonedDateTime;
 import java.util.Collection;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -41,23 +44,28 @@ public class FeedService {
 
     public Feed addFeed(String link) {
         log.info("Adding feed: {}", link);
-        Feed feed = feedRepository.findByLink(link);
-        if (feed != null) {
-            log.debug("Feed already exists: {}", link);
-            return feed;
-        }
         try {
+            URL url = new URL(link);
+            Feed feed = feedRepository.findByLink(url);
+            if (feed != null) {
+                log.debug("Feed already exists: {}", link);
+                return feed;
+            }
+            
             feed = rssService.feedFromUrl(link);
             Feed savedFeed = feedRepository.save(feed);
             log.info("Feed added successfully: {}", link);
             return savedFeed;
+        } catch (MalformedURLException e) {
+            log.error("Invalid URL: {}", link, e);
+            throw new IllegalArgumentException("Invalid URL: " + link, e);
         } catch (Exception e) {
             log.error("Error adding feed: {}", link, e);
             throw e;
         }
     }
 
-    public Feed getFeedById(Long id){
+    public Feed getFeedById(UUID id){
         return feedRepository.findById(id).orElse(null);
     }
 

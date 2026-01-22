@@ -10,6 +10,7 @@ import lombok.Setter;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.UUID;
 
 @Entity
 @Table(name = "feed_item")
@@ -20,8 +21,8 @@ import java.util.Collection;
 public class FeedItem {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column
     private String title;

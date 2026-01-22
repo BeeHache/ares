@@ -15,11 +15,10 @@ export class FeedItemsComponent {
 
   @Input()
   set feed(value: Feed | null) {
-    console.log('FeedItemsComponent setter called with:', value); // Debug log
+    console.log('FeedItemsComponent setter called with:', value);
     this._feed = value;
     if (value) {
       this.items = value.items || [];
-      console.log('Items to display:', this.items);
 
       // Sort by date descending if needed
       this.items.sort((a, b) => {

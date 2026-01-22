@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-verify-email',
@@ -32,7 +33,7 @@ export class VerifyEmailComponent implements OnInit {
   }
 
   verifyEmail(code: string) {
-    this.http.get(`http://localhost:8080/api/register/confirm/${code}`, { responseType: 'text' })
+    this.http.get(`${environment.apiUrl}/register/confirm/${code}`, { responseType: 'text' })
       .subscribe({
         next: (response) => {
           this.status = 'success';

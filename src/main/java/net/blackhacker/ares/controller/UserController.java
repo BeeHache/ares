@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collection;
-import java.util.Optional;
+import java.util.UUID;
 
 @RestController()
 @RequestMapping("/api/user")
@@ -101,7 +101,7 @@ public class UserController {
     }
 
     @DeleteMapping("/feeds/{id}")
-    public ResponseEntity<Void> deleteFeed(@PathVariable Long id, @AuthenticationPrincipal Account principal) {
+    public ResponseEntity<Void> deleteFeed(@PathVariable UUID id, @AuthenticationPrincipal Account principal) {
         User user = userService.getUserByAccount(principal).get();
         Feed feed = feedService.getFeedById(id);
 

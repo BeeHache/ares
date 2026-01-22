@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../auth.service';
 import { filter, take } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 interface UserProfile {
   email: string;
@@ -44,7 +45,7 @@ export class UserComponent implements OnInit {
   }
 
   loadUserProfile(): void {
-    this.http.get<UserProfile>('http://localhost:8080/api/user/').subscribe({
+    this.http.get<UserProfile>(`${environment.apiUrl}/user/`).subscribe({
       next: (data) => {
         console.log('UserComponent: User profile loaded');
         this.user = data;

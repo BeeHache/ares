@@ -23,6 +23,7 @@ import java.net.URL;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -54,7 +55,7 @@ class FeedMapperTest {
         image.setData(new byte[]{1, 2, 3});
 
         Feed feed = new Feed();
-        feed.setId(1L);
+        feed.setId(UUID.randomUUID());
         feed.setTitle("Test Feed");
         feed.setDescription("A test feed");
         feed.setLinkString("http://example.com");

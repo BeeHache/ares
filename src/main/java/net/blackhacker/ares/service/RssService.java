@@ -11,6 +11,7 @@ import net.blackhacker.ares.model.Enclosure;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.FeedItem;
 import net.blackhacker.ares.model.Image;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -90,26 +91,29 @@ public class RssService {
                 return null;
             }
 
-            Feed feed = new Feed();
+            final Feed feed = new Feed();
             Channel channel = rssItems.get(0).getChannel();
             feed.setTitle(channel.getTitle());
             feed.setDescription(channel.getDescription());
             feed.setLink(new URI(channel.getLink()).toURL());
+            feed.setUrl(new URI(urlString).toURL());
             if (channel.getImage().isPresent()) {
-                URL url = new URI(channel.getImage().get().getLink()).toURL();
-                URLConnection connection = url.openConnection();
-                String contentType = connection.getContentType();
 
-                try(InputStream is = connection.getInputStream()){
-                    byte[] bytes = is.readAllBytes();
+                ResponseEntity<byte[]> response = urlFetchService.fetchBytes(channel.getImage().get().getUrl());
+                if (response.getStatusCode().is2xxSuccessful()) {
                     Image image = new Image();
-                    image.setData(bytes);
-                    image.setContentType(contentType);
+                    image.setData(response.getBody());
+
+                    MediaType mt = response.getHeaders().getContentType();
+                    if (mt != null) {
+                        image.setContentType(mt.toString());
+                    }
                     feed.setImage(image);
                 }
             }
             Set<FeedItem> feedItems = rssItems.stream().map(rssItem -> {
                 FeedItem feedItem = new FeedItem();
+                feedItem.setFeed(feed);
                 if (rssItem.getTitle().isPresent()) {
                     feedItem.setTitle(rssItem.getTitle().get());
                 }

@@ -55,7 +55,7 @@ export class FeedListComponent implements OnInit {
     }
   }
 
-  deleteFeed(id: number | undefined) {
+  deleteFeed(id: string | undefined) {
     if (id === undefined) {
         console.error('Cannot delete feed without ID');
         return;

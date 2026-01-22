@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,7 +31,7 @@ class ImageServiceTest {
     @Test
     void getImage_shouldReturnImage_whenImageExists() {
         // Arrange
-        Long id = 1L;
+        UUID id = UUID.randomUUID();
         Image image = new Image();
         image.setId(id);
         when(imageRepositry.findById(id)).thenReturn(Optional.of(image));
@@ -46,7 +47,7 @@ class ImageServiceTest {
     @Test
     void getImage_shouldReturnNull_whenImageDoesNotExist() {
         // Arrange
-        Long id = 1L;
+        UUID id = UUID.randomUUID();
         when(imageRepositry.findById(id)).thenReturn(Optional.empty());
 
         // Act
@@ -73,7 +74,7 @@ class ImageServiceTest {
     @Test
     void deleteImage_shouldCallDeleteById() {
         // Arrange
-        Long id = 1L;
+        UUID id = UUID.randomUUID();
 
         // Act
         imageService.deleteImage(id);
@@ -85,7 +86,7 @@ class ImageServiceTest {
     @Test
     void updateImage_shouldUpdateExistingImage_whenImageExists() {
         // Arrange
-        Long id = 1L;
+        UUID id = UUID.randomUUID();
         Image existingImage = new Image();
         existingImage.setId(id);
         existingImage.setContentType("image/png");
@@ -111,7 +112,7 @@ class ImageServiceTest {
     @Test
     void updateImage_shouldSaveNewImage_whenImageDoesNotExist() {
         // Arrange
-        Long id = 1L;
+        UUID id = UUID.randomUUID();
         Image newImage = new Image();
         newImage.setContentType("image/jpeg");
         newImage.setData(new byte[]{4, 5, 6});

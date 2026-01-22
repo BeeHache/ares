@@ -25,8 +25,8 @@ import java.util.*;
 @AllArgsConstructor
 public class Feed {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(nullable = false, unique = true)
     @Convert(converter = URLConverter.class)
@@ -47,10 +47,10 @@ public class Feed {
     private boolean isPodcast = false;
 
     @Column(nullable = false)
-    private ZonedDateTime lastModified;
+    private ZonedDateTime lastModified = ZonedDateTime.now();
 
     @Column(nullable = false)
-    private ZonedDateTime lastTouched;
+    private ZonedDateTime lastTouched =  ZonedDateTime.now();
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "image_id")

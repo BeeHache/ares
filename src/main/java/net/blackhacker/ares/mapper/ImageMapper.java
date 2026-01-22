@@ -11,6 +11,7 @@ public class ImageMapper implements ModelDTOMapper<Image, ImageDTO>{
         if (image == null) return null;
 
         ImageDTO dto = new ImageDTO();
+        dto.setId(image.getId());
         dto.setContentType(image.getContentType());
         dto.setData(image.getData());
         return dto;
@@ -20,6 +21,7 @@ public class ImageMapper implements ModelDTOMapper<Image, ImageDTO>{
     public Image toModel(ImageDTO imageDTO) {
         if (imageDTO == null) return null;
         Image image = new Image();
+        image.setId(imageDTO.getId());
         image.setContentType(imageDTO.getContentType());
         image.setData(imageDTO.getData());
         return image;
