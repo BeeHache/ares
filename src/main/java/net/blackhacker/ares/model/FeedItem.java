@@ -10,6 +10,7 @@ import lombok.Setter;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.UUID;
 
 @Entity
@@ -45,7 +46,7 @@ public class FeedItem {
     private Feed feed;
 
     @OneToMany(mappedBy = "feedItem", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Collection<Enclosure> enclosures = new ArrayList<>();
+    private Collection<Enclosure> enclosures = new HashSet<>();
 
     public boolean equals(Object o) {
         if (this == o) return true;

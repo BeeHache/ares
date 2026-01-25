@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController()
@@ -58,7 +59,14 @@ public class UserController {
         multipartFileValidator.validateMultipartFile(file);
 
         final User user = userService.getUserByAccount(account).get();
-        opmlService.importFile(file).forEach(feed -> {
+        Collection<Feed> feeds = feedService.saveFeeds(opmlService.importFile(file));
+        feeds.forEach(feed -> {
+
+            //Checks if a Feed exists already
+            Optional<Feed> ofeed = feedService.getFeedByUrl(feed.getUrl());
+            if (ofeed.isPresent()) {
+                feed = ofeed.get();
+            }
             feed.getUsers().add(user);
             user.getFeeds().add(feed);
         });

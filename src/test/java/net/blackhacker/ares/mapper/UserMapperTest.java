@@ -16,6 +16,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -52,8 +53,10 @@ class UserMapperTest {
         user.setAccount(account);
 
         feed1 = new Feed();
+        feed1.setId(UUID.randomUUID());
         feed1.setTitle("Feed 1");
         feed2 = new Feed();
+        feed2.setId(UUID.randomUUID());
         feed2.setTitle("Feed 2");
 
         feeds = new ArrayList<>();
@@ -62,8 +65,10 @@ class UserMapperTest {
         user.setFeeds(feeds);
 
         feedDTO1 = new FeedDTO();
+        feedDTO1.setId(UUID.randomUUID());
         feedDTO1.setTitle(feed1.getTitle());
         feedDTO2 = new FeedDTO();
+        feedDTO2.setId(UUID.randomUUID());
         feedDTO2.setTitle(feed2.getTitle());
     }
 

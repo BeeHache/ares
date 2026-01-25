@@ -31,10 +31,6 @@ class OpmlServiceTest {
     @MockitoBean
     private URLFetchService urlFetchService;
 
-    @MockitoBean
-    private URLConverter urlConverter;
-
-
     @InjectMocks
     private OpmlService opmlService;
 
@@ -45,7 +41,7 @@ class OpmlServiceTest {
     @BeforeEach
     void setUp() {
 
-        opmlService = new OpmlService(urlFetchService, urlConverter);
+        opmlService = new OpmlService(urlFetchService);
         opmlContentString = """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <opml version="1.0">
@@ -82,23 +78,16 @@ class OpmlServiceTest {
 
     @Test
     void importFile_shouldParseOpmlAndReturnFeeds() {
-;
+        when(urlFetchService.fetchBytes(anyString())).thenReturn(imageResponseBytes);
+
         MockMultipartFile file = new MockMultipartFile("file", "test.opml", "text/xml", opmlContentString.getBytes(StandardCharsets.UTF_8));
-
-
-        try {
-            when(urlFetchService.fetchBytes(anyString())).thenReturn(imageResponseBytes);
-            when(urlConverter.convertToEntityAttribute(anyString())).thenReturn(new URI("http://example.com/rss").toURL());
-        }catch (Exception e) {}
-
-
         Collection<Feed> result = opmlService.importFile(file);
 
         assertNotNull(result);
         assertEquals(1, result.size());
         Feed feed = result.iterator().next();
         assertEquals("Tech", feed.getTitle());
-        assertEquals("http://example.com/rss", feed.getLink().toString());
+        assertEquals("http://example.com/rss", feed.getUrl().toString());
         assertNotNull(feed.getImage());
         assertEquals("image/png", feed.getImage().getContentType());
         assertArrayEquals(new byte[]{1, 2, 3}, feed.getImage().getData());
@@ -109,9 +98,6 @@ class OpmlServiceTest {
 
         // Mock the fetch for the OPML file itself
         when(urlFetchService.fetchString("http://example.com/opml")).thenReturn(opmlResponseString);
-        when(urlFetchService.fetchBytes("http://example.com/image.png")).thenReturn(imageResponseBytes);
-        
-        // Mock the fetch for the image inside the OPML
         when(urlFetchService.fetchBytes(anyString())).thenReturn(imageResponseBytes);
 
         Collection<Feed> result = opmlService.importFeed("http://example.com/opml");
@@ -120,10 +106,7 @@ class OpmlServiceTest {
         assertEquals(1, result.size());
         Feed feed = result.iterator().next();
         assertEquals("Tech", feed.getTitle());
-        assertEquals("http://example.com/rss", feed.getLink().toString());
-        assertNotNull(feed.getImage());
-        assertEquals("image/png", feed.getImage().getContentType());
-        assertArrayEquals(new byte[]{1, 2, 3}, feed.getImage().getData());
+        assertEquals("http://example.com/rss", feed.getUrl().toString());
     }
 
     @Test

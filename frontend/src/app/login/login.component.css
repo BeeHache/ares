@@ -10,31 +10,8 @@ button:hover { background-color: #218838; }
 .error { color: red; margin-top: 10px; }
 .register-link { text-align: center; margin-top: 20px; }
 
-/* Password Toggle Styles */
-.password-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.password-wrapper input {
-  padding-right: 40px; /* Space for the icon */
-}
-
-.toggle-password {
-  position: absolute;
-  right: 5px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 5px;
-  font-size: 1.2rem;
-  color: #333; /* Icon color */
-  flex: none; /* Prevent flexbox from stretching it */
-  width: auto; /* Override global button width */
-}
-
-.toggle-password:hover {
-  background: transparent; /* Remove hover background from global button style */
-  color: #000;
+.forgot-password-link {
+  text-align: right;
+  font-size: 0.9em;
+  margin-bottom: 15px;
 }

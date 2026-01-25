@@ -1,0 +1,32 @@
+<div class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Import OPML</h3>
+      <button class="close-btn" (click)="close.emit()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="tabs">
+        <button [class.active]="mode === 'file'" (click)="mode = 'file'">Upload File</button>
+        <button [class.active]="mode === 'url'" (click)="mode = 'url'">From URL</button>
+      </div>
+
+      <div *ngIf="mode === 'file'" class="tab-content">
+        <input type="file" (change)="onFileSelected($event)" accept=".opml,.xml">
+      </div>
+
+      <div *ngIf="mode === 'url'" class="tab-content">
+        <input type="text" [(ngModel)]="url" placeholder="Enter OPML URL">
+      </div>
+
+      <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="close.emit()">Cancel</button>
+      <button class="btn primary" (click)="onSubmit()" [disabled]="isLoading">
+        {{ isLoading ? 'Importing...' : 'Import' }}
+      </button>
+    </div>
+  </div>
+</div>

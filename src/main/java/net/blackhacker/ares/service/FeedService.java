@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.jms.annotation.JmsListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -16,7 +17,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -46,13 +49,13 @@ public class FeedService {
         log.info("Adding feed: {}", link);
         try {
             URL url = new URL(link);
-            Feed feed = feedRepository.findByUrl(url);
-            if (feed != null) {
+            Optional<Feed> oFeed = feedRepository.findByUrl(url);
+            if (oFeed.isPresent()) {
                 log.debug("Feed already exists: {}", link);
-                return feed;
+                return oFeed.get();
             }
             
-            feed = rssService.feedFromUrl(link);
+            Feed feed = rssService.feedFromUrl(link);
             Feed savedFeed = feedRepository.save(feed);
             log.info("Feed added successfully: {}", link);
             return savedFeed;
@@ -69,14 +72,29 @@ public class FeedService {
         return feedRepository.findById(id).orElse(null);
     }
 
+    public Optional<Feed> getFeedByUrl(URL url){
+        return feedRepository.findByUrl(url);
+    }
+
     public Feed saveFeed(Feed feed){
         return feedRepository.save(feed);
     }
 
+    public Collection<Feed> saveFeeds(Collection<Feed> feeds){
 
+        Collection<Feed> existingFeeds = new ArrayList<>();
+        Collection<Feed> nonExistingFeeds = new ArrayList<>();
+        for (Feed feed : feeds){
+            Optional<Feed> ofeed = feedRepository.findByUrl(feed.getUrl());
+            ofeed.ifPresentOrElse(existingFeeds::add, () -> nonExistingFeeds.add(feed));
+        }
+
+        existingFeeds.addAll(feedRepository.saveAll(nonExistingFeeds));
+        return existingFeeds;
+    }
 
     @Async
-    void updateFeeds() {
+    public void updateFeeds() {
         log.info("Starting feed update cycle");
         ZonedDateTime fiveMinutesAgo = ZonedDateTime.now().minusSeconds(feedIntervalMs / 1000);
         log.debug("Five minutes ago:      {}", fiveMinutesAgo);
@@ -84,8 +102,8 @@ public class FeedService {
         log.debug("Five minutes from now: {}", fiveMinutesFromNow);
 
         for (int page=0; true; page++) {
-            Pageable pageable = PageRequest.of(page, queryLimit, Sort.by("lastTouched"));
-            Page<Feed> feeds  = feedRepository.findTouchedBefore(fiveMinutesAgo, pageable);
+            Pageable pageable = PageRequest.of(page, queryLimit, Sort.by("lastModified"));
+            Page<Feed> feeds  = feedRepository.findModifiedBefore(fiveMinutesAgo, pageable);
             if (feeds.isEmpty()){
                 log.debug("No feeds to update");
                 break;
@@ -142,5 +160,10 @@ public class FeedService {
 
         }
         log.info("Feed update cycle completed");
+    }
+
+    @JmsListener(destination = "update-feed")
+    public void updateFeed(UUID feedId){
+        feedRepository.findById(feedId).ifPresent(rssService::updateFeed);
     }
 }

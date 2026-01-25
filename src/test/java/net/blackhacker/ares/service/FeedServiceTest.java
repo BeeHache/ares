@@ -13,6 +13,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -41,7 +42,7 @@ class FeedServiceTest {
         Feed existingFeed = new Feed();
         existingFeed.setLinkString(link);
 
-        when(feedRepository.findByUrl(new URI(link).toURL())).thenReturn(existingFeed);
+        when(feedRepository.findByUrl(new URI(link).toURL())).thenReturn(Optional.of(existingFeed));
 
         // Act
         Feed result = feedService.addFeed(link);
@@ -61,7 +62,7 @@ class FeedServiceTest {
         Feed newFeed = new Feed();
         newFeed.setLinkString(link);
 
-        when(feedRepository.findByUrl(new URI(link).toURL())).thenReturn(null);
+        when(feedRepository.findByUrl(new URI(link).toURL())).thenReturn(Optional.empty());
         when(rssService.feedFromUrl(link)).thenReturn(newFeed);
         when(feedRepository.save(newFeed)).thenReturn(newFeed);
 

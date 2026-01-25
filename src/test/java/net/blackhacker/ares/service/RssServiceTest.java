@@ -12,9 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(classes = RssService.class)
@@ -79,7 +80,7 @@ class RssServiceTest {
     void feedDTOFromUrl_shouldReturnFeedDTO_whenRssIsValid() {
 
         when(urlFetchService
-                .fetchBytes("http://example.com/rss"))
+                .fetchBytes(eq("http://example.com/rss"), any()))
                 .thenReturn(ResponseEntity.ok(rssContentBytes));
 
         FeedDTO result = rssService.feedDTOFromUrl("http://example.com/rss");
@@ -103,7 +104,7 @@ class RssServiceTest {
         // An RSS feed with a channel but no items is valid XML but results in empty items list.
 
 
-        when(urlFetchService.fetchBytes("http://example.com/rss"))
+        when(urlFetchService.fetchBytes(eq("http://example.com/rss"), any()))
                 .thenReturn(emptyRssOkResponse);
 
         FeedDTO result = rssService.feedDTOFromUrl("http://example.com/rss");
@@ -122,7 +123,7 @@ class RssServiceTest {
     void feedFromUrl_shouldReturnFeed_whenRssIsValid() {
 
         when(urlFetchService
-                .fetchBytes("http://example.com/rss"))
+                .fetchBytes(eq("http://example.com/rss"), any()))
                 .thenReturn(ResponseEntity.ok(invalidRssString.getBytes(StandardCharsets.UTF_8)));
 
         Feed result = rssService.feedFromUrl("http://example.com/rss");
@@ -139,7 +140,7 @@ class RssServiceTest {
     @Test
     void feedFromUrl_shouldReturnNull_whenRssIsEmpty() {
         when(urlFetchService
-                .fetchBytes("http://example.com/rss"))
+                .fetchBytes(eq("http://example.com/rss"), any()))
                 .thenReturn(ResponseEntity.ok(emptyRssString.getBytes(StandardCharsets.UTF_8)));
 
         Feed result = rssService.feedFromUrl("http://example.com/rss");

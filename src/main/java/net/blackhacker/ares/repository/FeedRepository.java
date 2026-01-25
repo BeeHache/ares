@@ -10,13 +10,14 @@ import org.springframework.data.domain.Pageable;
 
 import java.net.URL;
 import java.time.ZonedDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface FeedRepository extends JpaRepository<Feed, UUID> {
 
-    @Query("SELECT f FROM Feed f WHERE f.lastTouched < :dt OR f.lastTouched IS NULL")
-    Page<Feed> findTouchedBefore(@Param("dt") ZonedDateTime zonedDateTime, Pageable pageable);
+    @Query("SELECT f FROM Feed f WHERE f.lastModified < :dt OR f.lastModified IS NULL")
+    Page<Feed> findModifiedBefore(@Param("dt") ZonedDateTime zonedDateTime, Pageable pageable);
 
-    Feed findByUrl(@Param("url") URL url);
+    Optional<Feed> findByUrl(@Param("url") URL url);
 }

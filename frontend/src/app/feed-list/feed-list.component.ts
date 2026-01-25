@@ -1,17 +1,19 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FeedService, Feed } from '../feed.service';
+import { OpmlImportComponent } from '../opml-import/opml-import.component';
 
 @Component({
   selector: 'app-feed-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, OpmlImportComponent],
   templateUrl: './feed-list.component.html',
   styleUrl: './feed-list.component.css'
 })
 export class FeedListComponent implements OnInit {
   feeds: Feed[] = [];
   totalUnread = 0; // Not yet supported by backend
+  showImportModal = false;
 
   constructor(
     private feedService: FeedService,
@@ -71,8 +73,15 @@ export class FeedListComponent implements OnInit {
     }
   }
 
-  importOpml() {
-      // Simple file input trigger could be added here
-      alert('OPML Import UI not implemented yet');
+  openImportModal() {
+      this.showImportModal = true;
+  }
+
+  closeImportModal() {
+      this.showImportModal = false;
+  }
+
+  onImportSuccess() {
+      this.loadFeeds(); // Refresh list
   }
 }

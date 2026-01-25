@@ -11,6 +11,8 @@ import net.blackhacker.ares.model.Enclosure;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.FeedItem;
 import net.blackhacker.ares.model.Image;
+import net.blackhacker.ares.repository.FeedRepository;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -20,7 +22,11 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,9 +36,12 @@ import java.util.stream.Collectors;
 public class RssService {
 
     final private URLFetchService urlFetchService;
+    final private DateTimeFormatter dateTimeFormatter;
+
 
     public RssService(URLFetchService urlFetchService) {
         this.urlFetchService = urlFetchService;
+        dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
     }
 
     public FeedDTO feedDTOFromUrl(String urlString) {
@@ -84,6 +93,10 @@ public class RssService {
     }
 
     public Feed feedFromUrl(String urlString) {
+        return feedFromUrl( new Feed(), urlString);
+    }
+
+    public Feed feedFromUrl(final Feed feed, String urlString) {
         try {
             List<Item> rssItems = parseRss(urlString);
 
@@ -91,7 +104,6 @@ public class RssService {
                 return null;
             }
 
-            final Feed feed = new Feed();
             Channel channel = rssItems.get(0).getChannel();
             feed.setTitle(channel.getTitle());
             feed.setDescription(channel.getDescription());
@@ -99,7 +111,12 @@ public class RssService {
             feed.setUrl(new URI(urlString).toURL());
             if (channel.getImage().isPresent()) {
 
-                ResponseEntity<byte[]> response = urlFetchService.fetchBytes(channel.getImage().get().getUrl());
+                ZonedDateTime lastModified =  feed.getLastModified();
+
+                Map<String,String> headers = new HashMap<>();
+                headers.put(HttpHeaders.IF_MODIFIED_SINCE, lastModified.format(dateTimeFormatter));
+
+                ResponseEntity<byte[]> response = urlFetchService.fetchBytes(channel.getImage().get().getUrl(), headers);
                 if (response.getStatusCode().is2xxSuccessful()) {
                     Image image = new Image();
                     image.setData(response.getBody());
@@ -155,8 +172,85 @@ public class RssService {
         }
     }
 
+    public void updateFeed(Feed feed) {
+        try {
+            List<Item> rssItems = parseRss(feed.getUrl().toString());
+
+            if (rssItems.isEmpty()) {
+                return;
+            }
+
+            Channel channel = rssItems.get(0).getChannel();
+            feed.setTitle(channel.getTitle());
+            feed.setDescription(channel.getDescription());
+            feed.setLink(new URI(channel.getLink()).toURL());
+            if (channel.getImage().isPresent()) {
+                ZonedDateTime lastModified =  feed.getLastModified();
+                Map<String,String> headers = new HashMap<>();
+                headers.put(HttpHeaders.IF_MODIFIED_SINCE, lastModified.format(dateTimeFormatter));
+
+                ResponseEntity<byte[]> response = urlFetchService.fetchBytes(channel.getImage().get().getUrl(), headers);
+                if (response.getStatusCode().is2xxSuccessful()) {
+                    Image image = new Image();
+                    image.setData(response.getBody());
+
+                    MediaType mt = response.getHeaders().getContentType();
+                    if (mt != null) {
+                        image.setContentType(mt.toString());
+                    }
+                    feed.setImage(image);
+                }
+            }
+            Set<FeedItem> feedItems = rssItems.stream().map(rssItem -> {
+                FeedItem feedItem = new FeedItem();
+                feedItem.setFeed(feed);
+                if (rssItem.getTitle().isPresent()) {
+                    feedItem.setTitle(rssItem.getTitle().get());
+                }
+                if (rssItem.getDescription().isPresent()) {
+                    feedItem.setDescription(rssItem.getDescription().get());
+                }
+                if (rssItem.getLink().isPresent()) {
+                    feedItem.setLink(rssItem.getLink().get());
+                }
+
+                rssItem.getEnclosures().forEach(
+                        enclosure -> {
+                            try {
+                                Enclosure enclosureModel = new Enclosure();
+                                enclosureModel.setUrl(new URI(enclosure.getUrl()).toURL());
+                                enclosureModel.setLength(enclosure.getLength().isPresent() ? enclosure.getLength().get() : null);
+                                enclosureModel.setType(enclosure.getType());
+                                enclosureModel.setFeedItem(feedItem);
+                                feedItem.getEnclosures().add(enclosureModel);
+                            } catch (Exception e) {
+                                log.error(e.getMessage(), e);
+                            }
+                        }
+                );
+
+                if (rssItem.getUpdatedAsZonedDateTime().isPresent()){
+                    feedItem.setDate(rssItem.getUpdatedAsZonedDateTime().get());
+                } else if (rssItem.getPubDateAsZonedDateTime().isPresent()) {
+                    feedItem.setDate(rssItem.getPubDateAsZonedDateTime().get());
+                }
+
+                return feedItem;
+            }).collect(Collectors.toSet());
+            feed.setItems(feedItems);
+            feed.touch();
+        } catch (Exception e) {
+            throw new ServiceException("Couldn't up feed :" + feed.getId().toString(), e);
+        }
+    }
+
+
     private List<Item> parseRss(String urlString) {
-        ResponseEntity<byte[]> response = urlFetchService.fetchBytes(urlString);
+        return parseRss(urlString,null);
+    }
+
+    private List<Item> parseRss(String urlString, Map<String, String> headers) {
+        ResponseEntity<byte[]> response = urlFetchService.fetchBytes(urlString, headers);
         if (!response.getStatusCode().is2xxSuccessful()) {
             log.warn("Problem fetching {}: {}", urlString, response.getStatusCode());
             return List.of();

@@ -34,7 +34,7 @@ class EmailSenderServiceTest {
     @MockitoBean
     private MimeMessage mimeMessage;
 
-    @InjectMocks
+    @Autowired
     private EmailSenderService emailSenderService;
 
     @Test

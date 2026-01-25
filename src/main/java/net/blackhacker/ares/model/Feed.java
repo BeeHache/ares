@@ -49,9 +49,6 @@ public class Feed {
     @Column(nullable = false)
     private ZonedDateTime lastModified = ZonedDateTime.now();
 
-    @Column(nullable = false)
-    private ZonedDateTime lastTouched =  ZonedDateTime.now();
-
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "image_id")
     private Image image;
@@ -75,6 +72,18 @@ public class Feed {
     }
 
     public void touch() {
-        this.lastTouched = ZonedDateTime.now();
+        this.lastModified = ZonedDateTime.now();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Feed feed = (Feed) o;
+        return Objects.equals(id, feed.id);
+    }
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
     }
 }

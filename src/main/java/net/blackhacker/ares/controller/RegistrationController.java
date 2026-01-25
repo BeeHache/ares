@@ -32,11 +32,8 @@ public class RegistrationController {
     ResponseEntity<UserDTO> registerUser(@RequestBody UserDTO userDTO) {
         log.info("Registration attempt for email: {}", userDTO.getEmail());
         userDTOValidator.validateUserForRegistration(userDTO);
-        Optional<User> registeredUser = userService.registerUser(userMapper.toModel(userDTO));
-        if (registeredUser.isEmpty()){
-            log.warn("Registration failed for email: {}", userDTO.getEmail());
-            return ResponseEntity.badRequest().build();
-        }
+        User registeredUser = userService.registerUser(userMapper.toModel(userDTO));
+
 
         log.info("User registered successfully: {}", userDTO.getEmail());
         URI location = ServletUriComponentsBuilder
@@ -47,7 +44,7 @@ public class RegistrationController {
 
         return ResponseEntity
                 .created(location)
-                .body(userMapper.toDTO(registeredUser.get()));
+                .body(userMapper.toDTO(registeredUser));
     }
 
     @GetMapping("/confirm/{code}")

@@ -10,9 +10,12 @@ spring:
   sql:
     init:
       mode: always
+      separator: ;;
   session:
     store-type: none
-
+app:
+  copyright:
+    start-year: 2024
 user:
   password:
     min_length: 8

@@ -31,7 +31,7 @@ public class FeedMapper implements ModelDTOMapper<Feed, FeedDTO> {
             dto.setId(feed.getId());
             dto.setTitle(feed.getTitle());
             dto.setDescription(feed.getDescription());
-            dto.setLink(feed.getLink().toString());
+            dto.setLink(feed.getLink() != null ? feed.getLink().toString() : null);
             dto.setImage(imageMapper.toDTO(feed.getImage()));
             dto.setPodcast(feed.isPodcast());
             dto.setLastModified(feed.getLastModified());

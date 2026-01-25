@@ -16,6 +16,7 @@ spring:
   sql:
     init:
       mode: always
+      separator: ;;
   data:
     redis:
       host: redis
@@ -31,6 +32,10 @@ spring:
           auth: ${SPRING_MAIL_SMTP_AUTH:true}
           starttls:
             enable: ${SPRING_MAIL_SMTP_STARTTLS_ENABLE:true}
+
+app:
+  copyright:
+    start-year: 2024
 
 user:
   password:

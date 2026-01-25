@@ -3,7 +3,7 @@
 
   <div class="actions">
     <button class="btn" (click)="addFeed()">Add Feed</button>
-    <button class="btn secondary" (click)="importOpml()">Import OPML</button>
+    <button class="btn" (click)="openImportModal()">Import OPML</button>
   </div>
 
   <div class="summary">
@@ -26,4 +26,10 @@
   <div *ngIf="feeds.length === 0" class="no-feeds">
       <p>No feeds found. Add one to get started!</p>
   </div>
+
+  <app-opml-import
+    *ngIf="showImportModal"
+    (close)="closeImportModal()"
+    (importSuccess)="onImportSuccess()">
+  </app-opml-import>
 </div>

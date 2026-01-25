@@ -75,4 +75,8 @@ export class FeedService {
     formData.append('file', file);
     return this.http.post<void>(`${this.apiUrl}/import`, formData);
   }
+
+  importOpmlUrl(url: string): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/import`, null, { params: { url } });
+  }
 }

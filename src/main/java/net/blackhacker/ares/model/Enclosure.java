@@ -6,6 +6,7 @@ import lombok.Data;
 import net.blackhacker.ares.utils.URLConverter;
 
 import java.net.URL;
+import java.util.Objects;
 import java.util.UUID;
 
 
@@ -31,4 +32,16 @@ public class Enclosure {
     @JoinColumn(name = "feed_item_id")
     private FeedItem feedItem;
 
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Enclosure enclosure = (Enclosure) o;
+        return Objects.equals(getUrl().toString(), enclosure.getUrl().toString());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getUrl().toString());
+    }
 }

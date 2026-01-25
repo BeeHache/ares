@@ -7,7 +7,7 @@
 .dashboard {
   display: flex;
   gap: 20px;
-  min-height: 70vh; /* Ensure it takes up vertical space */
+  min-height: 70vh;
 }
 
 .sidebar {
@@ -15,12 +15,56 @@
   border: 1px solid #ccc;
   border-radius: 5px;
   overflow: hidden;
+  background-color: #fff;
 }
 
 .main-content {
   flex-grow: 1;
   border: 1px solid #ccc;
   border-radius: 5px;
-  padding: 0; /* FeedItemsComponent has its own padding */
+  padding: 0;
   background-color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-header {
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    color: #007bff;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .feeds-page-container {
+        padding: 10px;
+        margin: 0;
+    }
+
+    .dashboard {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: calc(100vh - 80px); /* Full height minus header */
+    }
+
+    .main-content {
+        width: 100%;
+        height: calc(100vh - 80px);
+    }
+
+    .hidden {
+        display: none !important;
+    }
 }

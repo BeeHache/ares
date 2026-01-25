@@ -8,6 +8,7 @@ import net.blackhacker.ares.model.RefreshToken;
 import net.blackhacker.ares.service.AccountService;
 import net.blackhacker.ares.service.JWTService;
 import net.blackhacker.ares.service.RefreshTokenService;
+import net.blackhacker.ares.service.UserService;
 import net.blackhacker.ares.validation.UserDTOValidator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -16,10 +17,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
 @Slf4j
 @RestController()
@@ -31,16 +29,16 @@ public class LoginController {
 
     private final RefreshTokenService refreshTokenService;
     private final AccountService accountService;
-    private final UserDTOValidator userDTOValidator;
+    private final UserService userService;
     private final AuthenticationManager authenticationManager;
     private final JWTService jwtService; // Your custom service to sign tokens
 
     public LoginController(RefreshTokenService refreshTokenService, AccountService accountService,
-                           UserDTOValidator userDTOValidator,
+                           UserService userService,
                            AuthenticationManager authenticationManager, JWTService jwtService){
         this.refreshTokenService = refreshTokenService;
         this.accountService = accountService;
-        this.userDTOValidator = userDTOValidator;
+        this.userService = userService;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
     }
@@ -78,6 +76,12 @@ public class LoginController {
                 .contentType(MediaType.APPLICATION_JSON)
                 .headers(headers)
                 .body(accessTokenDTO);
+    }
+
+    @PostMapping("/recover")
+    public void recoverAccount(@RequestBody String email) {
+        userService.recoverUser(email);
+
     }
 
     @GetMapping("/refresh")

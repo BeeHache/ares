@@ -1,14 +1,13 @@
 <div class="container">
   <h2>Register</h2>
   <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
-    <div class="form-group">
-      <label for="email">Email:</label>
-      <input type="email" id="email" [(ngModel)]="email" name="email" required email #emailInput="ngModel">
-      <div *ngIf="emailInput.invalid && (emailInput.dirty || emailInput.touched)" class="error-message">
-        <div *ngIf="emailInput.errors?.['required']">Email is required.</div>
-        <div *ngIf="emailInput.errors?.['email']">Invalid email format.</div>
-      </div>
-    </div>
+
+    <app-email-input
+      [(ngModel)]="email"
+      name="email"
+      id="email"
+      [required]="true"
+    ></app-email-input>
 
     <app-password-input
       [(ngModel)]="password"
@@ -16,14 +15,7 @@
       id="password"
       label="Password"
       [required]="true"
-      [minlength]="8"
-      #passwordInput="ngModel"
     ></app-password-input>
-
-    <div *ngIf="passwordInput.invalid && (passwordInput.dirty || passwordInput.touched)" class="error-message">
-        <div *ngIf="passwordInput.errors?.['required']">Password is required.</div>
-        <div *ngIf="passwordInput.errors?.['minlength']">Password must be at least 8 characters long.</div>
-    </div>
 
     <app-password-input
       [(ngModel)]="confirmPassword"
@@ -33,10 +25,16 @@
       [required]="true"
     ></app-password-input>
 
+    <!-- Display all validation errors -->
+    <div *ngIf="errorMessages.length > 0" class="error-container">
+      <ul>
+        <li *ngFor="let msg of errorMessages">{{ msg }}</li>
+      </ul>
+    </div>
+
     <div class="button-group">
-      <button type="submit" [disabled]="registerForm.invalid">Register</button>
+      <button type="submit" [disabled]="errorMessages.length > 0">Register</button>
       <button type="button" class="cancel-btn" (click)="onCancel()">Cancel</button>
     </div>
   </form>
-  <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
 </div>

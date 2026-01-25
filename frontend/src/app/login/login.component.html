@@ -10,9 +10,12 @@
       [(ngModel)]="password"
       name="password"
       id="password"
-      label="Password"
       [required]="true"
     ></app-password-input>
+
+    <div class="forgot-password-link">
+      <a routerLink="/forgot-password">Forgot my password</a>
+    </div>
 
     <div class="button-group">
       <button type="submit">Login</button>
