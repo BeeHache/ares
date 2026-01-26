@@ -15,6 +15,7 @@ import net.blackhacker.ares.repository.FeedRepository;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
@@ -180,10 +181,13 @@ public class RssService {
                 return;
             }
 
+            // Get channel info from 1st item
             Channel channel = rssItems.get(0).getChannel();
             feed.setTitle(channel.getTitle());
             feed.setDescription(channel.getDescription());
             feed.setLink(new URI(channel.getLink()).toURL());
+
+            // Fetch image data
             if (channel.getImage().isPresent()) {
                 ZonedDateTime lastModified =  feed.getLastModified();
                 Map<String,String> headers = new HashMap<>();
@@ -201,6 +205,7 @@ public class RssService {
                     feed.setImage(image);
                 }
             }
+
             Set<FeedItem> feedItems = rssItems.stream().map(rssItem -> {
                 FeedItem feedItem = new FeedItem();
                 feedItem.setFeed(feed);
@@ -238,7 +243,6 @@ public class RssService {
                 return feedItem;
             }).collect(Collectors.toSet());
             feed.setItems(feedItems);
-            feed.touch();
         } catch (Exception e) {
             throw new ServiceException("Couldn't up feed :" + feed.getId().toString(), e);
         }

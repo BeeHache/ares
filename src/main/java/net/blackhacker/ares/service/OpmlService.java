@@ -7,23 +7,22 @@ import be.ceau.opml.entity.Head;
 import be.ceau.opml.entity.Opml;
 import be.ceau.opml.entity.Outline;
 import lombok.extern.slf4j.Slf4j;
+import net.blackhacker.ares.Constants;
+import net.blackhacker.ares.dto.MessageDTO;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.Image;
-import net.blackhacker.ares.utils.URLConverter;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -81,7 +80,7 @@ public class OpmlService {
      * @param outlines
      * @return A Collection of Feeds
      */
-    private Collection<Feed> opmlWalker(Collection<Outline> outlines){
+    private Collection<Feed>  opmlWalker(Collection<Outline> outlines){
         Collection<Feed> feeds = new ArrayList<>();
         for (Outline outlineItem : outlines){
             try {

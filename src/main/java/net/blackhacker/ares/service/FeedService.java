@@ -1,6 +1,8 @@
 package net.blackhacker.ares.service;
 
 import lombok.extern.slf4j.Slf4j;
+import net.blackhacker.ares.Constants;
+import net.blackhacker.ares.dto.MessageDTO;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.FeedItem;
 import net.blackhacker.ares.repository.FeedRepository;
@@ -10,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.jms.annotation.JmsListener;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -28,7 +31,7 @@ public class FeedService {
 
     private final FeedRepository feedRepository;
     private final RssService rssService;
-    private final TransactionTemplate transactionTemplate;
+    private final JmsTemplate jmsTemplate;
 
     @Value("${feed.interval_ms}")
     private long feedIntervalMs;
@@ -39,10 +42,10 @@ public class FeedService {
     public FeedService(
             FeedRepository feedRepository,
            RssService rssService,
-           TransactionTemplate transactionTemplate) {
+            JmsTemplate jmsTemplate) {
         this.feedRepository = feedRepository;
         this.rssService = rssService;
-        this.transactionTemplate = transactionTemplate;
+        this.jmsTemplate = jmsTemplate;
     }
 
     public Feed addFeed(String link) {
@@ -112,33 +115,9 @@ public class FeedService {
             log.debug("Found {} feeds to update", feeds.getNumberOfElements());
 
             int processed = 0;
-            for (Feed feed : feeds) {
-                try {
-                    transactionTemplate.execute(status -> {
-                        // Re-fetch the feed to ensure it's attached to the current transaction/session
-                        // This allows lazy loading of items to work
-                        Feed attachedFeed = feedRepository.findById(feed.getId()).orElseThrow();
-                        
-                        Feed newFeed = rssService.feedFromUrl(attachedFeed.getUrl().toString());
-                        if (newFeed != null) {
-                            Collection<FeedItem> feedItems = attachedFeed.getItems();
-    
-                            //re-parent the newFeed items
-                            for (FeedItem item : newFeed.getItems()) {
-                                item.setFeed(attachedFeed);
-                                feedItems.add(item);
-                            }
-                        }
-    
-                        attachedFeed.touch();
-                        feedRepository.save(attachedFeed);
-                        return null;
-                    });
-                    processed++;
-                } catch (Exception e) {
-                    log.error("Error updating feed {}", feed.getId(), e);
-                }
-            }
+            feeds.forEach(feed ->{
+                sendUpdateFeedMessage(feed.getId());
+            });
 
             log.debug("Processed {} feeds", processed);
 
@@ -149,21 +128,20 @@ public class FeedService {
             if (ZonedDateTime.now().isAfter(fiveMinutesFromNow)){
                 break;
             }
-
-            try {
-                log.debug("Sleeping for {} ms", 3000);
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                log.error("Error sleeping", e);
-                break;
-            }
-
         }
         log.info("Feed update cycle completed");
     }
 
-    @JmsListener(destination = "update-feed")
+    private void sendUpdateFeedMessage(UUID feedId){
+        jmsTemplate.convertAndSend(Constants.UPDATE_FEED_QUEUE, feedId);
+    }
+
+    @JmsListener(destination = Constants.UPDATE_FEED_QUEUE)
     public void updateFeed(UUID feedId){
-        feedRepository.findById(feedId).ifPresent(rssService::updateFeed);
+        feedRepository.findById(feedId).ifPresent(feed ->{
+            rssService.updateFeed(feed);
+            feed.touch();
+            feedRepository.save(feed);
+        });
     }
 }

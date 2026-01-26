@@ -9,7 +9,6 @@ import net.blackhacker.ares.service.AccountService;
 import net.blackhacker.ares.service.JWTService;
 import net.blackhacker.ares.service.RefreshTokenService;
 import net.blackhacker.ares.service.UserService;
-import net.blackhacker.ares.validation.UserDTOValidator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;

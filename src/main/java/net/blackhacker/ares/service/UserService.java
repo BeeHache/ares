@@ -1,7 +1,6 @@
 package net.blackhacker.ares.service;
 
 import lombok.extern.slf4j.Slf4j;
-import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.EmailConfirmationCode;
 import net.blackhacker.ares.model.User;
@@ -41,7 +40,7 @@ public class UserService {
             log.warn("User already exists: {}", user.getEmail());
             User foundUser = oUser.get();
             if (foundUser.getAccount().isEnabled()){
-                throw new RegistrationException("User already enabled");
+                throw new RegistrationException(String.format("%s already exists.", user.getEmail()));
             }
             sendVerficationEmail(foundUser);
             return foundUser;

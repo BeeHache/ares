@@ -11,6 +11,9 @@ spring:
     init:
       mode: always
       separator: ;;
+  activemq:
+    packages:
+      trusted: java.util,net.blackhacker.ares.dto
   session:
     store-type: none
 app:

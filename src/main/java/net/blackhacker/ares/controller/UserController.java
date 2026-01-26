@@ -1,6 +1,8 @@
 package net.blackhacker.ares.controller;
 
+import net.blackhacker.ares.Constants;
 import net.blackhacker.ares.dto.FeedDTO;
+import net.blackhacker.ares.dto.MessageDTO;
 import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.mapper.UserMapper;
@@ -15,7 +17,9 @@ import net.blackhacker.ares.validation.URLValidator;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,11 +37,14 @@ public class UserController {
     private final FeedMapper feedMapper;
     private final MultipartFileValidator multipartFileValidator;
     private final URLValidator urlValidator;
+    private final TransactionTemplate transactionTemplate;
+    private final JmsTemplate jmsTemplate;
 
 
     public UserController(UserService userService, FeedService feedService, OpmlService opmlService,
                           UserMapper userMapper, FeedMapper feedMapper, MultipartFileValidator multipartFileValidator,
-                          URLValidator urlValidator){
+                          URLValidator urlValidator,  TransactionTemplate transactionTemplate,
+                          JmsTemplate jmsTemplate) {
         this.userService = userService;
         this.feedService = feedService;
         this.opmlService = opmlService;
@@ -45,6 +52,8 @@ public class UserController {
         this.feedMapper = feedMapper;
         this.multipartFileValidator = multipartFileValidator;
         this.urlValidator = urlValidator;
+        this.transactionTemplate = transactionTemplate;
+        this.jmsTemplate = jmsTemplate;
     }
 
     @GetMapping("/")
@@ -55,37 +64,35 @@ public class UserController {
     }
 
     @PostMapping("/import")
-    ResponseEntity<Void> importOPML(@RequestParam("file") MultipartFile file, @AuthenticationPrincipal Account account) {
+    ResponseEntity<Void> importOpmlFromFile(@RequestParam("file") MultipartFile file, @AuthenticationPrincipal Account account) {
         multipartFileValidator.validateMultipartFile(file);
-
         final User user = userService.getUserByAccount(account).get();
         Collection<Feed> feeds = feedService.saveFeeds(opmlService.importFile(file));
-        feeds.forEach(feed -> {
-
-            //Checks if a Feed exists already
-            Optional<Feed> ofeed = feedService.getFeedByUrl(feed.getUrl());
-            if (ofeed.isPresent()) {
-                feed = ofeed.get();
-            }
-            feed.getUsers().add(user);
-            user.getFeeds().add(feed);
-        });
-        userService.saveUser(user);
+        importOpml(user,feeds);
         return ResponseEntity.accepted().build();
     }
 
     @PutMapping("/import")
-    ResponseEntity<Void> importOPML(@RequestParam("url") String url, @AuthenticationPrincipal Account account) {
+    ResponseEntity<Void> importOpmlFromUrl(@RequestParam("url") String url, @AuthenticationPrincipal Account account) {
         urlValidator.validateURL(url);
-
         final User user = userService.getUserByAccount(account).get();
-        opmlService.importFeed(url).forEach(feed -> {
-            feed.getUsers().add(user);
-            user.getFeeds().add(feed);
-        });
-        userService.saveUser(user);
+        Collection<Feed> feeds = opmlService.importFeed(url);
+        importOpml(user,feeds);
         return ResponseEntity.accepted().build();
     }
+
+    private void importOpml (final User user, Collection<Feed> feeds) {
+        feeds.forEach(feed -> {
+            transactionTemplate.executeWithoutResult(status -> {
+                feed.getUsers().add(user);
+                user.getFeeds().add(feed);
+                userService.saveUser(user);
+            });
+            sendUpdateFeedMessage(feed.getId());
+        });
+    }
+
+
 
     @PutMapping("/addfeed")
     ResponseEntity<FeedDTO> addFeed(@RequestParam("link") String link, @AuthenticationPrincipal @NonNull Account account){
@@ -123,5 +130,9 @@ public class UserController {
         feedService.saveFeed(feed);
         userService.saveUser(user);
         return ResponseEntity.ok().build();
+    }
+
+    private void sendUpdateFeedMessage(UUID feedId){
+        jmsTemplate.convertAndSend(Constants.UPDATE_FEED_QUEUE, feedId);
     }
 }
