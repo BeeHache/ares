@@ -37,11 +37,15 @@ public class Enclosure {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Enclosure enclosure = (Enclosure) o;
-        return Objects.equals(getUrl().toString(), enclosure.getUrl().toString());
+        if (url != null && enclosure.url != null)
+            return Objects.equals(getUrl().toString(), enclosure.getUrl().toString());
+        return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(getUrl().toString());
+        if (url != null)
+            return url.toString().hashCode();
+        return super.hashCode();
     }
 }

@@ -5,7 +5,7 @@ import jakarta.persistence.Converter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
 @Slf4j
@@ -27,9 +27,9 @@ public class URLConverter implements AttributeConverter<URL, String> {
             return null;
         }
         try {
-            return new URL(s);
-        } catch (MalformedURLException e) {
-            log.error("Could not convert database string '{}' to URL object", s, e);
+            return new URI(s).toURL();
+        } catch (Exception e) {
+            log.error(String.format("Could not convert database string '%s' to URL object", s), e);
             return null;
         }
     }

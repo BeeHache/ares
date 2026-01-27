@@ -40,7 +40,7 @@ class FeedServiceTest {
         // Arrange
         String link = "http://example.com/feed";
         Feed existingFeed = new Feed();
-        existingFeed.setLinkString(link);
+        existingFeed.setLinkFromString(link);
 
         when(feedRepository.findByUrl(new URI(link).toURL())).thenReturn(Optional.of(existingFeed));
 
@@ -60,7 +60,7 @@ class FeedServiceTest {
         // Arrange
         String link = "http://example.com/new-feed";
         Feed newFeed = new Feed();
-        newFeed.setLinkString(link);
+        newFeed.setLinkFromString(link);
 
         when(feedRepository.findByUrl(new URI(link).toURL())).thenReturn(Optional.empty());
         when(rssService.feedFromUrl(link)).thenReturn(newFeed);

@@ -15,6 +15,7 @@ import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional; // Import Transactional
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.net.MalformedURLException;
@@ -137,11 +138,16 @@ public class FeedService {
     }
 
     @JmsListener(destination = Constants.UPDATE_FEED_QUEUE)
+    @Transactional // Added Transactional annotation
     public void updateFeed(UUID feedId){
-        feedRepository.findById(feedId).ifPresent(feed ->{
-            rssService.updateFeed(feed);
-            feed.touch();
-            feedRepository.save(feed);
-        });
+        try {
+            feedRepository.findById(feedId).ifPresent(feed -> {
+                if (rssService.updateFeed(feed)) {
+                    feedRepository.save(feed);
+                }
+            });
+        } catch (Exception e) {
+            log.error("Error updating feed: {}: {}", feedId, e.getMessage());
+        }
     }
 }

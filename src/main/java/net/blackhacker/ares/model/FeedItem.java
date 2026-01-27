@@ -6,13 +6,18 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import net.blackhacker.ares.utils.URLConverter;
 
+import java.net.URI;
+import java.net.URL;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
 
+@Slf4j
 @Entity
 @Table(name = "feed_item")
 @Getter
@@ -32,7 +37,8 @@ public class FeedItem {
     private String description;
 
     @Column
-    private String link;
+    @Convert(converter = URLConverter.class)
+    private URL link;
 
     @Column
     private ZonedDateTime date;
@@ -47,6 +53,15 @@ public class FeedItem {
 
     @OneToMany(mappedBy = "feedItem", cascade = CascadeType.ALL, orphanRemoval = true)
     private Collection<Enclosure> enclosures = new HashSet<>();
+
+    public void setLinkFromString(String linkString) {
+        try {
+            link = new URI(linkString).toURL();
+        }catch (Exception e) {
+            log.error("Error parsing link from string", e);
+            link = null;
+        }
+    }
 
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -113,7 +113,7 @@ class UserControllerTest {
 
         feed = new Feed();
         feed.setTitle("Test Feed");
-        feed.setLinkString(validUrl);
+        feed.setLinkFromString(validUrl);
 
         feedDTO = new FeedDTO();
         feedDTO.setTitle(feed.getTitle());

@@ -1,7 +1,6 @@
 package net.blackhacker.ares.service;
 
 import net.blackhacker.ares.model.Feed;
-import net.blackhacker.ares.utils.URLConverter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,7 +13,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.util.MultiValueMap;
 
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
@@ -121,12 +119,12 @@ class OpmlServiceTest {
         // Arrange
         Feed feed1 = new Feed();
         feed1.setTitle("Feed 1");
-        feed1.setLinkString("http://example.com/feed1");
+        feed1.setLinkFromString("http://example.com/feed1");
         feed1.setDescription("Description 1");
 
         Feed feed2 = new Feed();
         feed2.setTitle("Feed 2");
-        feed2.setLinkString("http://example.com/feed2");
+        feed2.setLinkFromString("http://example.com/feed2");
         // Description is null
 
         Collection<Feed> feeds = List.of(feed1, feed2);

@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.utils.BooleanConverter;
 import net.blackhacker.ares.utils.URLConverter;
 
@@ -17,6 +18,7 @@ import java.time.ZonedDateTime;
 import java.util.*;
 
 
+@Slf4j
 @Entity
 @Table(name = "feeds")
 @Getter
@@ -59,7 +61,7 @@ public class Feed {
     @ManyToMany(mappedBy = "feeds")
     private List<User> users = new ArrayList<>();
 
-    public void setLinkString(String link) {
+    public void setLinkFromString(String link) {
         if (link == null) {
             this.link = null;
             return;
@@ -67,8 +69,14 @@ public class Feed {
         try {
             this.link = URI.create(link).toURL();
         }catch (MalformedURLException | IllegalArgumentException e) {
+            log.error("Invalid link provided: {}", link, e);
             this.link = null;
         }
+    }
+
+    public String getLinkAsString() {
+        if (link == null) { return null;}
+        return link.toString();
     }
 
     public void touch() {
@@ -80,10 +88,10 @@ public class Feed {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Feed feed = (Feed) o;
-        return Objects.equals(id, feed.id);
+        return Objects.equals(url, feed.url);
     }
     @Override
     public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+        return url != null ? url.hashCode() : super.hashCode();
     }
 }

@@ -43,7 +43,7 @@ class FeedItemMapperTest {
         item.setId(UUID.randomUUID());
         item.setTitle("Test Item");
         item.setDescription("A test item");
-        item.setLink("http://example.com/item");
+        item.setLinkFromString("http://example.com/item");
         item.setImage(image);
         item.setDate(LDT);
 

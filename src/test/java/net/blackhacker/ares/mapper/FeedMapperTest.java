@@ -58,7 +58,7 @@ class FeedMapperTest {
         feed.setId(UUID.randomUUID());
         feed.setTitle("Test Feed");
         feed.setDescription("A test feed");
-        feed.setLinkString("http://example.com");
+        feed.setLinkFromString("http://example.com");
         feed.setImage(image);
         feed.setPodcast(false);
         feed.setLastModified(ZonedDateTime.now());

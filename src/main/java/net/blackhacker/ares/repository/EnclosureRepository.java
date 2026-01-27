@@ -1,6 +1,6 @@
 package net.blackhacker.ares.repository;
 
-import net.blackhacker.ares.model.FeedItem;
+import net.blackhacker.ares.model.Enclosure;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,6 +9,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface FeedItemRepository extends JpaRepository<FeedItem, UUID> {
-    Optional<FeedItem> findByLink(URL url);
+public interface EnclosureRepository extends JpaRepository<Enclosure, UUID> {
+    Optional<Enclosure> findByUrl(URL url);
 }
