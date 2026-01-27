@@ -84,7 +84,6 @@ class OpmlServiceTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         Feed feed = result.iterator().next();
-        assertEquals("Tech", feed.getTitle());
         assertEquals("http://example.com/rss", feed.getUrl().toString());
         assertNotNull(feed.getImage());
         assertEquals("image/png", feed.getImage().getContentType());
@@ -103,7 +102,6 @@ class OpmlServiceTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         Feed feed = result.iterator().next();
-        assertEquals("Tech", feed.getTitle());
         assertEquals("http://example.com/rss", feed.getUrl().toString());
     }
 
@@ -112,45 +110,5 @@ class OpmlServiceTest {
         MockMultipartFile file = new MockMultipartFile("file", "test.opml", "text/xml", "invalid xml".getBytes(StandardCharsets.UTF_8));
 
         assertThrows(ServiceException.class, () -> opmlService.importFile(file));
-    }
-
-    @Test
-    void generateOPML_shouldReturnOpmlString() {
-        // Arrange
-        Feed feed1 = new Feed();
-        feed1.setTitle("Feed 1");
-        feed1.setLinkFromString("http://example.com/feed1");
-        feed1.setDescription("Description 1");
-
-        Feed feed2 = new Feed();
-        feed2.setTitle("Feed 2");
-        feed2.setLinkFromString("http://example.com/feed2");
-        // Description is null
-
-        Collection<Feed> feeds = List.of(feed1, feed2);
-
-        // Act
-        String result = opmlService.generateOPML(feeds);
-
-        // Assert
-        assertNotNull(result);
-        assertTrue(result.contains("<opml version=\"2.0\">"));
-        assertTrue(result.contains("<head>"));
-        assertTrue(result.contains("<title>Ares Export</title>"));
-        assertTrue(result.contains("<body>"));
-        
-        // Check for Feed 1
-        assertTrue(result.contains("text=\"Feed 1\""));
-        assertTrue(result.contains("title=\"Feed 1\""));
-        assertTrue(result.contains("xmlUrl=\"http://example.com/feed1\""));
-        assertTrue(result.contains("description=\"Description 1\""));
-        
-        // Check for Feed 2
-        assertTrue(result.contains("text=\"Feed 2\""));
-        assertTrue(result.contains("title=\"Feed 2\""));
-        assertTrue(result.contains("xmlUrl=\"http://example.com/feed2\""));
-        // Should not contain description for Feed 2 if it's null, but checking absence is tricky with string contains
-        // as "Description 1" is present. We can check that the specific attribute isn't there for this feed if we parse it back,
-        // but for a simple string check, this is sufficient.
     }
 }

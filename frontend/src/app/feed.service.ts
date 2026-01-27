@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../environments/environment';
 
 export interface Enclosure {
@@ -35,39 +36,62 @@ export interface Feed {
   providedIn: 'root'
 })
 export class FeedService {
-  private apiUrl = `${environment.apiUrl}/user`;
+  private apiUrl = `${environment.apiUrl}/feed`;
 
   private selectedFeedSubject = new BehaviorSubject<Feed | null>(null);
   selectedFeed$ = this.selectedFeedSubject.asObservable();
 
   constructor(private http: HttpClient) {
-      console.log('FeedService instance created');
       this.selectedFeed$.subscribe(feed => {
-          console.log('FeedService: selectedFeed$ emitted:', feed);
+          // Keep subscription active
       });
   }
 
   selectFeed(feed: Feed | null) {
-      console.log('FeedService: selectFeed() method called with:', feed);
-      if (feed) {
-          console.log('FeedService: Calling .next() with a valid feed object.');
-          this.selectedFeedSubject.next(feed);
-      } else {
-          console.log('FeedService: Calling .next() with null.');
-          this.selectedFeedSubject.next(null);
-      }
+      this.selectedFeedSubject.next(feed);
   }
 
   getFeeds(): Observable<Feed[]> {
-    return this.http.get<Feed[]>(`${this.apiUrl}/feeds`);
+    return this.http.get<string[]>(`${this.apiUrl}`).pipe(
+      map(feedStrings => feedStrings.map(json => {
+          try {
+              return typeof json === 'string' ? JSON.parse(json) : json;
+          } catch (e) {
+              console.error('Error parsing feed JSON', e);
+              return null;
+          }
+      }).filter(feed => feed !== null))
+    );
+  }
+
+  getFeedById(id: string): Observable<Feed> {
+    return this.http.get<string>(`${this.apiUrl}/${id}`).pipe(
+        map(json => {
+            try {
+                return typeof json === 'string' ? JSON.parse(json) : json;
+            } catch (e) {
+                console.error('Error parsing feed JSON', e);
+                throw e;
+            }
+        })
+    );
   }
 
   addFeed(link: string): Observable<Feed> {
-    return this.http.put<Feed>(`${this.apiUrl}/addfeed`, null, { params: { link } });
+    return this.http.put<string>(`${this.apiUrl}`, null, { params: { link } }).pipe(
+        map(json => {
+            try {
+                return typeof json === 'string' ? JSON.parse(json) : json;
+            } catch (e) {
+                console.error('Error parsing feed JSON', e);
+                throw e;
+            }
+        })
+    );
   }
 
   deleteFeed(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/feeds/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
   importOpmlFile(file: File): Observable<void> {

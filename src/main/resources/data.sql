@@ -47,25 +47,25 @@ ON CONFLICT (account_id, role_id) DO NOTHING;;
 
 
 -- 6. Insert Feeds
-INSERT INTO feeds (url, title, description, link, is_podcast, last_modified)
-VALUES ('https://feeds.bbci.co.uk/news/rss.xml', 'BBC News', 'World News from London', 'https://www.bbc.co.uk/news', 'N', CURRENT_TIMESTAMP)
+INSERT INTO feeds (url, is_podcast, last_modified)
+VALUES ('https://feeds.bbci.co.uk/news/rss.xml', 'N', CURRENT_TIMESTAMP)
 ON CONFLICT (url) DO NOTHING;;
 
-INSERT INTO feeds (url, title, description, link, is_podcast, last_modified)
-VALUES ('https://feeds.simplecast.com/54nAGpIl', 'The Daily', 'A New York Times Podcast', 'https://feeds.simplecast.com/54nAGpIl', 'Y', CURRENT_TIMESTAMP)
+INSERT INTO feeds (url, is_podcast, last_modified)
+VALUES ('https://feeds.simplecast.com/54nAGpIl', 'Y', CURRENT_TIMESTAMP)
 ON CONFLICT (url) DO NOTHING;;
 
 
 -- 7. Link Users to Feeds
 -- User 1 follows both
-INSERT INTO user_feeds (user_id, feed_id)
+INSERT INTO subscriptions (user_id, feed_id)
 VALUES (
     (SELECT id FROM users WHERE email = 'user1@ares.com'),
     (SELECT id FROM feeds WHERE url = 'https://feeds.bbci.co.uk/news/rss.xml')
 )
 ON CONFLICT (user_id, feed_id) DO NOTHING;;
 
-INSERT INTO user_feeds (user_id, feed_id)
+INSERT INTO subscriptions (user_id, feed_id)
 VALUES (
     (SELECT id FROM users WHERE email = 'user1@ares.com'),
     (SELECT id FROM feeds WHERE url = 'https://feeds.simplecast.com/54nAGpIl')
@@ -73,25 +73,10 @@ VALUES (
 ON CONFLICT (user_id, feed_id) DO NOTHING;
 
 -- User 2 only follows BBC News
-INSERT INTO user_feeds (user_id, feed_id)
+INSERT INTO subscriptions (user_id, feed_id)
 VALUES (
     (SELECT id FROM users WHERE email = 'user2@ares.com'),
     (SELECT id FROM feeds WHERE url = 'https://feeds.bbci.co.uk/news/rss.xml')
 )
 ON CONFLICT (user_id, feed_id) DO NOTHING;;
 
-
--- 8. Insert Feed Items
-INSERT INTO feed_item (feed_id, title, description, link, date)
-VALUES (
-    (SELECT id FROM feeds WHERE url = 'https://feeds.bbci.co.uk/news/rss.xml'),
-    'Breaking News', 'Something big happened today.', 'https://bbc.com/news/1', '2025-12-21 12:00:00'
-)
-ON CONFLICT (link) DO NOTHING;;
-
-INSERT INTO feed_item (feed_id, title, description, link, date)
-VALUES (
-    (SELECT id FROM feeds WHERE url = 'https://feeds.simplecast.com/54nAGpIl'),
-    'The Sunday Read', 'A deep dive into politics.', 'https://nytimes.com/podcast/1', '2025-12-21 08:00:00'
-)
-ON CONFLICT (link) DO NOTHING;;

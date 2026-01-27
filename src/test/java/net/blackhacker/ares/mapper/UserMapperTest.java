@@ -25,8 +25,6 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UserMapperTest {
 
-    @MockitoBean
-    private FeedMapper feedMapper;
 
     @MockitoBean
     private PasswordEncoder passwordEncoder;
@@ -54,10 +52,8 @@ class UserMapperTest {
 
         feed1 = new Feed();
         feed1.setId(UUID.randomUUID());
-        feed1.setTitle("Feed 1");
         feed2 = new Feed();
         feed2.setId(UUID.randomUUID());
-        feed2.setTitle("Feed 2");
 
         feeds = new ArrayList<>();
         feeds.add(feed1);
@@ -66,19 +62,16 @@ class UserMapperTest {
 
         feedDTO1 = new FeedDTO();
         feedDTO1.setId(UUID.randomUUID());
-        feedDTO1.setTitle(feed1.getTitle());
+
         feedDTO2 = new FeedDTO();
         feedDTO2.setId(UUID.randomUUID());
-        feedDTO2.setTitle(feed2.getTitle());
+
     }
 
     @Test
     void toDTO_shouldMapUserToUserDTO() {
         // Arrange
 
-
-        when(feedMapper.toDTO(feed1)).thenReturn(feedDTO1);
-        when(feedMapper.toDTO(feed2)).thenReturn(feedDTO2);
 
         // Act
         UserDTO dto = userMapper.toDTO(user);

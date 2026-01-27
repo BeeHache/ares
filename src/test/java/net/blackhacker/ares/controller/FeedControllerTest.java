@@ -1,7 +1,6 @@
 package net.blackhacker.ares.controller;
 
 import net.blackhacker.ares.dto.FeedDTO;
-import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
@@ -50,9 +49,6 @@ class FeedControllerTest {
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    @MockitoBean
-    private FeedMapper feedMapper;
-
     private Optional<User> optionalUser;
     private User principal;
     private User user;
@@ -67,8 +63,7 @@ class FeedControllerTest {
 
 
         feed = new Feed();
-        feed.setTitle("Tech Blog");
-        feed.setLinkFromString("https://tech.blog/rss");
+        feed.setUrlFromString("https://tech.blog/rss");
 
         user.setFeeds(Set.of(feed));
 
@@ -81,7 +76,6 @@ class FeedControllerTest {
     void getFeed_shouldReturnFeedList_whenUserIsAuthenticated() throws Exception {
 
         when(userService.getUserByAccount(any(Account.class))).thenReturn(optionalUser);
-        when(feedMapper.toDTO(any(Feed.class))).thenReturn(feedDTO);
 
         Authentication auth = new TestingAuthenticationToken(principal, null, "ROLE_USER");
 

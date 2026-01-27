@@ -1,6 +1,7 @@
-import { Component, Input } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Feed, FeedItem } from '../feed.service';
+import { ActivatedRoute } from '@angular/router';
+import { Feed, FeedItem, FeedService } from '../feed.service';
 
 @Component({
   selector: 'app-feed-items',
@@ -9,29 +10,48 @@ import { Feed, FeedItem } from '../feed.service';
   templateUrl: './feed-items.component.html',
   styleUrl: './feed-items.component.css'
 })
-export class FeedItemsComponent {
-  private _feed: Feed | null = null;
+export class FeedItemsComponent implements OnInit {
+  feed: Feed | null = null;
   items: FeedItem[] = [];
+  loading = false;
+  error = '';
 
-  @Input()
-  set feed(value: Feed | null) {
-    console.log('FeedItemsComponent setter called with:', value);
-    this._feed = value;
-    if (value) {
-      this.items = value.items || [];
+  constructor(
+    private route: ActivatedRoute,
+    private feedService: FeedService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
-      // Sort by date descending if needed
-      this.items.sort((a, b) => {
-          const dateA = a.date ? new Date(a.date).getTime() : 0;
-          const dateB = b.date ? new Date(b.date).getTime() : 0;
-          return dateB - dateA;
-      });
-    } else {
-        this.items = [];
-    }
+  ngOnInit(): void {
+    this.route.paramMap.subscribe(params => {
+      const feedId = params.get('id');
+      if (feedId) {
+        this.loadFeed(feedId);
+      }
+    });
   }
 
-  get feed(): Feed | null {
-    return this._feed;
+  loadFeed(id: string) {
+    this.loading = true;
+    this.error = '';
+    this.feedService.getFeedById(id).subscribe({
+      next: (feed) => {
+        this.feed = feed;
+        this.items = feed.items || [];
+        this.items.sort((a, b) => {
+            const dateA = a.date ? new Date(a.date).getTime() : 0;
+            const dateB = b.date ? new Date(b.date).getTime() : 0;
+            return dateB - dateA;
+        });
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error loading feed:', err);
+        this.error = 'Failed to load feed.';
+        this.loading = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 }

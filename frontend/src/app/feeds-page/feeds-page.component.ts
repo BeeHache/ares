@@ -1,14 +1,13 @@
 import { Component, OnInit, NgZone, ChangeDetectorRef, Inject, PLATFORM_ID, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FeedListComponent } from '../feed-list/feed-list.component';
-import { FeedItemsComponent } from '../feed-items/feed-items.component';
 import { Feed, FeedService } from '../feed.service';
-import { Observable } from 'rxjs';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-feeds-page',
   standalone: true,
-  imports: [CommonModule, FeedListComponent, FeedItemsComponent],
+  imports: [CommonModule, FeedListComponent],
   templateUrl: './feeds-page.component.html',
   styleUrl: './feeds-page.component.css'
 })
@@ -16,27 +15,32 @@ export class FeedsPageComponent implements OnInit {
   selectedFeed: Feed | null = null;
   isMobile = false;
   showSidebar = true;
+  iframeSrc: SafeResourceUrl | null = null;
 
   constructor(
       private feedService: FeedService,
       private zone: NgZone,
       private cdr: ChangeDetectorRef,
-      @Inject(PLATFORM_ID) private platformId: Object
+      @Inject(PLATFORM_ID) private platformId: Object,
+      private sanitizer: DomSanitizer
   ) {
-    console.log('FeedsPageComponent: Constructor called');
   }
 
   ngOnInit(): void {
-    console.log('FeedsPageComponent: ngOnInit called');
     this.checkScreenSize();
 
     this.zone.run(() => {
         this.feedService.selectedFeed$.subscribe(feed => {
-            console.log('FeedsPageComponent: Subscription fired with:', feed);
             this.selectedFeed = feed;
 
+            if (feed && feed.id) {
+                this.iframeSrc = this.sanitizer.bypassSecurityTrustResourceUrl(`/feed-items/${feed.id}`);
+            } else {
+                this.iframeSrc = null;
+            }
+
             if (this.isMobile && feed) {
-                this.showSidebar = false; // Hide sidebar on mobile when feed selected
+                this.showSidebar = false;
             }
 
             this.cdr.detectChanges();
@@ -51,20 +55,21 @@ export class FeedsPageComponent implements OnInit {
 
   checkScreenSize() {
       if (isPlatformBrowser(this.platformId)) {
-          this.isMobile = window.innerWidth < 768; // Mobile breakpoint
+          this.isMobile = window.innerWidth < 768;
           if (!this.isMobile) {
-              this.showSidebar = true; // Always show sidebar on desktop
+              this.showSidebar = true;
           } else if (this.selectedFeed) {
-              this.showSidebar = false; // Hide sidebar if feed selected on mobile
+              this.showSidebar = false;
           } else {
-              this.showSidebar = true; // Show sidebar if no feed selected
+              this.showSidebar = true;
           }
       }
   }
 
   backToFeedList() {
       this.selectedFeed = null;
-      this.feedService.selectFeed(null); // Clear selection in service
+      this.iframeSrc = null;
+      this.feedService.selectFeed(null);
       this.showSidebar = true;
   }
 }

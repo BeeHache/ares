@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,5 +17,5 @@ public class FeedDTO implements Serializable {
     private boolean isPodcast;
     private ZonedDateTime lastModified;
     private ImageDTO image;
-    private List<FeedItemDTO> items;
+    private List<FeedItemDTO> items = new ArrayList<>();
 }

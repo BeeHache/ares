@@ -2,9 +2,7 @@ package net.blackhacker.ares.service;
 
 import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.Constants;
-import net.blackhacker.ares.dto.MessageDTO;
 import net.blackhacker.ares.model.Feed;
-import net.blackhacker.ares.model.FeedItem;
 import net.blackhacker.ares.repository.FeedRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -16,7 +14,6 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // Import Transactional
-import org.springframework.transaction.support.TransactionTemplate;
 
 import java.net.MalformedURLException;
 import java.net.URL;

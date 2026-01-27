@@ -1,10 +1,7 @@
 package net.blackhacker.ares.controller;
 
 import net.blackhacker.ares.Constants;
-import net.blackhacker.ares.dto.FeedDTO;
-import net.blackhacker.ares.dto.MessageDTO;
 import net.blackhacker.ares.dto.UserDTO;
-import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.mapper.UserMapper;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Feed;
@@ -24,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collection;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController()
@@ -34,7 +30,6 @@ public class UserController {
     private final FeedService feedService;
     private final OpmlService opmlService;
     private final UserMapper userMapper;
-    private final FeedMapper feedMapper;
     private final MultipartFileValidator multipartFileValidator;
     private final URLValidator urlValidator;
     private final TransactionTemplate transactionTemplate;
@@ -42,14 +37,13 @@ public class UserController {
 
 
     public UserController(UserService userService, FeedService feedService, OpmlService opmlService,
-                          UserMapper userMapper, FeedMapper feedMapper, MultipartFileValidator multipartFileValidator,
+                          UserMapper userMapper, MultipartFileValidator multipartFileValidator,
                           URLValidator urlValidator,  TransactionTemplate transactionTemplate,
                           JmsTemplate jmsTemplate) {
         this.userService = userService;
         this.feedService = feedService;
         this.opmlService = opmlService;
         this.userMapper = userMapper;
-        this.feedMapper = feedMapper;
         this.multipartFileValidator = multipartFileValidator;
         this.urlValidator = urlValidator;
         this.transactionTemplate = transactionTemplate;
@@ -84,7 +78,6 @@ public class UserController {
     private void importOpml (final User user, Collection<Feed> feeds) {
         feeds.forEach(feed -> {
             transactionTemplate.executeWithoutResult(status -> {
-                feed.getUsers().add(user);
                 user.getFeeds().add(feed);
                 userService.saveUser(user);
             });
@@ -95,21 +88,20 @@ public class UserController {
 
 
     @PutMapping("/addfeed")
-    ResponseEntity<FeedDTO> addFeed(@RequestParam("link") String link, @AuthenticationPrincipal @NonNull Account account){
+    ResponseEntity<String> addFeed(@RequestParam("link") String link, @AuthenticationPrincipal @NonNull Account account){
         urlValidator.validateURL(link);
 
         User user = userService.getUserByAccount(account).get();
         Feed feed = feedService.addFeed(link);
         user.getFeeds().add(feed);
         userService.saveUser(user);
-        FeedDTO feedDTO = feedMapper.toDTO(feed);
-        return ResponseEntity.ok(feedDTO);
+        return ResponseEntity.ok(feed.getJsonData());
     }
 
     @GetMapping("/feeds")
-    public ResponseEntity<Collection<FeedDTO>> getFeed(@AuthenticationPrincipal Account principal) {
+    public ResponseEntity<Collection<String>> getFeed(@AuthenticationPrincipal Account principal) {
         User user = userService.getUserByAccount(principal).get();
-        Collection<FeedDTO> feeds = user.getFeeds().stream().map(feedMapper::toDTO).toList();
+        Collection<String> feeds = user.getFeeds().stream().map(Feed::getJsonData).toList();
         return ResponseEntity
                 .ok()
                 .contentType(MediaType.APPLICATION_JSON)
@@ -126,7 +118,6 @@ public class UserController {
         }
 
         user.getFeeds().remove(feed);
-        feed.getUsers().remove(user);
         feedService.saveFeed(feed);
         userService.saveUser(user);
         return ResponseEntity.ok().build();

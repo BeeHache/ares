@@ -7,7 +7,6 @@ import java.util.UUID;
 
 @Data
 public class EnclosureDTO implements Serializable {
-    private UUID id;
     private String url;
     private Long length;
     private String type;

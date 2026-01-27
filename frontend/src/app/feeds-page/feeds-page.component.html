@@ -9,7 +9,11 @@
       <div class="mobile-header" *ngIf="isMobile">
           <button class="back-btn" (click)="backToFeedList()">← Back to Feeds</button>
       </div>
-      <app-feed-items [feed]="selectedFeed"></app-feed-items>
+
+      <iframe *ngIf="iframeSrc" [src]="iframeSrc" class="feed-items-frame"></iframe>
+      <div *ngIf="!iframeSrc" class="placeholder">
+          <p>Select a feed to view items.</p>
+      </div>
     </div>
 
   </div>

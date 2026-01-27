@@ -1,20 +1,14 @@
 package net.blackhacker.ares.service;
 
 import be.ceau.opml.OpmlParser;
-import be.ceau.opml.OpmlWriter;
-import be.ceau.opml.entity.Body;
-import be.ceau.opml.entity.Head;
 import be.ceau.opml.entity.Opml;
 import be.ceau.opml.entity.Outline;
 import lombok.extern.slf4j.Slf4j;
-import net.blackhacker.ares.Constants;
-import net.blackhacker.ares.dto.MessageDTO;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.Image;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -91,29 +85,23 @@ public class OpmlService {
                 String imageUrl = outlineItem.getAttribute("imageUrl");
                 if (xmlUrl != null && !xmlUrl.isEmpty()) {
                     Feed feed = new Feed();
-                    if (title != null) {
-                        feed.setTitle(title);
-                    } else if (text != null) {
-                        feed.setTitle(text);
-                    }
-                    if (htmlUrl != null) {
-                        feed.setLink(new URI(htmlUrl).toURL());
-                    }
                     feed.setUrl(new URI(xmlUrl).toURL());
-                    if(imageUrl != null){
-                        ResponseEntity<byte[]> re = urlFetchService.fetchBytes(imageUrl);
-                        MediaType contentType = re.getHeaders().getContentType();
+                    if (false) {
+                        if (imageUrl != null) {
+                            ResponseEntity<byte[]> re = urlFetchService.fetchBytes(imageUrl);
+                            MediaType contentType = re.getHeaders().getContentType();
 
-                        if (re.getStatusCode() == HttpStatus.OK) {
-                            Image image = new Image();
-                            if (contentType != null) {
-                                image.setContentType(contentType.toString());
-                            }
-                            if (re.hasBody()){
-                                image.setData(re.getBody());
-                            }
+                            if (re.getStatusCode() == HttpStatus.OK) {
+                                Image image = new Image();
+                                if (contentType != null) {
+                                    image.setContentType(contentType.toString());
+                                }
+                                if (re.hasBody()) {
+                                    image.setData(re.getBody());
+                                }
 
-                            feed.setImage(image);
+                                feed.setImage(image);
+                            }
                         }
                     }
 
@@ -137,32 +125,5 @@ public class OpmlService {
         List<Outline> ols = opml.getBody().getOutlines();
 
         return opmlWalker(ols);
-    }
-
-    public String generateOPML(Collection<Feed> feeds) {
-        try {
-        Head head = new Head("Ares Export", new Date().toString(),
-                null,null,null,null,
-                null,null,null,null,
-                null,null,null);
-        Body body = new Body(
-            feeds.stream().map(feed -> {
-                Map<String, String> attributes = new HashMap<>();
-                attributes.put("text", feed.getTitle());
-                attributes.put("title", feed.getTitle());
-                attributes.put("type", "rss");
-                attributes.put("xmlUrl", feed.getLink().toString());
-                if (feed.getDescription() != null) {
-                    attributes.put("description", feed.getDescription());
-                }
-                // Assuming htmlUrl is not stored in Feed, omitting it or could be same as link if appropriate
-                return new Outline(attributes, Collections.emptyList());
-            }).toList()
-        );
-
-        return new OpmlWriter().write(new Opml("2.0", head, body));
-        } catch (Exception e){
-            throw new ServiceException("Couldn't generate OPML", e);
-        }
     }
 }

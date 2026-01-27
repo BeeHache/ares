@@ -52,41 +52,18 @@ create table if not exists image(
 create table if not exists feeds (
     id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     url varchar(512) not null unique,
-    title varchar(255) not null,
-    description TEXT,
-    link varchar(512),
     is_podcast char(1) not null default 'N',
     last_modified timestamp with time zone,
     image_id UUID,
+    json_data TEXT,
     CONSTRAINT check_is_podcast CHECK (is_podcast IN ('Y', 'N')),
     CONSTRAINT fk_feed_image FOREIGN KEY (image_id) REFERENCES image(id) ON DELETE CASCADE
 );;
 
 create index if not exists ix_feeds_last_mod on feeds (last_modified);;
 
-create table if not exists feed_item (
-    id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
-    feed_id UUID NOT NULL,
-    title VARCHAR(255),
-    description TEXT,
-    link VARCHAR(512) UNIQUE,
-    date timestamp with time zone,
-    image_id UUID,
-    CONSTRAINT fk_feed FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE,
-    CONSTRAINT fk_feed_item_image FOREIGN KEY (image_id) REFERENCES image(id) ON DELETE CASCADE
-);;
 
-create table if not exists enclosures
-(
-    id           UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
-    feed_item_id UUID NOT NULL,
-    url          varchar(512) not null unique,
-    length       BIGINT,
-    type         varchar(32),
-    CONSTRAINT fk_feed_item FOREIGN KEY (feed_item_id) REFERENCES feed_item (id) ON DELETE CASCADE
-);;
-
-create table if not exists user_feeds (
+create table if not exists subscriptions (
     user_id BIGINT NOT NULL,
     feed_id UUID NOT NULL,
     PRIMARY KEY (user_id, feed_id), -- Prevents a user from subscribing to the same feed twice
@@ -94,15 +71,6 @@ create table if not exists user_feeds (
     CONSTRAINT fk_feed_link FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE
 );;
 
-create table if not exists user_feed_item (
-    user_id BIGINT NOT NULL,
-    feed_item_id UUID NOT NULL,
-    read_at timestamp with time zone,
-    archive_at timestamp with time zone,
-    PRIMARY KEY (user_id, feed_item_id), -- Prevents a user from reading the same feed item twice
-    CONSTRAINT fk_user_link FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_feed_item_link FOREIGN KEY (feed_item_id) REFERENCES feed_item(id) ON DELETE CASCADE
-);;
 
 CREATE OR REPLACE FUNCTION update_last_modified_column()
 RETURNS TRIGGER AS $$

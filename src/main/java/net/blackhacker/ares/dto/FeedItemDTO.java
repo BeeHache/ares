@@ -10,7 +10,6 @@ import java.util.UUID;
 
 @Data
 public class FeedItemDTO implements Serializable {
-    private UUID id;
     private String title;
     private String description;
     private String link;

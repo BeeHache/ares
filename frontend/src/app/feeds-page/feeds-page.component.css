@@ -43,6 +43,22 @@
     padding: 5px 10px;
 }
 
+.feed-items-frame {
+    flex-grow: 1;
+    border: none;
+    width: 100%;
+    height: 100%;
+}
+
+.placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+    color: #888;
+    font-size: 1.2em;
+}
+
 /* Mobile Styles */
 @media (max-width: 768px) {
     .feeds-page-container {

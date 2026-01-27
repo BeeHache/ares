@@ -8,6 +8,7 @@
   margin-bottom: 30px;
   border-bottom: 2px solid #eee;
   padding-bottom: 20px;
+  overflow-wrap: break-word;
 }
 
 .feed-header h3 {
@@ -31,6 +32,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  max-width: 100%;
 }
 
 .item-card {
@@ -39,6 +41,11 @@
   border-radius: 8px;
   padding: 20px;
   transition: box-shadow 0.2s;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .item-card:hover {
@@ -68,6 +75,7 @@
 .item-description {
   color: #444;
   line-height: 1.5;
+  max-width: 100%;
 }
 
 /* Handle images in description */

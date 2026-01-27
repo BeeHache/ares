@@ -13,6 +13,7 @@ import net.blackhacker.ares.utils.URLConverter;
 
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.ZonedDateTime;
 import java.util.*;
@@ -34,16 +35,6 @@ public class Feed {
     @Convert(converter = URLConverter.class)
     private URL url;
 
-    @Column(nullable = false)
-    private String title;
-
-    @Column
-    private String description;
-
-    @Column
-    @Convert(converter = URLConverter.class)
-    private URL link;
-
     @Column
     @Convert(converter = BooleanConverter.class)
     private boolean isPodcast = false;
@@ -55,29 +46,17 @@ public class Feed {
     @JoinColumn(name = "image_id")
     private Image image;
 
-    @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<FeedItem> items = new HashSet<>();
+    @Column
+    String jsonData;
 
-    @ManyToMany(mappedBy = "feeds")
-    private List<User> users = new ArrayList<>();
-
-    public void setLinkFromString(String link) {
-        if (link == null) {
-            this.link = null;
-            return;
-        }
+    public void setUrlFromString(String urlString) {
         try {
-            this.link = URI.create(link).toURL();
-        }catch (MalformedURLException | IllegalArgumentException e) {
-            log.error("Invalid link provided: {}", link, e);
-            this.link = null;
+            this.url = new URI(urlString).toURL();
+        } catch (MalformedURLException | URISyntaxException e) {
+            log.error(e.getMessage());
         }
     }
 
-    public String getLinkAsString() {
-        if (link == null) { return null;}
-        return link.toString();
-    }
 
     public void touch() {
         this.lastModified = ZonedDateTime.now();
