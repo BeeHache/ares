@@ -15,7 +15,6 @@ import org.springframework.util.MultiValueMap;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -85,9 +84,6 @@ class OpmlServiceTest {
         assertEquals(1, result.size());
         Feed feed = result.iterator().next();
         assertEquals("http://example.com/rss", feed.getUrl().toString());
-        assertNotNull(feed.getImage());
-        assertEquals("image/png", feed.getImage().getContentType());
-        assertArrayEquals(new byte[]{1, 2, 3}, feed.getImage().getData());
     }
 
     @Test

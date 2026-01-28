@@ -6,7 +6,6 @@ import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.UUID;
 
 @Data
 public class FeedItemDTO implements Serializable {
@@ -14,6 +13,5 @@ public class FeedItemDTO implements Serializable {
     private String description;
     private String link;
     private ZonedDateTime date;
-    private ImageDTO image;
     private Collection<EnclosureDTO> enclosures = new ArrayList<>();
 }

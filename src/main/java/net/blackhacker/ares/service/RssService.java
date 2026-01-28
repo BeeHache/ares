@@ -9,21 +9,14 @@ import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.dto.EnclosureDTO;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.FeedItemDTO;
-import net.blackhacker.ares.dto.ImageDTO;
 import net.blackhacker.ares.model.Feed;
-import net.blackhacker.ares.model.Image;
 import net.blackhacker.ares.validation.URLValidator;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.net.*;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -59,19 +52,8 @@ public class RssService {
             feedDTO.setTitle(channel.getTitle());
             feedDTO.setDescription(channel.getDescription());
             feedDTO.setLink(channel.getLink());
-
             if (channel.getImage().isPresent()) {
-                URL url = new URI(channel.getImage().get().getLink()).toURL();
-                URLConnection connection = url.openConnection();
-                String contentType = connection.getContentType();
-
-                try(InputStream is = connection.getInputStream()){
-                    byte[] bytes = is.readAllBytes();
-                   ImageDTO imageDTO = new ImageDTO();
-                   imageDTO.setData(bytes);
-                   imageDTO.setContentType(contentType);
-                   feedDTO.setImage(imageDTO);
-                }
+                feedDTO.setImageUrl(channel.getImage().get().getUrl());
             }
 
             List<FeedItemDTO> feedItemDTOs = rssItems.stream().map(rssItem -> {
@@ -110,7 +92,6 @@ public class RssService {
     }
 
     public boolean updateFeed(Feed feed) {
-        boolean feedUpdated = false;
         FeedDTO feedDto = new  FeedDTO();
         try {
             List<Item> rssItems = parseRss(feed.getUrl().toString());
@@ -125,26 +106,8 @@ public class RssService {
             feedDto.setTitle(channel.getTitle());
             feedDto.setDescription(channel.getDescription());
             feedDto.setLink(channel.getLink());
-
-            if (false) {
-                // Fetch image data
-                if (channel.getImage().isPresent()) {
-                    ZonedDateTime lastModified = feed.getLastModified();
-                    Map<String, String> headers = new HashMap<>();
-                    headers.put(HttpHeaders.IF_MODIFIED_SINCE, lastModified.format(dateTimeFormatter));
-
-                    ResponseEntity<byte[]> response = urlFetchService.fetchBytes(channel.getImage().get().getUrl(), headers);
-                    if (response.getStatusCode().is2xxSuccessful()) {
-                        Image image = new Image();
-                        image.setData(response.getBody());
-
-                        MediaType mt = response.getHeaders().getContentType();
-                        if (mt != null) {
-                            image.setContentType(mt.toString());
-                        }
-                        feed.setImage(image);
-                    }
-                }
+            if  (channel.getImage().isPresent()) {
+                feedDto.setImageUrl(channel.getImage().get().getLink());
             }
 
             List<FeedItemDTO> feedItems = rssItems.stream().map(rssItem -> {

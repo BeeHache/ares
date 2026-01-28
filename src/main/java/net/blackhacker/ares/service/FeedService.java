@@ -1,7 +1,9 @@
 package net.blackhacker.ares.service;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.Constants;
+import net.blackhacker.ares.dto.FeedTitleDTO;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.repository.FeedRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -71,6 +73,10 @@ public class FeedService {
 
     public Feed getFeedById(UUID id){
         return feedRepository.findById(id).orElse(null);
+    }
+
+    public Collection<FeedTitleDTO> getFeedTitles(@NonNull Long userId) {
+        return feedRepository.findFeedTitlesByUserId(userId);
     }
 
     public Optional<Feed> getFeedByUrl(URL url){

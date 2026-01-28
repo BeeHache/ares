@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FeedService, Feed } from '../feed.service';
+import { FeedService, FeedTitle, Feed } from '../feed.service';
 import { OpmlImportComponent } from '../opml-import/opml-import.component';
 
 @Component({
@@ -11,7 +11,7 @@ import { OpmlImportComponent } from '../opml-import/opml-import.component';
   styleUrl: './feed-list.component.css'
 })
 export class FeedListComponent implements OnInit {
-  feeds: Feed[] = [];
+  feeds: FeedTitle[] = [];
   totalUnread = 0; // Not yet supported by backend
   showImportModal = false;
 
@@ -28,7 +28,7 @@ export class FeedListComponent implements OnInit {
   }
 
   loadFeeds() {
-    this.feedService.getFeeds().subscribe({
+    this.feedService.getFeedTitles().subscribe({
       next: (data) => {
         console.log('Feeds received from backend:', data); // Debug log
         this.feeds = data;
@@ -38,7 +38,7 @@ export class FeedListComponent implements OnInit {
     });
   }
 
-  selectFeed(feed: Feed) {
+  selectFeed(feed: FeedTitle) {
       console.log('FeedListComponent: selectFeed called with:', feed); // Debug log
       this.feedService.selectFeed(feed);
   }

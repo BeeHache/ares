@@ -43,21 +43,16 @@ create table if not exists account_roles (
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 );;
 
-create table if not exists image(
-    id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
-    content_type varchar(32),
-    data bytea not null
-);;
-
 create table if not exists feeds (
     id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     url varchar(512) not null unique,
+    title varchar(256),
     is_podcast char(1) not null default 'N',
     last_modified timestamp with time zone,
-    image_id UUID,
+    image_url varchar(512),
+    link_url varchar(512),
     json_data TEXT,
-    CONSTRAINT check_is_podcast CHECK (is_podcast IN ('Y', 'N')),
-    CONSTRAINT fk_feed_image FOREIGN KEY (image_id) REFERENCES image(id) ON DELETE CASCADE
+    CONSTRAINT check_is_podcast CHECK (is_podcast IN ('Y', 'N'))
 );;
 
 create index if not exists ix_feeds_last_mod on feeds (last_modified);;

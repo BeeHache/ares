@@ -1,6 +1,7 @@
 package net.blackhacker.ares.controller;
 
 import net.blackhacker.ares.Constants;
+import net.blackhacker.ares.dto.FeedTitleDTO;
 import net.blackhacker.ares.dto.StringCacheDTO;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Feed;
@@ -53,9 +54,14 @@ public class FeedController {
         this.stringCacheRepository = stringCacheRepository;
     }
 
+    @GetMapping("/titles")
+    public Collection<FeedTitleDTO> getFeedTitles(@AuthenticationPrincipal Account principal) {
+        User user = userService.getUserByAccount(principal).get();
+        return feedService.getFeedTitles(user.getId());
+    }
+
     @GetMapping
     public ResponseEntity<Collection<String>> getFeed(@AuthenticationPrincipal Account principal) {
-
         User user = userService.getUserByAccount(principal).get();
         Collection<String> feeds = user.getFeeds().stream().map(Feed::getJsonData).toList();
         return ResponseEntity
@@ -97,7 +103,7 @@ public class FeedController {
         multipartFileValidator.validateMultipartFile(file);
         final User user = userService.getUserByAccount(account).get();
         Collection<Feed> feeds = feedService.saveFeeds(opmlService.importFile(file));
-        importOpml(user,feeds);
+        subscribeUserToFeeds(user,feeds);
         return ResponseEntity.accepted().build();
     }
 
@@ -127,7 +133,7 @@ public class FeedController {
         return ResponseEntity.ok().build();
     }
 
-    private void importOpml (final User user, Collection<Feed> feeds) {
+    private void subscribeUserToFeeds(final User user, Collection<Feed> feeds) {
         feeds.forEach(feed -> {
             transactionTemplate.executeWithoutResult(status -> {
                 user.getFeeds().add(feed);

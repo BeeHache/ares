@@ -5,9 +5,6 @@ import be.ceau.opml.entity.Opml;
 import be.ceau.opml.entity.Outline;
 import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.model.Feed;
-import net.blackhacker.ares.model.Image;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -79,33 +76,17 @@ public class OpmlService {
         for (Outline outlineItem : outlines){
             try {
                 String xmlUrl = outlineItem.getAttribute("xmlUrl");
-                String htmlUrl = outlineItem.getAttribute("htmlUrl");
-                String title = outlineItem.getAttribute("title");
-                String text = outlineItem.getAttribute("text");
+                String title = outlineItem.getAttribute("text");
                 String imageUrl = outlineItem.getAttribute("imageUrl");
                 if (xmlUrl != null && !xmlUrl.isEmpty()) {
                     Feed feed = new Feed();
-                    feed.setUrl(new URI(xmlUrl).toURL());
-                    if (false) {
-                        if (imageUrl != null) {
-                            ResponseEntity<byte[]> re = urlFetchService.fetchBytes(imageUrl);
-                            MediaType contentType = re.getHeaders().getContentType();
-
-                            if (re.getStatusCode() == HttpStatus.OK) {
-                                Image image = new Image();
-                                if (contentType != null) {
-                                    image.setContentType(contentType.toString());
-                                }
-                                if (re.hasBody()) {
-                                    image.setData(re.getBody());
-                                }
-
-                                feed.setImage(image);
-                            }
-                        }
+                    if (title != null && !title.isEmpty()) {
+                        feed.setTitle(title);
                     }
-
-
+                    feed.setUrl(new URI(xmlUrl).toURL());
+                    if (imageUrl != null && !imageUrl.isEmpty()) {
+                        feed.setImageUrl(new URI(imageUrl).toURL());
+                    }
                     feeds.add(feed);
                 }
                 if (outlineItem.getSubElements() != null && !outlineItem.getSubElements().isEmpty()) {
@@ -116,14 +97,11 @@ public class OpmlService {
             }
         }
         return feeds;
-
     }
 
     private Collection<Feed> parseOPML(InputStream inputStream) throws Exception{
         Opml opml = new OpmlParser().parse(inputStream);
-
         List<Outline> ols = opml.getBody().getOutlines();
-
         return opmlWalker(ols);
     }
 }

@@ -1,7 +1,7 @@
 import { Component, OnInit, NgZone, ChangeDetectorRef, Inject, PLATFORM_ID, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FeedListComponent } from '../feed-list/feed-list.component';
-import { Feed, FeedService } from '../feed.service';
+import { FeedTitle, FeedService } from '../feed.service';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
@@ -12,7 +12,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
   styleUrl: './feeds-page.component.css'
 })
 export class FeedsPageComponent implements OnInit {
-  selectedFeed: Feed | null = null;
+  selectedFeed: FeedTitle | null = null;
   isMobile = false;
   showSidebar = true;
   iframeSrc: SafeResourceUrl | null = null;

@@ -20,6 +20,11 @@ export interface FeedItem {
   enclosures?: Enclosure[];
 }
 
+export interface FeedTitle {
+  id: string;
+  title: string;
+}
+
 export interface Feed {
   id: string;
   title: string;
@@ -38,7 +43,7 @@ export interface Feed {
 export class FeedService {
   private apiUrl = `${environment.apiUrl}/feed`;
 
-  private selectedFeedSubject = new BehaviorSubject<Feed | null>(null);
+  private selectedFeedSubject = new BehaviorSubject<FeedTitle | null>(null);
   selectedFeed$ = this.selectedFeedSubject.asObservable();
 
   constructor(private http: HttpClient) {
@@ -47,8 +52,12 @@ export class FeedService {
       });
   }
 
-  selectFeed(feed: Feed | null) {
+  selectFeed(feed: FeedTitle | null) {
       this.selectedFeedSubject.next(feed);
+  }
+
+  getFeedTitles(): Observable<FeedTitle[]> {
+      return this.http.get<FeedTitle[]>(`${this.apiUrl}/titles`);
   }
 
   getFeeds(): Observable<Feed[]> {

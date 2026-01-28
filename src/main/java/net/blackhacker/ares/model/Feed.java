@@ -36,15 +36,22 @@ public class Feed {
     private URL url;
 
     @Column
+    private String title;
+
+    @Column
     @Convert(converter = BooleanConverter.class)
     private boolean isPodcast = false;
 
     @Column(nullable = false)
     private ZonedDateTime lastModified = ZonedDateTime.now();
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "image_id")
-    private Image image;
+    @Column
+    @Convert(converter = URLConverter.class)
+    private URL imageUrl;
+
+    @Column
+    @Convert(converter = URLConverter.class)
+    private URL linkUrl;
 
     @Column
     String jsonData;
