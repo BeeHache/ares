@@ -1,68 +1,39 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <title>Email Verification</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>Verify Your Email</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .container {
-            background-color: #f9f9f9;
-            padding: 30px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: #ffffff !important;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-            margin: 20px 0;
-        }
-        .footer {
-            margin-top: 30px;
-            font-size: 12px;
-            color: #777;
-            text-align: center;
-        }
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        .header { background-color: #f8f9fa; padding: 10px; text-align: center; font-size: 1.5em; font-weight: bold; }
+        .content { padding: 20px; }
+        .button { display: inline-block; background-color: #28a745; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .footer { margin-top: 20px; font-size: 0.8em; color: #888; text-align: center; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h2>Welcome to Ares!</h2>
+            Welcome to Ares!
         </div>
-
-        <p>Hello <span th:text="${name}">User</span>,</p>
-
-        <p>Thank you for registering with Ares. To complete your registration and activate your account, please verify your email address by clicking the button below:</p>
-
-        <div style="text-align: center;">
-            <a th:href="${verificationLink}" class="button">Verify Email Address</a>
+        <div class="content">
+            <p>Hello <span th:text="${name}">User</span>,</p>
+            <p>Thank you for registering. Please click the button below to verify your email address and activate your account.</p>
+            <p style="text-align: center;">
+                <a th:href="${verificationLink}" class="button">Verify Your Email</a>
+            </p>
+            <p>If the button does not work, you can copy and paste the following link into your browser:</p>
+            <p><a th:href="${verificationLink}" th:text="${verificationLink}"></a></p>
+            <p>Thank you,<br/>The Ares Team</p>
         </div>
-
-        <p>If the button above doesn't work, you can also copy and paste the following link into your browser:</p>
-        <p><a th:href="${verificationLink}" th:text="${verificationLink}">http://example.com/verify</a></p>
-
-        <p>This link will expire in 24 hours.</p>
-
-        <p>If you did not create an account with Ares, please ignore this email.</p>
-
         <div class="footer">
-            <p>&copy; <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2024</span> Ares Application. All rights reserved.</p>
+            <p>
+                &copy;
+                <span th:if="${copyrightStartYear == currentYear}" th:text="${copyrightStartYear}"></span>
+                <span th:if="${copyrightStartYear != currentYear}" th:text="${copyrightStartYear} + ' - ' + ${currentYear}"></span>
+                Ares. All rights reserved.
+            </p>
         </div>
     </div>
 </body>

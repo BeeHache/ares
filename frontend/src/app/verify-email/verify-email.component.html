@@ -1,0 +1,22 @@
+<div class="container">
+  <div class="card">
+    <h2>Email Verification</h2>
+
+    <div *ngIf="status === 'loading'" class="status loading">
+      <div class="spinner"></div>
+      <p>{{ message }}</p>
+    </div>
+
+    <div *ngIf="status === 'success'" class="status success">
+      <div class="icon">✅</div>
+      <p>{{ message }}</p>
+      <a routerLink="/login" class="btn">Go to Login</a>
+    </div>
+
+    <div *ngIf="status === 'error'" class="status error">
+      <div class="icon">❌</div>
+      <p>{{ message }}</p>
+      <a routerLink="/register" class="btn secondary">Register Again</a>
+    </div>
+  </div>
+</div>

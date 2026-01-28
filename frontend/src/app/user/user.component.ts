@@ -1,48 +1,60 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../auth.service';
+import { filter, take } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 interface UserProfile {
   email: string;
-  feeds: any[]; // You can create a more specific type for feeds later
+  // Feeds will no longer be directly displayed here
 }
 
 @Component({
   selector: 'app-user',
   standalone: true,
-  imports: [CommonModule],
-  template: `
-    <div class="container" *ngIf="user; else loading">
-      <h2>User Profile</h2>
-      <p><strong>Email:</strong> {{ user.email }}</p>
-      <p><strong>Number of Feeds:</strong> {{ user.feeds.length || 0 }}</p>
-    </div>
-    <ng-template #loading>
-      <p>Loading user data...</p>
-    </ng-template>
-    <div *ngIf="error" class="error">
-      <p>{{ error }}</p>
-    </div>
-  `,
-  styles: [`
-    .container { max-width: 600px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
-    .error { color: red; margin-top: 10px; }
-  `]
+  imports: [CommonModule], // Removed FeedListComponent, FeedItemsComponent
+  templateUrl: './user.component.html',
+  styleUrl: './user.component.css'
 })
 export class UserComponent implements OnInit {
   user: UserProfile | null = null;
   error: string | null = null;
+  // selectedFeed: Feed | null = null; // Removed selectedFeed
 
-  constructor(private http: HttpClient) {}
+  constructor(
+      private http: HttpClient,
+      private authService: AuthService,
+      private cdr: ChangeDetectorRef
+  ) {
+    console.log('UserComponent: Constructor called');
+  }
 
   ngOnInit(): void {
-    this.http.get<UserProfile>('http://localhost:8080/api/user/').subscribe({
+    console.log('UserComponent: ngOnInit called');
+
+    this.authService.currentUser$.pipe(
+      filter(user => user !== null),
+      take(1)
+    ).subscribe(() => {
+      console.log('UserComponent: Auth confirmed, loading user profile...');
+      this.loadUserProfile();
+    });
+
+    // Removed feedService subscription
+  }
+
+  loadUserProfile(): void {
+    this.http.get<UserProfile>(`${environment.apiUrl}/user/`).subscribe({
       next: (data) => {
+        console.log('UserComponent: User profile loaded');
         this.user = data;
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        this.error = 'Failed to load user data. Please try logging in again.';
+        this.error = `Failed to load user data. Status: ${err.status}. Please try logging in again.`;
         console.error('User profile error:', err);
+        this.cdr.detectChanges();
       }
     });
   }

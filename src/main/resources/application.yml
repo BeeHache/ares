@@ -16,10 +16,14 @@ spring:
   sql:
     init:
       mode: always
+      separator: ;;
   data:
     redis:
-      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      host: redis
       port: 6379
+  activemq:
+    packages:
+      trusted: java.util,net.blackhacker.ares.dto
   mail:
     host: ${SPRING_MAIL_HOST:localhost}
     port: ${SPRING_MAIL_PORT:1025}
@@ -28,15 +32,19 @@ spring:
     properties:
       mail:
         smtp:
-          auth: true
+          auth: ${SPRING_MAIL_SMTP_AUTH:true}
           starttls:
-            enable: true
+            enable: ${SPRING_MAIL_SMTP_STARTTLS_ENABLE:true}
+
+app:
+  copyright:
+    start-year: 2024
 
 user:
   password:
     min_length: 8
 feed:
-  interval_seconds: 300 # 5 min
+  interval_ms: 300000 # 5 min
   query_limit: 1000
 
 security:
@@ -48,7 +56,18 @@ security:
 logging:
   file:
     name: ${spring.application.name}.log
-    path: ${HOME}/Projects/logs/
+    path: ./logs
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7
+      file-name-pattern: ${logging.file.path}/archived/${spring.application.name}-%d{yyyy-MM-dd}-%i.log.gz
   level:
-    web: DEBUG
-    org.springframework.security: DEBUG
+    root: INFO
+    net.blackhacker.ares: ${LOG_LEVEL:DEBUG}
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:INFO}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

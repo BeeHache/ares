@@ -69,7 +69,7 @@ public class RegistrationControllerTest {
         doNothing().when(userDTOValidator).validateUserForRegistration(any(UserDTO.class));
         when(userMapper.toModel(any(UserDTO.class))).thenReturn(user);
         when(userMapper.toDTO(any(User.class))).thenReturn(userDTO);
-        when(userService.registerUser(any(User.class))).thenReturn(Optional.of(user));
+        when(userService.registerUser(any(User.class))).thenReturn(user);
 
         // Act & Assert
         mockMvc.perform(post("/api/register")

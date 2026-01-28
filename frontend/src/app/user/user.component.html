@@ -1,0 +1,15 @@
+<div class="container" *ngIf="user; else loading">
+  <div class="profile-header">
+    <h2>User Profile</h2>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <!-- Add other profile details here as needed -->
+  </div>
+</div>
+
+<ng-template #loading>
+  <p>Loading user data...</p>
+</ng-template>
+
+<div *ngIf="error" class="error">
+  <p>{{ error }}</p>
+</div>

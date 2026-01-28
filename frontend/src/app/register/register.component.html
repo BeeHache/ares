@@ -1,0 +1,40 @@
+<div class="container">
+  <h2>Register</h2>
+  <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
+
+    <app-email-input
+      [(ngModel)]="email"
+      name="email"
+      id="email"
+      [required]="true"
+    ></app-email-input>
+
+    <app-password-input
+      [(ngModel)]="password"
+      name="password"
+      id="password"
+      label="Password"
+      [required]="true"
+    ></app-password-input>
+
+    <app-password-input
+      [(ngModel)]="confirmPassword"
+      name="confirmPassword"
+      id="confirmPassword"
+      label="Confirm Password"
+      [required]="true"
+    ></app-password-input>
+
+    <!-- Display all validation errors -->
+    <div *ngIf="errorMessages.length > 0" class="error-container">
+      <ul>
+        <li *ngFor="let msg of errorMessages">{{ msg }}</li>
+      </ul>
+    </div>
+
+    <div class="button-group">
+      <button type="submit" [disabled]="errorMessages.length > 0">Register</button>
+      <button type="button" class="cancel-btn" (click)="onCancel()">Cancel</button>
+    </div>
+  </form>
+</div>

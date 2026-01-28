@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 @Configuration
 @EnableAsync
 public class AsyncConfig {
-    @Scheduled(fixedRateString = "${feed.interval_seconds}")
+    @Scheduled(fixedRateString = "${feed.interval_ms}")
     void schedualFeedUpdates(){
 
     }

@@ -14,6 +14,7 @@ import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.service.AccountService;
 import net.blackhacker.ares.service.JWTService;
 import net.blackhacker.ares.service.RefreshTokenService;
+import net.blackhacker.ares.service.UserService;
 import net.blackhacker.ares.validation.UserDTOValidator;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +50,9 @@ class LoginControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private UserService userService;
 
     @MockitoBean
     private UserDTOValidator userDTOValidator;
@@ -112,11 +116,8 @@ class LoginControllerTest {
     @Test
     void login_shouldReturnTokens_whenCredentialsAreValid() throws Exception {
         Authentication successfulAuth = new UsernamePasswordAuthenticationToken(account, null, account.getAuthorities());
-
-
         String accessTokenString = "access-token";
 
-        doNothing().when(userDTOValidator).validateUserForLogin(any(UserDTO.class));
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(successfulAuth);
         when(jwtService.generateToken(any(Account.class))).thenReturn(accessTokenString);
@@ -144,7 +145,6 @@ class LoginControllerTest {
     @Test
     void login_shouldReturnUnauthorized_whenCredentialsAreInvalid() throws Exception {
 
-        doNothing().when(userDTOValidator).validateUserForLogin(any(UserDTO.class));
         when(userMapper.toModel(any(UserDTO.class))).thenReturn(user);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new BadCredentialsException("Invalid credentials"));

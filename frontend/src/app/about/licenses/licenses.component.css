@@ -1,0 +1,40 @@
+.container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+.project-license {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 2rem;
+  overflow-x: auto;
+}
+
+pre {
+  white-space: pre-wrap;
+  font-family: monospace;
+  margin: 0;
+}
+
+.category {
+  margin-bottom: 2rem;
+}
+
+.license-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.license-table th, .license-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.license-table th {
+  background-color: #f2f2f2;
+}

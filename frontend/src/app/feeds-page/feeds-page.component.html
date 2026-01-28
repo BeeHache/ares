@@ -1,0 +1,20 @@
+<div class="feeds-page-container">
+  <div class="dashboard">
+
+    <div class="sidebar" [class.hidden]="isMobile && !showSidebar">
+      <app-feed-list></app-feed-list>
+    </div>
+
+    <div class="main-content" [class.hidden]="isMobile && showSidebar">
+      <div class="mobile-header" *ngIf="isMobile">
+          <button class="back-btn" (click)="backToFeedList()">← Back to Feeds</button>
+      </div>
+
+      <iframe *ngIf="iframeSrc" [src]="iframeSrc" class="feed-items-frame"></iframe>
+      <div *ngIf="!iframeSrc" class="placeholder">
+          <p>Select a feed to view items.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
