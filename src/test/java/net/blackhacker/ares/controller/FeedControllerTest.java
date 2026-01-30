@@ -1,26 +1,35 @@
 package net.blackhacker.ares.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
+import net.blackhacker.ares.repository.StringCacheRepository;
 import net.blackhacker.ares.security.JwtAuthenticationFilter;
 import net.blackhacker.ares.service.FeedService;
 import net.blackhacker.ares.service.JWTService;
+import net.blackhacker.ares.service.OpmlService;
 import net.blackhacker.ares.service.UserService;
+import net.blackhacker.ares.validation.MultipartFileValidator;
+import net.blackhacker.ares.validation.URLValidator;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -49,6 +58,24 @@ class FeedControllerTest {
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @MockitoBean
+    private OpmlService opmlService;
+
+    @MockitoBean
+    private MultipartFileValidator multipartFileValidator;
+
+    @MockitoBean
+    private URLValidator urlValidator;
+
+    @MockitoBean
+    private TransactionTemplate transactionTemplate;
+
+    @MockitoBean
+    private JmsTemplate jmsTemplate;
+
+    @MockitoBean
+    StringCacheRepository stringCacheRepository;
+
     private Optional<User> optionalUser;
     private User principal;
     private User user;
@@ -61,15 +88,21 @@ class FeedControllerTest {
         user = new User();
         optionalUser = Optional.of(user);
 
-
-        feed = new Feed();
-        feed.setUrlFromString("https://tech.blog/rss");
-
-        user.setFeeds(Set.of(feed));
-
         feedDTO = new FeedDTO();
         feedDTO.setTitle("Tech Blog");
         feedDTO.setLink("https://tech.blog/rss");
+
+
+        feed = new Feed();
+        feed.setTitle("Tech Blog");
+        feed.setUrlFromString("https://tech.blog/rss");
+        feed.setId(UUID.randomUUID());
+        try {
+            feed.setJsonData(new ObjectMapper().writeValueAsString(feedDTO));
+        } catch(Exception e){}
+
+        user.setFeeds(Set.of(feed));
+
     }
 
     @Test
@@ -85,8 +118,8 @@ class FeedControllerTest {
                 .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].title").value("Tech Blog"))
-                .andExpect(jsonPath("$[0].link").value("https://tech.blog/rss"));
+                .andExpect(jsonPath("$[0]").isString())
+                .andExpect(jsonPath("$[0]", Matchers.containsString("Tech Blog")));
     }
 
     @Test

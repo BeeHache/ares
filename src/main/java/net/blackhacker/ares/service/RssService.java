@@ -10,7 +10,6 @@ import net.blackhacker.ares.dto.EnclosureDTO;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.FeedItemDTO;
 import net.blackhacker.ares.model.Feed;
-import net.blackhacker.ares.validation.URLValidator;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -28,16 +27,14 @@ public class RssService {
     final private URLFetchService urlFetchService;
     final private DateTimeFormatter dateTimeFormatter;
     final private DateTimeFormatter feedDateFormatter;
-    final private URLValidator urlValidator;
     final private ObjectMapper objectMapper;
 
 
-    public RssService(URLFetchService urlFetchService, URLValidator urlValidator,  ObjectMapper objectMapper) {
+    public RssService(URLFetchService urlFetchService) {
         this.urlFetchService = urlFetchService;
         dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
         feedDateFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z");
-        this.urlValidator = urlValidator;
-        this.objectMapper = objectMapper;
+        this.objectMapper = new ObjectMapper();
     }
 
     public FeedDTO feedDTOFromUrl(String urlString) {
@@ -84,14 +81,20 @@ public class RssService {
     public Feed feedFromUrl(@NonNull Feed feed, String urlString) {
         try {
             feed.setUrl(new URI(urlString).toURL());
-            updateFeed(feed);
+            if (updateFeed(feed)) {
+                return feed;
+            }
         } catch(Exception e) {
             log.error(e.getMessage(), e);
         }
-        return feed;
+        return null;
     }
 
-    public boolean updateFeed(Feed feed) {
+    public boolean updateFeed(@NonNull Feed feed) {
+        if (feed.getUrl() == null) {
+            return false;
+        }
+
         FeedDTO feedDto = new  FeedDTO();
         try {
             List<Item> rssItems = parseRss(feed.getUrl().toString());

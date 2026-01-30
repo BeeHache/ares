@@ -23,7 +23,7 @@ interface Category {
 export class LicensesComponent {
   projectLicense = `MIT License
 
-Copyright (c) 2025 Benjamin King
+Copyright (c) 2026 Benjamin King
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -51,15 +51,20 @@ SOFTWARE.`;
         { name: 'Mailhog', license: 'MIT License', url: 'https://github.com/mailhog/MailHog' },
         { name: 'Nginx', version: 'alpine', license: 'BSD 2-Clause', url: 'https://hub.docker.com/_/nginx' },
         { name: 'PostgreSQL', version: '15-alpine', license: 'PostgreSQL License', url: 'https://hub.docker.com/_/postgres' },
-        { name: 'Redis', version: '7-alpine', license: 'BSD 3-Clause', url: 'https://hub.docker.com/_/redis' }
+        { name: 'Redis', version: '7-alpine', license: 'BSD 3-Clause', url: 'https://hub.docker.com/_/redis' },
+        { name: 'ActiveMQ', version: '6.2.0', license: 'Apache License 2.0', url: 'https://activemq.apache.org/' }
       ]
     },
     {
       name: 'Spring Boot & Core',
       dependencies: [
         { name: 'Spring Boot', version: '4.0.1', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-boot' },
+        { name: 'Spring Boot Web Starter', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-boot' },
+        { name: 'Spring Boot Security Starter', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-security' },
+        { name: 'Spring Boot Data JPA Starter', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-data-jpa' },
         { name: 'Spring Boot Mail Starter', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-boot' },
         { name: 'Spring Boot Thymeleaf Starter', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-boot' },
+        { name: 'Spring Boot ActiveMQ Starter', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-boot' },
         { name: 'Spring Data Redis', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-data-redis' }
       ]
     },

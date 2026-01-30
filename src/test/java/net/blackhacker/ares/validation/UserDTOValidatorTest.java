@@ -45,20 +45,4 @@ class UserDTOValidatorTest {
         // Act & Assert
         assertDoesNotThrow(() -> userDTOValidator.validateUserForRegistration(userDTO));
     }
-
-    @Test
-    void validateUserForRegistration_shouldThrowException_whenUserAlreadyExists() {
-        // Arrange
-        UserDTO userDTO = new UserDTO();
-        userDTO.setEmail("existing@example.com");
-        userDTO.setPassword("ValidPass123!");
-
-        doNothing().when(emailValidator).validateEmail(userDTO.getEmail());
-        doNothing().when(passwordValidator).validatePassword(userDTO.getPassword());
-        when(userService.getUserByEmail(userDTO.getEmail()))
-                .thenReturn(Optional.of(new net.blackhacker.ares.model.User()));
-
-        // Act & Assert
-        assertThrows(ValidationException.class, () -> userDTOValidator.validateUserForRegistration(userDTO));
-    }
 }

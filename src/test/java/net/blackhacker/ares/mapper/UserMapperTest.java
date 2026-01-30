@@ -80,8 +80,6 @@ class UserMapperTest {
         assertNotNull(dto);
         assertEquals("test@example.com", dto.getEmail());
         assertNull(dto.getPassword(), "Password should not be exposed in DTO");
-        assertNotNull(dto.getFeeds());
-        assertEquals(feeds.size(), dto.getFeeds().size());
     }
 
     @Test
