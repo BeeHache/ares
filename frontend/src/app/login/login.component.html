@@ -1,0 +1,29 @@
+<div class="container">
+  <h2>Login</h2>
+  <form (ngSubmit)="onSubmit()">
+    <div class="form-group">
+      <label for="email">Email:</label>
+      <input type="email" id="email" [(ngModel)]="email" name="email" required>
+    </div>
+
+    <app-password-input
+      [(ngModel)]="password"
+      name="password"
+      id="password"
+      [required]="true"
+    ></app-password-input>
+
+    <div class="forgot-password-link">
+      <a routerLink="/forgot-password">Forgot my password</a>
+    </div>
+
+    <div class="button-group">
+      <button type="submit">Login</button>
+      <button type="button" class="cancel-btn" (click)="onCancel()">Cancel</button>
+    </div>
+  </form>
+  <p *ngIf="errorMessage" class="error">{{ errorMessage }}</p>
+  <p class="register-link">
+    Don't have an account? <a routerLink="/register">Register here</a>
+  </p>
+</div>

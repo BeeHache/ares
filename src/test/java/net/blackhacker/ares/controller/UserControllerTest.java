@@ -6,7 +6,6 @@ import net.blackhacker.ares.security.JwtAuthenticationEntryPoint;
 import net.blackhacker.ares.security.JwtAuthenticationFilter;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.UserDTO;
-import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.mapper.UserMapper;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
@@ -21,10 +20,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -64,9 +65,6 @@ class UserControllerTest {
     private UserMapper userMapper;
 
     @MockitoBean
-    private FeedMapper feedMapper;
-
-    @MockitoBean
     private UserDTOValidator userDTOValidator;
 
     @MockitoBean
@@ -83,6 +81,12 @@ class UserControllerTest {
 
     @MockitoBean
     private CustomAccessDeniedHandler forbiddenHandler;
+
+    @MockitoBean
+    private TransactionTemplate transactionTemplate;
+
+    @MockitoBean
+    private JmsTemplate jmsTemplate;
 
     private Account account;
     private User user;
@@ -112,12 +116,9 @@ class UserControllerTest {
         userDTO.setEmail("test@example.com");
 
         feed = new Feed();
-        feed.setTitle("Test Feed");
-        feed.setLink(validUrl);
+        feed.setUrlFromString(validUrl);
 
         feedDTO = new FeedDTO();
-        feedDTO.setTitle(feed.getTitle());
-        feedDTO.setLink(feed.getLink());
     }
 
     @Test
@@ -135,7 +136,7 @@ class UserControllerTest {
 
     @Test
     @WithMockUser(username = "test@example.com")
-    void importOPML_shouldReturnAccepted_whenFileIsValid() throws Exception {
+    void importOpmlFromUrl_shouldReturnAccepted_whenFileIsValid() throws Exception {
         MockMultipartFile multipartFile = new MockMultipartFile(
                 "file",
                 "feeds.opml",
@@ -158,13 +159,11 @@ class UserControllerTest {
         doNothing().when(urlValidator).validateURL(validUrl);
         when(userService.getUserByAccount(any(Account.class))).thenReturn(Optional.of(user));
         when(feedService.addFeed(anyString())).thenReturn(feed);
-        when(feedMapper.toDTO(any(Feed.class))).thenReturn(feedDTO);
 
         mockMvc.perform(put("/api/user/addfeed")
                         .param("link", validUrl)
                         .with(user("test@example.com").roles("USER")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title").value(feed.getTitle()));
+                .andExpect(status().isOk());
 
         //verify(userService).saveUser(user);
     }

@@ -1,0 +1,19 @@
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+/* Inherit invalid styles from parent form if needed */
+:host-context(.ng-invalid.ng-touched) input {
+  border-color: red;
+}

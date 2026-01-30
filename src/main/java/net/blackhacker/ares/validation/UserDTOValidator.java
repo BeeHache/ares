@@ -1,8 +1,6 @@
 package net.blackhacker.ares.validation;
 
 import net.blackhacker.ares.dto.UserDTO;
-import net.blackhacker.ares.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -10,28 +8,18 @@ public class UserDTOValidator {
 
     private final EmailValidator emailValidator;
     private final PasswordValidator passwordValidator;
-    private final UserService userService;
 
-    public UserDTOValidator(EmailValidator emailValidator, PasswordValidator passwordValidator, UserService userService) {
+    public UserDTOValidator(EmailValidator emailValidator, PasswordValidator passwordValidator) {
         this.emailValidator = emailValidator;
         this.passwordValidator = passwordValidator;
-        this.userService = userService;
     }
 
-    public void validateUserForLogin(UserDTO userDTO) {
+    public void validateUserForRegistration(UserDTO userDTO) {
         if (userDTO == null) {
             throw new ValidationException("User data must not be null.");
         }
 
         emailValidator.validateEmail(userDTO.getEmail());
         passwordValidator.validatePassword(userDTO.getPassword());
-    }
-
-    public void validateUserForRegistration(UserDTO userDTO) {
-        validateUserForLogin(userDTO);
-
-        if (userService.getUserByEmail(userDTO.getEmail()) != null) {
-            throw new ValidationException("User already exists");
-        }
     }
 }

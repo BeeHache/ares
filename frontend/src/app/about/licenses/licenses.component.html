@@ -1,0 +1,32 @@
+<div class="container">
+  <h1>Ares License</h1>
+  <div class="project-license">
+    <pre>{{ projectLicense }}</pre>
+  </div>
+
+  <h1>Open Source Licenses</h1>
+  <p>This project uses the following open source software:</p>
+
+  <div class="category" *ngFor="let category of categories">
+    <h2>{{ category.name }}</h2>
+    <table class="license-table">
+      <thead>
+        <tr>
+          <th>Dependency</th>
+          <th>Version</th>
+          <th>License</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let dep of category.dependencies">
+          <td>
+            <a *ngIf="dep.url" [href]="dep.url" target="_blank" rel="noopener noreferrer">{{ dep.name }}</a>
+            <span *ngIf="!dep.url">{{ dep.name }}</span>
+          </td>
+          <td>{{ dep.version || '-' }}</td>
+          <td>{{ dep.license }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

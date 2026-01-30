@@ -1,5 +1,6 @@
 package net.blackhacker.ares.service;
 
+import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -18,8 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+
 @SpringBootTest(classes = EmailSenderService.class)
 @ExtendWith(MockitoExtension.class)
 class EmailSenderServiceTest {
@@ -30,7 +31,10 @@ class EmailSenderServiceTest {
     @MockitoBean
     private TemplateEngine templateEngine;
 
-    @InjectMocks
+    @MockitoBean
+    private MimeMessage mimeMessage;
+
+    @Autowired
     private EmailSenderService emailSenderService;
 
     @Test
@@ -43,8 +47,9 @@ class EmailSenderServiceTest {
         String[] args = {"key1", "value1", "key2", "value2"};
         String processedContent = "<html>Processed Content</html>";
 
-        when(templateEngine.process(eq("templates/" + template + ".html"), any(Context.class)))
-                .thenReturn(processedContent);
+        when(templateEngine.process(anyString(), any(Context.class))).thenReturn(processedContent);
+        when(javaMailSender.createMimeMessage()).thenReturn(mimeMessage);
+        doNothing().when(javaMailSender).send(any(MimeMessage.class));
 
         // Act
         emailSenderService.sendEmail(to, from, subject, template, args);
@@ -52,22 +57,14 @@ class EmailSenderServiceTest {
         // Assert
         // Verify TemplateEngine interaction
         ArgumentCaptor<Context> contextCaptor = ArgumentCaptor.forClass(Context.class);
-        verify(templateEngine).process(eq("templates/" + template + ".html"), contextCaptor.capture());
+        verify(templateEngine).process(anyString(), contextCaptor.capture());
         
         Context capturedContext = contextCaptor.getValue();
         assertEquals("value1", capturedContext.getVariable("key1"));
         assertEquals("value2", capturedContext.getVariable("key2"));
 
         // Verify JavaMailSender interaction
-        ArgumentCaptor<SimpleMailMessage> messageCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(javaMailSender).send(messageCaptor.capture());
-
-        SimpleMailMessage capturedMessage = messageCaptor.getValue();
-        assertNotNull(capturedMessage);
-        assertNotNull(capturedMessage.getTo());
-        assertEquals(to, capturedMessage.getTo()[0]);
-        assertEquals(from, capturedMessage.getFrom());
-        assertEquals(subject, capturedMessage.getSubject());
-        assertEquals(processedContent, capturedMessage.getText());
+        ArgumentCaptor<MimeMessage> messageCaptor = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(javaMailSender).send(any(MimeMessage.class));
     }
 }

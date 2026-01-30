@@ -1,6 +1,7 @@
 package net.blackhacker.ares.service;
 
 import net.blackhacker.ares.model.Account;
+import net.blackhacker.ares.model.EmailConfirmationCode;
 import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.repository.EmailConfirmationRepository;
 import net.blackhacker.ares.repository.UserRepository;
@@ -14,7 +15,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.thymeleaf.TemplateEngine;
 
+import java.time.ZonedDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,28 +45,42 @@ class UserServiceTest {
     @InjectMocks
     private UserService userService;
 
-    private User user, existingUser;
-    private Account account, nonExistingAccount;
+    private User user, existingUser, existingNonenabledUser;
+    private Account existingEnabledAccount, existingNonenabledAccount, nonExistingAccount;
     private String testEmail = "test@example.com";
     private String takenEmail = "taken@example.com";
+    private EmailConfirmationCode ecc;
 
     @BeforeEach
     public void setUP() {
 
-        account = new Account();
-        account.setUsername("testuser");
+        existingEnabledAccount = new Account();
+        existingEnabledAccount.setUsername("testuser");
+        existingEnabledAccount.setAccountEnabledAt(ZonedDateTime.now().minusDays(1));
+
+        existingNonenabledAccount = new  Account();
+        existingNonenabledAccount.setUsername("testnonuser");
 
         nonExistingAccount = new Account();
 
         user = new User();
         user.setEmail(testEmail);
-        user.setAccount(account);
+        user.setAccount(existingEnabledAccount);
 
         existingUser = new User();
         existingUser.setEmail(takenEmail);
-        existingUser.setAccount(account);
+        existingUser.setAccount(existingEnabledAccount);
+
+        existingNonenabledUser =  new User();
+        existingNonenabledUser.setEmail(takenEmail);
+        existingNonenabledUser.setAccount(existingNonenabledAccount);
 
         reset(userRepository);
+
+        ecc = new EmailConfirmationCode();
+        ecc.setCode(UUID.randomUUID().toString());
+
+
     }
 
     @Test
@@ -74,23 +91,39 @@ class UserServiceTest {
         when(userRepository.save(user)).thenReturn(user);
 
         // Act
-        Optional<User> registeredUser = userService.registerUser(user);
+        User registeredUser = userService.registerUser(user);
 
         // Assert
-        assertTrue(registeredUser.isPresent());
-        assertEquals(testEmail, registeredUser.get().getEmail());
-        verify(userRepository).existsByEmail(testEmail);
+        assertNotNull(registeredUser);
+        assertEquals(testEmail, registeredUser.getEmail());
         verify(userRepository).save(user);
     }
 
     @Test
-    void registerUser_shouldReturnNull_whenEmailIsTaken() {
+    void registerUser_shouldThrowException_whenEmailIsTakenAndEnabled() {
 
-        when(userRepository.existsByEmail(takenEmail)).thenReturn(true);
-        when(userRepository.save(existingUser)).thenReturn(existingUser);
-        Optional<User> registeredUser = userService.registerUser(existingUser);
-        assertFalse(registeredUser.isPresent());
-        verify(userRepository).existsByEmail(takenEmail);
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(any(User.class))).thenReturn(existingUser);
+        when(emailConfirmationRepository.save(any(EmailConfirmationCode.class))).thenReturn(ecc);
+        doNothing().when(emailSenderService).sendEmail(any(), any(), any(),
+                any(), any(), any(), any());
+
+        assertThrows(ServiceException.class, () -> {
+            userService.registerUser(user);
+        });
+    }
+
+    @Test
+    void registerUser_shouldReturnUser_whenEmailIsTakenButNotEnabled() {
+
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(existingNonenabledUser));
+        when(emailConfirmationRepository.save(any(EmailConfirmationCode.class))).thenReturn(ecc);
+        doNothing().when(emailSenderService).sendEmail(any(), any(), any(),
+                any(), any(), any(), any());
+
+        User registeredUser = userService.registerUser(user);
+
+        assertNotNull(registeredUser);
         verify(userRepository, never()).save(user);
     }
 
@@ -112,10 +145,10 @@ class UserServiceTest {
 
     @Test
     void getUserByAccount_shouldReturnUser_whenUserExists() {
-        when(userRepository.findByAccount(account)).thenReturn(Optional.of(user));
-        Optional<User> result = userService.getUserByAccount(account);
+        when(userRepository.findByAccount(existingEnabledAccount)).thenReturn(Optional.of(user));
+        Optional<User> result = userService.getUserByAccount(existingEnabledAccount);
         assertTrue(result.isPresent());
-        assertEquals(account, result.get().getAccount());
+        assertEquals(existingEnabledAccount, result.get().getAccount());
     }
 
     @Test
@@ -136,7 +169,7 @@ class UserServiceTest {
     @Test
     void getUserByAccount_shouldReturnAccount_whenAccountExists() {
         when(userRepository.findByAccount(any(Account.class))).thenReturn(Optional.of(user));
-        Optional<User> result = userService.getUserByAccount(account);
+        Optional<User> result = userService.getUserByAccount(existingEnabledAccount);
         assertTrue(result.isPresent());
         assertEquals(user, result.get());
     }

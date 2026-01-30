@@ -1,0 +1,100 @@
+.feed-items-container {
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.feed-header {
+  margin-bottom: 30px;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 20px;
+  overflow-wrap: break-word;
+}
+
+.feed-header h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.feed-description {
+  color: #666;
+  font-style: italic;
+}
+
+.feed-source-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: #007bff;
+  text-decoration: none;
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 100%;
+}
+
+.item-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  transition: box-shadow 0.2s;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.item-card:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.item-card h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.item-card h4 a {
+  color: #2c3e50;
+  text-decoration: none;
+}
+
+.item-card h4 a:hover {
+  color: #007bff;
+}
+
+.item-meta {
+  font-size: 0.85em;
+  color: #888;
+  margin-bottom: 10px;
+}
+
+.item-description {
+  color: #444;
+  line-height: 1.5;
+  max-width: 100%;
+}
+
+/* Handle images in description */
+.item-description img {
+    max-width: 100%;
+    height: auto;
+}
+
+.placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #888;
+  font-size: 1.2em;
+}
+
+.no-items {
+    text-align: center;
+    color: #888;
+    padding: 20px;
+}

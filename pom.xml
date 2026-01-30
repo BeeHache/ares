@@ -39,6 +39,7 @@
         <testcontainers.version>1.21.4</testcontainers.version>
         <lombok.version>1.18.42</lombok.version>
         <jedis.version>7.2.0</jedis.version>
+        <activemq.version>6.2.0</activemq.version>
     </properties>
     <dependencies>
         <dependency>
@@ -56,6 +57,19 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-activemq</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-broker</artifactId>
+            <version>${activemq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-json</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -83,7 +97,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <!-- <version>${lombok.version}</version> -->
+            <version>${lombok.version}</version>
             <optional>true</optional>
         </dependency>
         <dependency>

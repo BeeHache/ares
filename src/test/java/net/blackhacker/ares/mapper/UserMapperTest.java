@@ -16,6 +16,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -24,8 +25,6 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UserMapperTest {
 
-    @MockitoBean
-    private FeedMapper feedMapper;
 
     @MockitoBean
     private PasswordEncoder passwordEncoder;
@@ -52,9 +51,9 @@ class UserMapperTest {
         user.setAccount(account);
 
         feed1 = new Feed();
-        feed1.setTitle("Feed 1");
+        feed1.setId(UUID.randomUUID());
         feed2 = new Feed();
-        feed2.setTitle("Feed 2");
+        feed2.setId(UUID.randomUUID());
 
         feeds = new ArrayList<>();
         feeds.add(feed1);
@@ -62,18 +61,17 @@ class UserMapperTest {
         user.setFeeds(feeds);
 
         feedDTO1 = new FeedDTO();
-        feedDTO1.setTitle(feed1.getTitle());
+        feedDTO1.setId(UUID.randomUUID());
+
         feedDTO2 = new FeedDTO();
-        feedDTO2.setTitle(feed2.getTitle());
+        feedDTO2.setId(UUID.randomUUID());
+
     }
 
     @Test
     void toDTO_shouldMapUserToUserDTO() {
         // Arrange
 
-
-        when(feedMapper.toDTO(feed1)).thenReturn(feedDTO1);
-        when(feedMapper.toDTO(feed2)).thenReturn(feedDTO2);
 
         // Act
         UserDTO dto = userMapper.toDTO(user);
@@ -82,8 +80,6 @@ class UserMapperTest {
         assertNotNull(dto);
         assertEquals("test@example.com", dto.getEmail());
         assertNull(dto.getPassword(), "Password should not be exposed in DTO");
-        assertNotNull(dto.getFeeds());
-        assertEquals(feeds.size(), dto.getFeeds().size());
     }
 
     @Test

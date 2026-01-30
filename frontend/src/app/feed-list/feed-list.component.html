@@ -1,0 +1,35 @@
+<div class="feed-list-container">
+  <h2>My Feeds</h2>
+
+  <div class="actions">
+    <button class="btn" (click)="addFeed()">Add Feed</button>
+    <button class="btn" (click)="openImportModal()">Import OPML</button>
+  </div>
+
+  <div class="summary">
+    <a href="#" class="summary-link active">All Feeds ({{ feeds.length }})</a>
+    <!-- <a href="#" class="summary-link">Unread ({{ totalUnread }})</a> -->
+  </div>
+
+  <ul class="feed-items">
+    <li *ngFor="let feed of feeds" class="feed-item">
+      <div class="feed-row">
+        <a href="javascript:void(0)" class="feed-link" (click)="selectFeed(feed)">
+          <span class="feed-name">{{ feed.title }}</span>
+          <!-- <span *ngIf="feed.unreadCount > 0" class="unread-count">{{ feed.unreadCount }}</span> -->
+        </a>
+        <button class="delete-btn" (click)="deleteFeed(feed.id)" title="Unsubscribe">×</button>
+      </div>
+    </li>
+  </ul>
+
+  <div *ngIf="feeds.length === 0" class="no-feeds">
+      <p>No feeds found. Add one to get started!</p>
+  </div>
+
+  <app-opml-import
+    *ngIf="showImportModal"
+    (close)="closeImportModal()"
+    (importSuccess)="onImportSuccess()">
+  </app-opml-import>
+</div>

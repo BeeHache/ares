@@ -1,21 +1,21 @@
 package net.blackhacker.ares.service;
 
 import be.ceau.opml.OpmlParser;
-import be.ceau.opml.OpmlWriter;
-import be.ceau.opml.entity.Body;
-import be.ceau.opml.entity.Head;
 import be.ceau.opml.entity.Opml;
 import be.ceau.opml.entity.Outline;
+import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.model.Feed;
-import net.blackhacker.ares.model.Image;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class OpmlService {
 
@@ -41,12 +41,21 @@ public class OpmlService {
 
     public Collection<Feed> importFeed(String urlString) {
 
-        byte[] bytes = urlFetchService.fetchImageBytes(urlString);
+        ResponseEntity<String> response = urlFetchService.fetchString(urlString);
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new ServiceException("Problem fetching " + urlString);
+        }
 
         try {
-            return parseOPML(bytes);
+            return parseOPML(response.getBody());
         } catch (Exception e){
             throw new ServiceException("Couldn't parse url " + urlString, e);
+        }
+    }
+
+    private Collection<Feed> parseOPML(String opmlString) throws Exception{
+        try(InputStream is = new ByteArrayInputStream(opmlString.getBytes(StandardCharsets.UTF_8))){
+            return parseOPML(is);
         }
     }
 
@@ -57,54 +66,42 @@ public class OpmlService {
         }
     }
 
-    private Collection<Feed> parseOPML(InputStream inputStream) throws Exception{
-        Opml opml = new OpmlParser().parse(inputStream);
-
-        return opml.getBody().getOutlines().stream().map(outline -> {
-
-            Map<String, String> attributes = outline.getAttributes();
-
-            Feed feed = new Feed();
-            feed.setTitle(attributes.get("title"));
-            feed.setDescription(attributes.get("description"));
-            feed.setLink(attributes.get("xmlUrl"));
-
-            String contentType = urlFetchService.getContentType(attributes.get("xmlUrl"));
-            byte[] bytes = urlFetchService.fetchImageBytes(attributes.get("imageUrl"));
-            Image image = new Image();
-            image.setData(bytes);
-            image.setContentType(contentType);
-            feed.setImage(image);
-
-            return feed;
-
-        }).collect(Collectors.toList());
+    /**
+     * Resursively walks the Outline tree build a collection of feeds
+     * @param outlines
+     * @return A Collection of Feeds
+     */
+    private Collection<Feed>  opmlWalker(Collection<Outline> outlines){
+        Collection<Feed> feeds = new ArrayList<>();
+        for (Outline outlineItem : outlines){
+            try {
+                String xmlUrl = outlineItem.getAttribute("xmlUrl");
+                String title = outlineItem.getAttribute("text");
+                String imageUrl = outlineItem.getAttribute("imageUrl");
+                if (xmlUrl != null && !xmlUrl.isEmpty()) {
+                    Feed feed = new Feed();
+                    if (title != null && !title.isEmpty()) {
+                        feed.setTitle(title);
+                    }
+                    feed.setUrl(new URI(xmlUrl).toURL());
+                    if (imageUrl != null && !imageUrl.isEmpty()) {
+                        feed.setImageUrl(new URI(imageUrl).toURL());
+                    }
+                    feeds.add(feed);
+                }
+                if (outlineItem.getSubElements() != null && !outlineItem.getSubElements().isEmpty()) {
+                    feeds.addAll(opmlWalker(outlineItem.getSubElements()));
+                }
+            } catch (Exception e) {
+                log.warn(e.getMessage(), e);
+            }
+        }
+        return feeds;
     }
 
-    public String generateOPML(Collection<Feed> feeds) {
-        try {
-        Head head = new Head("Ares Export", new Date().toString(),
-                null,null,null,null,
-                null,null,null,null,
-                null,null,null);
-        Body body = new Body(
-            feeds.stream().map(feed -> {
-                Map<String, String> attributes = new HashMap<>();
-                attributes.put("text", feed.getTitle());
-                attributes.put("title", feed.getTitle());
-                attributes.put("type", "rss");
-                attributes.put("xmlUrl", feed.getLink());
-                if (feed.getDescription() != null) {
-                    attributes.put("description", feed.getDescription());
-                }
-                // Assuming htmlUrl is not stored in Feed, omitting it or could be same as link if appropriate
-                return new Outline(attributes, Collections.emptyList());
-            }).toList()
-        );
-
-        return new OpmlWriter().write(new Opml("2.0", head, body));
-        } catch (Exception e){
-            throw new ServiceException("Couldn't generate OPML", e);
-        }
+    private Collection<Feed> parseOPML(InputStream inputStream) throws Exception{
+        Opml opml = new OpmlParser().parse(inputStream);
+        List<Outline> ols = opml.getBody().getOutlines();
+        return opmlWalker(ols);
     }
 }

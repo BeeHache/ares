@@ -3,35 +3,43 @@ package net.blackhacker.ares.service;
 import com.apptasticsoftware.rssreader.Channel;
 import com.apptasticsoftware.rssreader.Item;
 import com.apptasticsoftware.rssreader.RssReader;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import net.blackhacker.ares.dto.EnclosureDTO;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.FeedItemDTO;
-import net.blackhacker.ares.dto.ImageDTO;
 import net.blackhacker.ares.model.Feed;
-import net.blackhacker.ares.model.FeedItem;
-import net.blackhacker.ares.model.Image;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.*;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 
+@Slf4j
 @Service
 public class RssService {
 
     final private URLFetchService urlFetchService;
+    final private DateTimeFormatter dateTimeFormatter;
+    final private DateTimeFormatter feedDateFormatter;
+    final private ObjectMapper objectMapper;
+
 
     public RssService(URLFetchService urlFetchService) {
         this.urlFetchService = urlFetchService;
+        dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        feedDateFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z");
+        this.objectMapper = new ObjectMapper();
     }
 
     public FeedDTO feedDTOFromUrl(String urlString) {
         try {
-            List<Item> rssItems = pareRss(urlString);
+            List<Item> rssItems = parseRss(urlString);
             if (rssItems.isEmpty()) {
                 return null;
             }
@@ -41,19 +49,8 @@ public class RssService {
             feedDTO.setTitle(channel.getTitle());
             feedDTO.setDescription(channel.getDescription());
             feedDTO.setLink(channel.getLink());
-
             if (channel.getImage().isPresent()) {
-                URL url = new URI(channel.getImage().get().getLink()).toURL();
-                URLConnection connection = url.openConnection();
-                String contentType = connection.getContentType();
-
-                try(InputStream is = connection.getInputStream()){
-                    byte[] bytes = is.readAllBytes();
-                   ImageDTO imageDTO = new ImageDTO();
-                   imageDTO.setData(bytes);
-                   imageDTO.setContentType(contentType);
-                   feedDTO.setImage(imageDTO);
-                }
+                feedDTO.setImageUrl(channel.getImage().get().getUrl());
             }
 
             List<FeedItemDTO> feedItemDTOs = rssItems.stream().map(rssItem -> {
@@ -78,56 +75,108 @@ public class RssService {
     }
 
     public Feed feedFromUrl(String urlString) {
+        return feedFromUrl( new Feed(), urlString);
+    }
+
+    public Feed feedFromUrl(@NonNull Feed feed, String urlString) {
         try {
-            List<Item> rssItems = pareRss(urlString);
+            feed.setUrl(new URI(urlString).toURL());
+            if (updateFeed(feed)) {
+                return feed;
+            }
+        } catch(Exception e) {
+            log.error(e.getMessage(), e);
+        }
+        return null;
+    }
+
+    public boolean updateFeed(@NonNull Feed feed) {
+        if (feed.getUrl() == null) {
+            return false;
+        }
+
+        FeedDTO feedDto = new  FeedDTO();
+        try {
+            List<Item> rssItems = parseRss(feed.getUrl().toString());
 
             if (rssItems.isEmpty()) {
-                return null;
+                return false;
             }
 
-            Feed feed = new Feed();
+            // Get channel info from 1st item
             Channel channel = rssItems.get(0).getChannel();
-            feed.setTitle(channel.getTitle());
-            feed.setDescription(channel.getDescription());
-            feed.setLink(channel.getLink());
-            if (channel.getImage().isPresent()) {
-                URL url = new URI(channel.getImage().get().getLink()).toURL();
-                URLConnection connection = url.openConnection();
-                String contentType = connection.getContentType();
-
-                try(InputStream is = connection.getInputStream()){
-                    byte[] bytes = is.readAllBytes();
-                    Image image = new Image();
-                    image.setData(bytes);
-                    image.setContentType(contentType);
-                    feed.setImage(image);
-                }
+            feedDto.setId(feed.getId());
+            feedDto.setTitle(channel.getTitle());
+            feedDto.setDescription(channel.getDescription());
+            feedDto.setLink(channel.getLink());
+            if  (channel.getImage().isPresent()) {
+                feedDto.setImageUrl(channel.getImage().get().getLink());
             }
-            List<FeedItem> feedItems = rssItems.stream().map(rssItem -> {
-                FeedItem feedItem = new FeedItem();
+
+            List<FeedItemDTO> feedItems = rssItems.stream().map(rssItem -> {
+
+                final FeedItemDTO feedItemDTO = new FeedItemDTO();
+
                 if (rssItem.getTitle().isPresent()) {
-                    feedItem.setTitle(rssItem.getTitle().get());
+                    feedItemDTO.setTitle(rssItem.getTitle().get());
                 }
                 if (rssItem.getDescription().isPresent()) {
-                    feedItem.setDescription(rssItem.getDescription().get());
+                    feedItemDTO.setDescription(rssItem.getDescription().get());
                 }
                 if (rssItem.getLink().isPresent()) {
-                    feedItem.setLink(rssItem.getLink().get());
+                    feedItemDTO.setLink(rssItem.getLink().get());
                 }
 
-                return feedItem;
-            }).collect(Collectors.toList());
-            feed.setItems(feedItems);
-            return feed;
+                ///  Loop through each enclosure and add it to the FeedItem
+                rssItem.getEnclosures().forEach(
+                    enclosure -> {
+                        try {
+                            EnclosureDTO enclosureDTO = new EnclosureDTO();
+                            enclosureDTO.setUrl(enclosure.getUrl());
+                            if(enclosure.getLength().isPresent()) {
+                                enclosureDTO.setLength(enclosure.getLength().get());
+                            }
+                            enclosureDTO.setType(enclosure.getType());
+                            feedItemDTO.getEnclosures().add(enclosureDTO);
+                        } catch (Exception e) {
+                            log.error(e.getMessage(), e);
+                        }
+                    }
+                );
+
+                if (rssItem.getUpdated().isPresent()){
+                    feedItemDTO.setDate(rssItem.getUpdatedAsZonedDateTime().get());
+                }
+
+                return feedItemDTO;
+            }).toList();
+
+            feedDto.getItems().addAll(feedItems);
+            feed.setJsonData(objectMapper.writer().writeValueAsString(feedDto));
+            return true;
 
         } catch (Exception e) {
-            throw new ServiceException("Can't read from " + urlString, e);
+            throw new ServiceException(String.format("Couldn't update feed :%s:%s",feed.getId(), e.getMessage()));
         }
     }
 
-    private List<Item> pareRss(String urlString){
-        byte[] bytes = urlFetchService.fetchImageBytes(urlString);
-        return  new RssReader().read(new ByteArrayInputStream(bytes)).toList();
+
+    private List<Item> parseRss(String urlString) {
+        return parseRss(urlString,null);
+    }
+
+    private List<Item> parseRss(String urlString, Map<String, String> headers) {
+        ResponseEntity<byte[]> response = urlFetchService.fetchBytes(urlString, headers);
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            log.warn("Problem fetching {}: {}", urlString, response.getStatusCode());
+            return List.of();
+        }
+        if (response.getBody() == null) {
+            log.warn("Response Body of {} is empty",urlString);
+            return List.of();
+        }
+
+        return new RssReader().read(new ByteArrayInputStream(response.getBody())).toList();
     }
 
 }

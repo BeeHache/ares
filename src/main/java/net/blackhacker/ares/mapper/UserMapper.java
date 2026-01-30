@@ -11,11 +11,9 @@ import java.util.stream.Collectors;
 @Component
 public class UserMapper implements ModelDTOMapper<User, UserDTO> {
 
-    private final FeedMapper feedMapper;
     private final PasswordEncoder passwordEncoder;
 
-    public UserMapper(FeedMapper feedMapper, PasswordEncoder passwordEncoder){
-        this.feedMapper = feedMapper;
+    public UserMapper(PasswordEncoder passwordEncoder){
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -26,11 +24,6 @@ public class UserMapper implements ModelDTOMapper<User, UserDTO> {
         UserDTO dto = new UserDTO();
         dto.setEmail(user.getEmail());
         // Password should not be mapped back to DTO for security
-        if (user.getFeeds() != null) {
-            dto.setFeeds(user.getFeeds().stream()
-                    .map(feedMapper::toDTO)
-                    .collect(Collectors.toSet()));
-        }
         return dto;
     }
 
