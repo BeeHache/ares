@@ -11,12 +11,11 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: none
-    defer-datasource-initialization: true
+      ddl-auto: validate
+    # defer-datasource-initialization: true  <-- REMOVED THIS
   sql:
     init:
-      mode: always
-      separator: ;;
+      mode: never
   data:
     redis:
       host: redis
@@ -35,6 +34,13 @@ spring:
           auth: ${SPRING_MAIL_SMTP_AUTH:true}
           starttls:
             enable: ${SPRING_MAIL_SMTP_STARTTLS_ENABLE:true}
+  flyway:
+    enabled: true
+    baseline-on-migrate: false # Set to false since DB is empty
+    locations: classpath:db/migration
+    placeholders:
+      ADMIN_EMAIL: ${ARES_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ARES_ADMIN_PASSWORD}
 
 app:
   copyright:

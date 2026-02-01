@@ -3,19 +3,24 @@ spring:
     name: Ares
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   sql:
     init:
-      mode: always
-      separator: ;;
+      mode: never
   activemq:
     packages:
       trusted: java.util,net.blackhacker.ares.dto
   session:
     store-type: none
+  flyway:
+    enabled: true
+    locations:
+      - classpath:db/migration
+      - classpath:db/testdata
+
 app:
   copyright:
     start-year: 2024
