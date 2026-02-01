@@ -26,6 +26,6 @@ public interface FeedRepository extends JpaRepository<Feed, UUID> {
     @Query(value = "SELECT f.id, f.title, f.image_url FROM subscriptions s,  feeds f WHERE s.feed_id=f.id and s.user_id = :userid", nativeQuery = true)
     Collection<FeedTitleDTO> findFeedTitlesByUserId(@Param("userid") Long userId);
 
-    @Query(value="SELECT f.jsonData FROM feeds f WHERE f.id=:feed_id")
+    @Query(value="SELECT f.jsonData FROM Feed f WHERE f.id=:feed_id")
     Optional<String> getJsonDataById(@Param("feed_id") UUID feedId);
 }
