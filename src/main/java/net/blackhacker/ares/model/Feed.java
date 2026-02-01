@@ -38,7 +38,7 @@ public class Feed {
     @Column
     private String title;
 
-    @Column(columnDefinition = "char(1)")
+    @Column
     @Convert(converter = BooleanConverter.class)
     private boolean isPodcast = false;
 
