@@ -48,6 +48,7 @@ create table if not exists feeds (
     url varchar(512) not null unique,
     title varchar(256),
     is_podcast char(1) not null default 'N',
+    last_build_date timestamp with time zone,
     last_modified timestamp with time zone,
     image_url varchar(512),
     link_url varchar(512),

@@ -82,20 +82,21 @@ public class FeedController {
                     .body(oJson.get().getString());
         }
 
-        Feed feed = feedService.getFeedById(id);
-        if (feed==null) {
+        Optional<String> jsonData = feedService.getJsonData(id);
+        if (jsonData.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
+        //save data to cache
         StringCacheDTO stringCacheDTO = new StringCacheDTO();
         stringCacheDTO.setId(id);
-        stringCacheDTO.setString(feed.getJsonData());
+        stringCacheDTO.setString(jsonData.get());
         stringCacheRepository.save(stringCacheDTO);
 
         return ResponseEntity
                 .ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(feed.getJsonData());
+                .body(jsonData.get());
     }
 
     @PostMapping("/import")

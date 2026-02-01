@@ -18,6 +18,7 @@ import java.net.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 
 @Slf4j
@@ -106,7 +107,12 @@ public class RssService {
             // Get channel info from 1st item
             Channel channel = rssItems.get(0).getChannel();
             feedDto.setId(feed.getId());
+
             feedDto.setTitle(channel.getTitle());
+            if (!Objects.equals(feed.getTitle(), channel.getTitle())) {
+                feed.setTitle(channel.getTitle());
+            }
+
             feedDto.setDescription(channel.getDescription());
             feedDto.setLink(channel.getLink());
             if  (channel.getImage().isPresent()) {
