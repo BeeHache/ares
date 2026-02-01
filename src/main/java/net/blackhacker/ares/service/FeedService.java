@@ -75,6 +75,10 @@ public class FeedService {
         return feedRepository.findById(id).orElse(null);
     }
 
+    public Optional<String> getJsonData(UUID id){
+        return feedRepository.getJsonDataById(id);
+    }
+
     public Collection<FeedTitleDTO> getFeedTitles(@NonNull Long userId) {
         return feedRepository.findFeedTitlesByUserId(userId);
     }
