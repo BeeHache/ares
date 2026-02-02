@@ -3,7 +3,3 @@ spring:
     locations:
       - classpath:db/migration
       - classpath:db/testdata
-
-  sql:
-    init:
-      data-locations: classpath:data.sql, classpath:data-dev.sql
