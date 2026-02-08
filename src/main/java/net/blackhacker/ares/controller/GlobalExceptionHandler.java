@@ -5,6 +5,7 @@ import net.blackhacker.ares.service.RegistrationException;
 import net.blackhacker.ares.validation.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -34,7 +35,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(AuthenticationException.class)
+    @ExceptionHandler({AuthenticationException.class, BadCredentialsException.class})
     public ResponseEntity<ErrorResponse> handleaAuthenticationException(AuthenticationException ex, WebRequest request) {
         log.error("Authentication error occurred: {}", ex.getMessage());
         log.trace(ex.getMessage(), ex);

@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,8 +56,8 @@ public class URLFetchService {
     public ResponseEntity<byte[]> fetchBytes(String urlString,
                                              Map<String, String> headersMap,
                                              Map<String, String> cookiesMap) {
-        final Map<String, String> h = headersMap==null?new HashMap<>():headersMap;
-        final Map<String, String> c = cookiesMap==null?new HashMap<>():cookiesMap;
+        final Map<String, String> h = headersMap==null ? Collections.emptyMap() : headersMap;
+        final Map<String, String> c = cookiesMap==null ? Collections.emptyMap() : cookiesMap;
 
         return restClient.get()
                 .uri(urlString)

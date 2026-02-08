@@ -4,8 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.EmailConfirmationCode;
 import net.blackhacker.ares.model.User;
-import net.blackhacker.ares.repository.EmailConfirmationRepository;
-import net.blackhacker.ares.repository.UserRepository;
+import net.blackhacker.ares.repository.crud.EmailConfirmationRepository;
+import net.blackhacker.ares.repository.jpa.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

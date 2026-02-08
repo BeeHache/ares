@@ -1,12 +1,12 @@
 package net.blackhacker.ares.controller;
 
 import net.blackhacker.ares.Constants;
+import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.FeedTitleDTO;
-import net.blackhacker.ares.dto.StringCacheDTO;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Feed;
+import net.blackhacker.ares.model.FeedImage;
 import net.blackhacker.ares.model.User;
-import net.blackhacker.ares.repository.StringCacheRepository;
 import net.blackhacker.ares.service.FeedService;
 import net.blackhacker.ares.service.OpmlService;
 import net.blackhacker.ares.service.UserService;
@@ -36,14 +36,12 @@ public class FeedController {
     private final MultipartFileValidator multipartFileValidator;
     private final TransactionTemplate transactionTemplate;
     private final JmsTemplate jmsTemplate;
-    private final StringCacheRepository stringCacheRepository;
 
     public FeedController(FeedService feedService,  UserService userService,
                           OpmlService opmlService, URLValidator urlValidator,
                           MultipartFileValidator multipartFileValidator,
                           TransactionTemplate transactionTemplate,
-                          JmsTemplate jmsTemplate,
-                          StringCacheRepository stringCacheRepository) {
+                          JmsTemplate jmsTemplate) {
         this.feedService = feedService;
         this.userService = userService;
         this.opmlService = opmlService;
@@ -51,7 +49,6 @@ public class FeedController {
         this.multipartFileValidator = multipartFileValidator;
         this.transactionTemplate = transactionTemplate;
         this.jmsTemplate = jmsTemplate;
-        this.stringCacheRepository = stringCacheRepository;
     }
 
     @GetMapping("/titles")
@@ -61,42 +58,39 @@ public class FeedController {
     }
 
     @GetMapping
-    public ResponseEntity<Collection<String>> getFeed(@AuthenticationPrincipal Account principal) {
+    public ResponseEntity<Collection<FeedDTO>> getFeed(@AuthenticationPrincipal Account principal) {
         User user = userService.getUserByAccount(principal).get();
-        Collection<String> feeds = user.getFeeds().stream().map(Feed::getJsonData).toList();
-        return ResponseEntity
-                .ok()
+        Collection<FeedDTO> feeds = user.getFeeds().stream().map(Feed::getDto).toList();
+        return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(feeds);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<String> getFeed(@PathVariable("id") UUID id) {
-
-
-        Optional<StringCacheDTO> oJson = stringCacheRepository.findById(id);
-        if (oJson.isPresent()) {
-            return ResponseEntity
-                    .ok()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(oJson.get().getString());
-        }
-
-        Optional<String> jsonData = feedService.getJsonData(id);
-        if (jsonData.isEmpty()) {
+    public ResponseEntity<FeedDTO> getFeed(@PathVariable("id") UUID id) {
+        Optional<FeedDTO> feedDTO = feedService.getFeedDTO(id);
+        if (feedDTO.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-
-        //save data to cache
-        StringCacheDTO stringCacheDTO = new StringCacheDTO();
-        stringCacheDTO.setId(id);
-        stringCacheDTO.setString(jsonData.get());
-        stringCacheRepository.save(stringCacheDTO);
 
         return ResponseEntity
                 .ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(jsonData.get());
+                .body(feedDTO.get());
+    }
+
+    @GetMapping("/{id}/image")
+    public ResponseEntity<byte[]> getImage(@PathVariable("id") UUID id) {
+        Optional<FeedImage> oFeedImage = feedService.getFeedImageById(id);
+        if (oFeedImage.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        FeedImage feedImage = oFeedImage.get();
+        return ResponseEntity
+            .ok()
+            .contentType(feedImage.getContentType())
+            .body(feedImage.getContent());
     }
 
     @PostMapping("/import")
@@ -109,14 +103,14 @@ public class FeedController {
     }
 
     @PutMapping
-    ResponseEntity<String> addFeed(@RequestParam("link") String link, @AuthenticationPrincipal @NonNull Account account){
+    ResponseEntity<FeedDTO> addFeed(@RequestParam("link") String link, @AuthenticationPrincipal @NonNull Account account){
         urlValidator.validateURL(link);
 
         User user = userService.getUserByAccount(account).get();
         Feed feed = feedService.addFeed(link);
         user.getFeeds().add(feed);
         userService.saveUser(user);
-        return ResponseEntity.ok(feed.getJsonData());
+        return ResponseEntity.ok(feed.getDto());
     }
 
     @DeleteMapping("/{id}")

@@ -8,8 +8,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.utils.BooleanConverter;
+import net.blackhacker.ares.utils.FeedDtoType;
 import net.blackhacker.ares.utils.URLConverter;
+import org.hibernate.annotations.Type;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -36,25 +39,18 @@ public class Feed {
     private URL url;
 
     @Column
-    private String title;
-
-    @Column
     @Convert(converter = BooleanConverter.class)
     private boolean isPodcast = false;
 
     @Column(nullable = false)
     private ZonedDateTime lastModified = ZonedDateTime.now();
 
-    @Column
-    @Convert(converter = URLConverter.class)
-    private URL imageUrl;
+    @OneToOne(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
+    private FeedImage feedImage;
 
-    @Column
-    @Convert(converter = URLConverter.class)
-    private URL linkUrl;
-
-    @Column
-    String jsonData;
+    @Type(FeedDtoType.class)
+    @Column(name = "dto",columnDefinition = "JSONB")
+    private FeedDTO dto;
 
     public void setUrlFromString(String urlString) {
         try {

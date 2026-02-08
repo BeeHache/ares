@@ -9,8 +9,8 @@ create table if not exists accounts (
     password_expires_at timestamp with time zone,
     account_locked_until timestamp with time zone,
     account_enabled_at timestamp with time zone,
-    CONSTRAINT check_type CHECK (type IN ('ADMIN', 'USER')),
-    CONSTRAINT username_type_unique UNIQUE (username, type)
+    CHECK (type IN ('ADMIN', 'USER')),
+    UNIQUE (username, type)
 );
 
 create table if not exists admins (
@@ -32,7 +32,7 @@ create table if not exists roles (
     id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name VARCHAR(255) NOT NULL UNIQUE,
     parent_id BIGINT, -- This is the recursive link
-    CONSTRAINT fk_role_parent FOREIGN KEY (parent_id) REFERENCES roles(id) ON DELETE CASCADE
+    FOREIGN KEY (parent_id) REFERENCES roles(id) ON DELETE CASCADE
 );
 
 create table if not exists account_roles (
@@ -46,24 +46,33 @@ create table if not exists account_roles (
 create table if not exists feeds (
     id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     url varchar(512) not null unique,
-    title varchar(256),
     is_podcast varchar(1) not null default 'N',
     last_modified timestamp with time zone,
-    image_url varchar(512),
-    link_url varchar(512),
-    json_data TEXT,
-    CONSTRAINT check_is_podcast CHECK (is_podcast IN ('Y', 'N'))
+    dto JSONB,
+    CHECK (is_podcast IN ('Y', 'N'))
 );
 
 create index if not exists ix_feeds_last_mod on feeds (last_modified);
+create index if not exists ix_feeds_dto_title on feeds ((dto ->>'title'));
+create index if not exists ix_feeds_dto_description on feeds ((dto ->> 'description'));
+create index if not exists ix_feeds_dto on feeds USING GIN (dto);
+
+create table if not exists feed_image (
+    id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    feed_id UUID,
+    image_url varchar(512),
+    content_type varchar(32),
+    data BYTEA,
+    FOREIGN KEY (feed_id) references feeds(id) ON DELETE CASCADE
+);
 
 
 create table if not exists subscriptions (
     user_id BIGINT NOT NULL,
     feed_id UUID NOT NULL,
     PRIMARY KEY (user_id, feed_id), -- Prevents a user from subscribing to the same feed twice
-    CONSTRAINT fk_user_link FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_feed_link FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE
 );
 
 

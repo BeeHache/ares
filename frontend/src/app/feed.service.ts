@@ -61,42 +61,15 @@ export class FeedService {
   }
 
   getFeeds(): Observable<Feed[]> {
-    return this.http.get<string[]>(`${this.apiUrl}`).pipe(
-      map(feedStrings => feedStrings.map(json => {
-          try {
-              return typeof json === 'string' ? JSON.parse(json) : json;
-          } catch (e) {
-              console.error('Error parsing feed JSON', e);
-              return null;
-          }
-      }).filter(feed => feed !== null))
-    );
+    return this.http.get<Feed[]>(`${this.apiUrl}`);
   }
 
   getFeedById(id: string): Observable<Feed> {
-    return this.http.get<string>(`${this.apiUrl}/${id}`).pipe(
-        map(json => {
-            try {
-                return typeof json === 'string' ? JSON.parse(json) : json;
-            } catch (e) {
-                console.error('Error parsing feed JSON', e);
-                throw e;
-            }
-        })
-    );
+    return this.http.get<Feed>(`${this.apiUrl}/${id}`);
   }
 
   addFeed(link: string): Observable<Feed> {
-    return this.http.put<string>(`${this.apiUrl}`, null, { params: { link } }).pipe(
-        map(json => {
-            try {
-                return typeof json === 'string' ? JSON.parse(json) : json;
-            } catch (e) {
-                console.error('Error parsing feed JSON', e);
-                throw e;
-            }
-        })
-    );
+    return this.http.put<Feed>(`${this.apiUrl}`, null, { params: { link } });
   }
 
   deleteFeed(id: string): Observable<void> {

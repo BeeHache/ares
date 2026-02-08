@@ -1,7 +1,7 @@
 package net.blackhacker.ares.service;
 
 import net.blackhacker.ares.model.Role;
-import net.blackhacker.ares.repository.RoleRepository;
+import net.blackhacker.ares.repository.jpa.RoleRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

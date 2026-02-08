@@ -1,4 +1,4 @@
-package net.blackhacker.ares.repository;
+package net.blackhacker.ares.repository.crud;
 
 import net.blackhacker.ares.model.RefreshToken;
 import org.springframework.data.repository.CrudRepository;

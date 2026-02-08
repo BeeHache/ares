@@ -1,7 +1,7 @@
 package net.blackhacker.ares.service;
 
 import net.blackhacker.ares.model.Account;
-import net.blackhacker.ares.repository.AccountRepository;
+import net.blackhacker.ares.repository.jpa.AccountRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

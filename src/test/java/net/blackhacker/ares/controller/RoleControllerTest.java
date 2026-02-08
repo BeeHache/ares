@@ -1,10 +1,11 @@
 package net.blackhacker.ares.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.blackhacker.ares.TestConfig;
 import net.blackhacker.ares.dto.RoleDTO;
 import net.blackhacker.ares.mapper.RoleMapper;
 import net.blackhacker.ares.model.Role;
-import net.blackhacker.ares.repository.RoleRepository;
+import net.blackhacker.ares.repository.jpa.RoleRepository;
 import net.blackhacker.ares.security.CustomAccessDeniedHandler;
 import net.blackhacker.ares.security.JwtAuthenticationEntryPoint;
 import net.blackhacker.ares.security.JwtAuthenticationFilter;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(RoleController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import(TestConfig.class)
 class RoleControllerTest {
 
     @Autowired

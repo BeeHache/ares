@@ -1,11 +1,10 @@
 package net.blackhacker.ares.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import net.blackhacker.ares.TestConfig;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
-import net.blackhacker.ares.repository.StringCacheRepository;
 import net.blackhacker.ares.security.JwtAuthenticationFilter;
 import net.blackhacker.ares.service.FeedService;
 import net.blackhacker.ares.service.JWTService;
@@ -13,12 +12,12 @@ import net.blackhacker.ares.service.OpmlService;
 import net.blackhacker.ares.service.UserService;
 import net.blackhacker.ares.validation.MultipartFileValidator;
 import net.blackhacker.ares.validation.URLValidator;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -41,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(FeedController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import(TestConfig.class)
 class FeedControllerTest {
 
     @Autowired
@@ -73,9 +73,6 @@ class FeedControllerTest {
     @MockitoBean
     private JmsTemplate jmsTemplate;
 
-    @MockitoBean
-    StringCacheRepository stringCacheRepository;
-
     private Optional<User> optionalUser;
     private User principal;
     private User user;
@@ -92,15 +89,10 @@ class FeedControllerTest {
         feedDTO.setTitle("Tech Blog");
         feedDTO.setLink("https://tech.blog/rss");
 
-
         feed = new Feed();
-        feed.setTitle("Tech Blog");
         feed.setUrlFromString("https://tech.blog/rss");
         feed.setId(UUID.randomUUID());
-        try {
-            feed.setJsonData(new ObjectMapper().writeValueAsString(feedDTO));
-        } catch(Exception e){}
-
+        feed.setDto(feedDTO);
         user.setFeeds(Set.of(feed));
 
     }
@@ -118,8 +110,8 @@ class FeedControllerTest {
                 .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0]").isString())
-                .andExpect(jsonPath("$[0]", Matchers.containsString("Tech Blog")));
+                .andExpect(jsonPath("$[0].title").value("Tech Blog"))
+                .andExpect(jsonPath("$[0].link").value("https://tech.blog/rss"));
     }
 
     @Test

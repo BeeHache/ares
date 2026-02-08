@@ -29,9 +29,6 @@ import java.util.Arrays;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Value("${spring.profiles.active:dev}")
-    private String activeProfile;
-
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint unauthorizedHandler;
     private final CustomAccessDeniedHandler forbiddenHandler;
@@ -46,7 +43,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return activeProfile.equals("dev") ? NoOpPasswordEncoder.getInstance() : new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder();
     }
 
     @Bean

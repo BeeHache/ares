@@ -1,10 +1,12 @@
 -- 1. Insert Accounts
+-- user1_pass
 INSERT INTO accounts (username, password, type, account_enabled_at)
-VALUES ('user1@ares.com', 'user1_pass', 'USER', '2023-01-01 00:00:00')
+VALUES ('user1@ares.com', '$2y$12$KBrYuP1ZGySR8Ufqwe4YE.yb8Vf5N/0eFQS6CgJU4HzGo2TYF5206', 'USER', '2023-01-01 00:00:00')
 ON CONFLICT (username, type) DO NOTHING;
 
+--user2_pass
 INSERT INTO accounts (username, password, type, account_enabled_at)
-VALUES ('user2@ares.com', 'user2_pass', 'USER', '2023-01-01 00:00:00')
+VALUES ('user2@ares.com', '$2y$12$LfkT8UB5wa/HGjoiRdXeUuvTtOheTMx6JMG4agzvB3tjtSxgNW3A', 'USER', '2023-01-01 00:00:00')
 ON CONFLICT (username, type) DO NOTHING;
 
 -- 2. Insert Users (Linked to Account)
@@ -18,11 +20,11 @@ ON CONFLICT (email) DO NOTHING;
 
 -- 3. Insert Feeds
 INSERT INTO feeds (url, is_podcast, last_modified)
-VALUES ('https://feeds.bbci.co.uk/news/rss.xml', 'N', CURRENT_TIMESTAMP)
+VALUES ('https://feeds.bbci.co.uk/news/rss.xml', 'N', CURRENT_TIMESTAMP - INTERVAL '24 hours')
 ON CONFLICT (url) DO NOTHING;
 
 INSERT INTO feeds (url, is_podcast, last_modified)
-VALUES ('https://feeds.simplecast.com/54nAGpIl', 'Y', CURRENT_TIMESTAMP)
+VALUES ('https://feeds.npr.org/500005/podcast.xml', 'Y', CURRENT_TIMESTAMP - INTERVAL '24 hours')
 ON CONFLICT (url) DO NOTHING;
 
 -- 4. Link Users to Feeds
@@ -37,7 +39,7 @@ ON CONFLICT (user_id, feed_id) DO NOTHING;
 INSERT INTO subscriptions (user_id, feed_id)
 VALUES (
     (SELECT id FROM users WHERE email = 'user1@ares.com'),
-    (SELECT id FROM feeds WHERE url = 'https://feeds.simplecast.com/54nAGpIl')
+    (SELECT id FROM feeds WHERE url = 'https://feeds.npr.org/500005/podcast.xml')
 )
 ON CONFLICT (user_id, feed_id) DO NOTHING;
 

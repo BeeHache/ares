@@ -3,22 +3,23 @@ package net.blackhacker.ares.service;
 import com.apptasticsoftware.rssreader.Channel;
 import com.apptasticsoftware.rssreader.Item;
 import com.apptasticsoftware.rssreader.RssReader;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.dto.EnclosureDTO;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.FeedItemDTO;
 import net.blackhacker.ares.model.Feed;
+import net.blackhacker.ares.utils.DateTimeReformatter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.net.*;
+import java.time.DateTimeException;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 
 @Slf4j
@@ -26,16 +27,12 @@ import java.util.Objects;
 public class RssService {
 
     final private URLFetchService urlFetchService;
-    final private DateTimeFormatter dateTimeFormatter;
-    final private DateTimeFormatter feedDateFormatter;
-    final private ObjectMapper objectMapper;
+
+    static final private RssReader rssReader = new RssReader();
 
 
     public RssService(URLFetchService urlFetchService) {
         this.urlFetchService = urlFetchService;
-        dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
-        feedDateFormatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss Z");
-        this.objectMapper = new ObjectMapper();
     }
 
     public FeedDTO feedDTOFromUrl(String urlString) {
@@ -64,6 +61,10 @@ public class RssService {
                 }
                 if (rssItem.getLink().isPresent()) {
                     feedItemDTO.setLink(rssItem.getLink().get());
+                }
+                if(rssItem.getPubDate().isPresent()){
+                    String pubdate = rssItem.getPubDate().get();
+                    feedItemDTO.setDate(DateTimeReformatter.reformat(pubdate));
                 }
                 return feedItemDTO;
             }).toList();
@@ -107,16 +108,11 @@ public class RssService {
             // Get channel info from 1st item
             Channel channel = rssItems.get(0).getChannel();
             feedDto.setId(feed.getId());
-
             feedDto.setTitle(channel.getTitle());
-            if (!Objects.equals(feed.getTitle(), channel.getTitle())) {
-                feed.setTitle(channel.getTitle());
-            }
-
             feedDto.setDescription(channel.getDescription());
             feedDto.setLink(channel.getLink());
             if  (channel.getImage().isPresent()) {
-                feedDto.setImageUrl(channel.getImage().get().getLink());
+                feedDto.setImageUrl(channel.getImage().get().getUrl());
             }
 
             List<FeedItemDTO> feedItems = rssItems.stream().map(rssItem -> {
@@ -131,6 +127,10 @@ public class RssService {
                 }
                 if (rssItem.getLink().isPresent()) {
                     feedItemDTO.setLink(rssItem.getLink().get());
+                }
+                if(rssItem.getPubDate().isPresent()){
+                    String pubdate = rssItem.getPubDate().get();
+                    feedItemDTO.setDate(DateTimeReformatter.reformat(pubdate));
                 }
 
                 ///  Loop through each enclosure and add it to the FeedItem
@@ -151,21 +151,20 @@ public class RssService {
                 );
 
                 if (rssItem.getUpdated().isPresent()){
-                    feedItemDTO.setDate(rssItem.getUpdatedAsZonedDateTime().get());
+                    feedItemDTO.setDate(DateTimeReformatter.reformat(rssItem.getUpdated().get()));
                 }
 
                 return feedItemDTO;
             }).toList();
 
             feedDto.getItems().addAll(feedItems);
-            feed.setJsonData(objectMapper.writer().writeValueAsString(feedDto));
+            feed.setDto(feedDto);
             return true;
 
         } catch (Exception e) {
             throw new ServiceException(String.format("Couldn't update feed :%s:%s",feed.getId(), e.getMessage()));
         }
     }
-
 
     private List<Item> parseRss(String urlString) {
         return parseRss(urlString,null);
@@ -182,7 +181,7 @@ public class RssService {
             return List.of();
         }
 
-        return new RssReader().read(new ByteArrayInputStream(response.getBody())).toList();
+        return rssReader.read(new ByteArrayInputStream(response.getBody())).toList();
     }
 
 }

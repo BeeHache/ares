@@ -14,7 +14,6 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;

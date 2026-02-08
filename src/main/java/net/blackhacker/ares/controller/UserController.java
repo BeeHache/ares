@@ -1,6 +1,7 @@
 package net.blackhacker.ares.controller;
 
 import net.blackhacker.ares.Constants;
+import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.mapper.UserMapper;
 import net.blackhacker.ares.model.Account;
@@ -88,20 +89,20 @@ public class UserController {
 
 
     @PutMapping("/addfeed")
-    ResponseEntity<String> addFeed(@RequestParam("link") String link, @AuthenticationPrincipal @NonNull Account account){
+    ResponseEntity<FeedDTO> addFeed(@RequestParam("link") String link, @AuthenticationPrincipal @NonNull Account account){
         urlValidator.validateURL(link);
 
         User user = userService.getUserByAccount(account).get();
         Feed feed = feedService.addFeed(link);
         user.getFeeds().add(feed);
         userService.saveUser(user);
-        return ResponseEntity.ok(feed.getJsonData());
+        return ResponseEntity.ok(feed.getDto());
     }
 
     @GetMapping("/feeds")
-    public ResponseEntity<Collection<String>> getFeed(@AuthenticationPrincipal Account principal) {
+    public ResponseEntity<Collection<FeedDTO>> getFeed(@AuthenticationPrincipal Account principal) {
         User user = userService.getUserByAccount(principal).get();
-        Collection<String> feeds = user.getFeeds().stream().map(Feed::getJsonData).toList();
+        Collection<FeedDTO> feeds = user.getFeeds().stream().map(Feed::getDto).toList();
         return ResponseEntity
                 .ok()
                 .contentType(MediaType.APPLICATION_JSON)

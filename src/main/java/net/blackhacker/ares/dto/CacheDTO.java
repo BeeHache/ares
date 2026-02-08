@@ -10,11 +10,11 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Data
-@RedisHash("StringCache")
-public class StringCacheDTO implements Serializable {
+@RedisHash("Cache")
+public class CacheDTO<T extends Serializable> implements Serializable {
     @Id
     private UUID id;
-    private String string;
+    private T  payload;
 
     @TimeToLive(unit = TimeUnit.DAYS)
     private Long ttl = 1L;

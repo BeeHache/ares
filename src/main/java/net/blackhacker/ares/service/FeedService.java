@@ -3,49 +3,60 @@ package net.blackhacker.ares.service;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.Constants;
+import net.blackhacker.ares.dto.FeedDTO;
+import net.blackhacker.ares.dto.FeedImageDTO;
 import net.blackhacker.ares.dto.FeedTitleDTO;
 import net.blackhacker.ares.model.Feed;
-import net.blackhacker.ares.repository.FeedRepository;
+import net.blackhacker.ares.model.FeedImage;
+import net.blackhacker.ares.repository.crud.FeedImageDTORepository;
+import net.blackhacker.ares.repository.jpa.FeedRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // Import Transactional
+import org.thymeleaf.expression.Lists;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
 public class FeedService {
 
     private final FeedRepository feedRepository;
+    private final FeedImageDTORepository feedImageDTORepository;
+    private final URLFetchService urlFetchService;
     private final RssService rssService;
     private final JmsTemplate jmsTemplate;
-
-    @Value("${feed.interval_ms}")
-    private long feedIntervalMs;
-
-    @Value("${feed.query_limit}")
-    private int queryLimit;
+    private final Long feedIntervalMs;
+    private final Integer queryLimit;
 
     public FeedService(
             FeedRepository feedRepository,
-           RssService rssService,
-            JmsTemplate jmsTemplate) {
+            FeedImageDTORepository feedImageDTORepository,
+            URLFetchService urlFetchService,
+            RssService rssService,
+            JmsTemplate jmsTemplate,
+            @Value("${feed.interval_ms}") Long feedIntervalMs,
+            @Value("${feed.query_limit}") Integer queryLimit) {
         this.feedRepository = feedRepository;
+        this.feedImageDTORepository = feedImageDTORepository;
+        this.urlFetchService = urlFetchService;
         this.rssService = rssService;
         this.jmsTemplate = jmsTemplate;
+        this.feedIntervalMs = feedIntervalMs;
+        this.queryLimit = queryLimit;
     }
 
     public Feed addFeed(String link) {
@@ -75,8 +86,12 @@ public class FeedService {
         return feedRepository.findById(id).orElse(null);
     }
 
-    public Optional<String> getJsonData(UUID id){
-        return feedRepository.getJsonDataById(id);
+    public Optional<FeedImage> getFeedImageById(UUID id){
+        return feedRepository.getFeedImageById(id);
+    }
+
+    public Optional<FeedDTO> getFeedDTO(UUID id){
+        return feedRepository.getFeedDTOById(id);
     }
 
     public Collection<FeedTitleDTO> getFeedTitles(@NonNull Long userId) {
@@ -88,20 +103,33 @@ public class FeedService {
     }
 
     public Feed saveFeed(Feed feed){
-        return feedRepository.save(feed);
+        Feed saved = feedRepository.save(feed);
+        sendUpdateFeedMessage(feed.getId());
+        return saved;
     }
 
     public Collection<Feed> saveFeeds(Collection<Feed> feeds){
 
+        /*
+         * Separates feeds that exist in the DB already and those that are new.
+         */
+
         Collection<Feed> existingFeeds = new ArrayList<>();
-        Collection<Feed> nonExistingFeeds = new ArrayList<>();
+        Collection<Feed> newFeeds = new ArrayList<>();
         for (Feed feed : feeds){
             Optional<Feed> ofeed = feedRepository.findByUrl(feed.getUrl());
-            ofeed.ifPresentOrElse(existingFeeds::add, () -> nonExistingFeeds.add(feed));
+            ofeed.ifPresentOrElse(existingFeeds::add, () -> newFeeds.add(feed));
         }
 
-        existingFeeds.addAll(feedRepository.saveAll(nonExistingFeeds));
-        return existingFeeds;
+        //save the new feeds to the DB
+        feedRepository.saveAll(newFeeds)
+                .forEach(feed-> {
+                    //send UPDATE_FEED for each new feed
+                    sendUpdateFeedMessage(feed.getId());
+                } );
+
+        //re-combine and return
+        return Stream.concat(existingFeeds.stream(), newFeeds.stream()).toList();
     }
 
     @Async
@@ -122,12 +150,9 @@ public class FeedService {
 
             log.debug("Found {} feeds to update", feeds.getNumberOfElements());
 
-            int processed = 0;
             feeds.forEach(feed ->{
                 sendUpdateFeedMessage(feed.getId());
             });
-
-            log.debug("Processed {} feeds", processed);
 
             if (feeds.getTotalElements() < queryLimit){
                 break;
@@ -150,11 +175,38 @@ public class FeedService {
         try {
             feedRepository.findById(feedId).ifPresent(feed -> {
                 if (rssService.updateFeed(feed)) {
+                    updateFeedImage(feed.getFeedImage());
                     feedRepository.save(feed);
                 }
             });
         } catch (Exception e) {
             log.error("Error updating feed: {}: {}", feedId, e.getMessage());
         }
+    }
+
+    public void updateFeedImage(FeedImage feedImage) {
+        if (feedImage == null){
+            return;
+        }
+        // fetch image content from cache
+        feedImageDTORepository.findById(feedImage.getId()).ifPresentOrElse(fidto -> {
+            feedImage.setContent(fidto.getContent());
+            feedImage.setContentType(MediaType.parseMediaType(fidto.getContentType()));
+        }, () -> {
+            // fetch image content from internet
+            ResponseEntity<byte[]> response = urlFetchService.fetchBytes(feedImage.getImageUrl().toString());
+            if (response.getStatusCode().is2xxSuccessful()) {
+                feedImage.setContent(response.getBody());
+                feedImage.setContentType(response.getHeaders().getContentType());
+
+                // store image content to cache
+                FeedImageDTO feedImageDTO = new FeedImageDTO();
+                feedImageDTO.setId(feedImage.getId());
+                feedImageDTO.setImageUrl(feedImage.getImageUrl().toString());
+                feedImageDTO.setContent(feedImage.getContent());
+                feedImageDTO.setContentType(feedImage.getContentType().toString());
+                feedImageDTORepository.save(feedImageDTO);
+            }
+        });
     }
 }

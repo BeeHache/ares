@@ -3,7 +3,6 @@ package net.blackhacker.ares.dto;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -12,6 +11,6 @@ public class FeedItemDTO implements Serializable {
     private String title;
     private String description;
     private String link;
-    private ZonedDateTime date;
+    private String date;
     private Collection<EnclosureDTO> enclosures = new ArrayList<>();
 }

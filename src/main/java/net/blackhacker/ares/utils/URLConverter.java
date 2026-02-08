@@ -29,8 +29,9 @@ public class URLConverter implements AttributeConverter<URL, String> {
         try {
             return new URI(s).toURL();
         } catch (Exception e) {
-            log.error(String.format("Could not convert database string '%s' to URL object", s), e);
+            log.error(String.format("URLConverter: Could not convert database string '%s' to URL object", s), e);
             return null;
         }
     }
 }
+
