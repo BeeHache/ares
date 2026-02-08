@@ -1,6 +1,5 @@
 package net.blackhacker.ares.controller;
 
-import net.blackhacker.ares.Constants;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.FeedTitleDTO;
 import net.blackhacker.ares.model.Account;
@@ -34,8 +33,6 @@ public class FeedController {
     private final OpmlService opmlService;
     private final URLValidator urlValidator;
     private final MultipartFileValidator multipartFileValidator;
-    private final TransactionTemplate transactionTemplate;
-    private final JmsTemplate jmsTemplate;
 
     public FeedController(FeedService feedService,  UserService userService,
                           OpmlService opmlService, URLValidator urlValidator,
@@ -47,8 +44,6 @@ public class FeedController {
         this.opmlService = opmlService;
         this.urlValidator = urlValidator;
         this.multipartFileValidator = multipartFileValidator;
-        this.transactionTemplate = transactionTemplate;
-        this.jmsTemplate = jmsTemplate;
     }
 
     @GetMapping("/titles")
@@ -98,7 +93,9 @@ public class FeedController {
         multipartFileValidator.validateMultipartFile(file);
         final User user = userService.getUserByAccount(account).get();
         Collection<Feed> feeds = feedService.saveFeeds(opmlService.importFile(file));
-        subscribeUserToFeeds(user,feeds);
+        feeds.forEach(feed -> {
+            userService.subscribeUserToFeed(user, feed);
+        });
         return ResponseEntity.accepted().build();
     }
 
@@ -126,19 +123,5 @@ public class FeedController {
         feedService.saveFeed(feed);
         userService.saveUser(user);
         return ResponseEntity.ok().build();
-    }
-
-    private void subscribeUserToFeeds(final User user, Collection<Feed> feeds) {
-        feeds.forEach(feed -> {
-            transactionTemplate.executeWithoutResult(status -> {
-                user.getFeeds().add(feed);
-                userService.saveUser(user);
-            });
-            sendUpdateFeedMessage(feed.getId());
-        });
-    }
-
-    private void sendUpdateFeedMessage(UUID feedId){
-        jmsTemplate.convertAndSend(Constants.UPDATE_FEED_QUEUE, feedId);
     }
 }

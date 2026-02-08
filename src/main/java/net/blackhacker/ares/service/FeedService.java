@@ -2,7 +2,7 @@ package net.blackhacker.ares.service;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import net.blackhacker.ares.Constants;
+import net.blackhacker.ares.EventQueues;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.FeedImageDTO;
 import net.blackhacker.ares.dto.FeedTitleDTO;
@@ -22,7 +22,6 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // Import Transactional
-import org.thymeleaf.expression.Lists;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -104,7 +103,7 @@ public class FeedService {
 
     public Feed saveFeed(Feed feed){
         Feed saved = feedRepository.save(feed);
-        sendUpdateFeedMessage(feed.getId());
+        jmsTemplate.convertAndSend(EventQueues.FEED_SAVED, feed.getId());
         return saved;
     }
 
@@ -122,14 +121,10 @@ public class FeedService {
         }
 
         //save the new feeds to the DB
-        feedRepository.saveAll(newFeeds)
-                .forEach(feed-> {
-                    //send UPDATE_FEED for each new feed
-                    sendUpdateFeedMessage(feed.getId());
-                } );
+        Stream<Feed> savedFeeds = newFeeds.stream().map(this::saveFeed);
 
-        //re-combine and return
-        return Stream.concat(existingFeeds.stream(), newFeeds.stream()).toList();
+        //combind and return
+        return Stream.concat(existingFeeds.stream(), savedFeeds).toList();
     }
 
     @Async
@@ -166,17 +161,17 @@ public class FeedService {
     }
 
     private void sendUpdateFeedMessage(UUID feedId){
-        jmsTemplate.convertAndSend(Constants.UPDATE_FEED_QUEUE, feedId);
+        jmsTemplate.convertAndSend(EventQueues.FEED_SAVED, feedId);
     }
 
-    @JmsListener(destination = Constants.UPDATE_FEED_QUEUE)
+    @JmsListener(destination = EventQueues.FEED_SAVED)
     @Transactional // Added Transactional annotation
     public void updateFeed(UUID feedId){
         try {
             feedRepository.findById(feedId).ifPresent(feed -> {
                 if (rssService.updateFeed(feed)) {
                     updateFeedImage(feed.getFeedImage());
-                    feedRepository.save(feed);
+                    saveFeed(feed);
                 }
             });
         } catch (Exception e) {

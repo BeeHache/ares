@@ -1,14 +1,20 @@
 package net.blackhacker.ares.service;
 
 import lombok.extern.slf4j.Slf4j;
+import net.blackhacker.ares.EventQueues;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.EmailConfirmationCode;
+import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
+import net.blackhacker.ares.msg.SubscriptionMsg;
 import net.blackhacker.ares.repository.crud.EmailConfirmationRepository;
 import net.blackhacker.ares.repository.jpa.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,16 +25,22 @@ public class UserService {
     private final UserRepository userRepository;
     private final EmailSenderService emailSenderService;
     private final EmailConfirmationRepository emailConfirmationRepository;
+    private final TransactionTemplate transactionTemplate;
+    private final JmsTemplate jmsTemplate;
 
 
     final private String frontendUrl;
 
     public UserService(UserRepository userRepository, EmailSenderService emailSenderService,
                        EmailConfirmationRepository emailConfirmationRepository,
+                       TransactionTemplate transactionTemplate,
+                       JmsTemplate jmsTemplate,
                        @Value("${app.frontend.url:http://localhost:4200}") String frontendUrl) {
         this.userRepository = userRepository;
         this.emailSenderService = emailSenderService;
         this.emailConfirmationRepository = emailConfirmationRepository;
+        this.transactionTemplate = transactionTemplate;
+        this.jmsTemplate = jmsTemplate;
         this.frontendUrl = frontendUrl;
     }
 
@@ -146,5 +158,13 @@ public class UserService {
 
         return true;
 
+    }
+
+    public void subscribeUserToFeed(User user, Feed feed) {
+        transactionTemplate.executeWithoutResult(status -> {
+            user.getFeeds().add(feed);
+            saveUser(user);
+            jmsTemplate.convertAndSend(EventQueues.SUBSCRIPTION_ADDED, new SubscriptionMsg(user.getId(), feed.getId()));
+        });
     }
 }

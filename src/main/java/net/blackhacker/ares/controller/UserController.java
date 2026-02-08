@@ -1,6 +1,6 @@
 package net.blackhacker.ares.controller;
 
-import net.blackhacker.ares.Constants;
+import net.blackhacker.ares.EventQueues;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.mapper.UserMapper;
@@ -33,8 +33,6 @@ public class UserController {
     private final UserMapper userMapper;
     private final MultipartFileValidator multipartFileValidator;
     private final URLValidator urlValidator;
-    private final TransactionTemplate transactionTemplate;
-    private final JmsTemplate jmsTemplate;
 
 
     public UserController(UserService userService, FeedService feedService, OpmlService opmlService,
@@ -47,8 +45,6 @@ public class UserController {
         this.userMapper = userMapper;
         this.multipartFileValidator = multipartFileValidator;
         this.urlValidator = urlValidator;
-        this.transactionTemplate = transactionTemplate;
-        this.jmsTemplate = jmsTemplate;
     }
 
     @GetMapping("/")
@@ -78,11 +74,7 @@ public class UserController {
 
     private void importOpml (final User user, Collection<Feed> feeds) {
         feeds.forEach(feed -> {
-            transactionTemplate.executeWithoutResult(status -> {
-                user.getFeeds().add(feed);
-                userService.saveUser(user);
-            });
-            sendUpdateFeedMessage(feed.getId());
+            userService.subscribeUserToFeed(user, feed);
         });
     }
 
@@ -122,9 +114,5 @@ public class UserController {
         feedService.saveFeed(feed);
         userService.saveUser(user);
         return ResponseEntity.ok().build();
-    }
-
-    private void sendUpdateFeedMessage(UUID feedId){
-        jmsTemplate.convertAndSend(Constants.UPDATE_FEED_QUEUE, feedId);
     }
 }
