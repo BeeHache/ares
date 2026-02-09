@@ -4,6 +4,7 @@ import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.FeedTitleDTO;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.FeedImage;
+import net.blackhacker.ares.service.CacheService;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,14 +27,18 @@ public interface FeedRepository extends JpaRepository<Feed, UUID> {
 
     Optional<Feed> findByUrl(@Param("url") URL url);
 
+    @Cacheable(value = CacheService.FEED_CACHE, unless = "#result=null")
+    Optional<Feed> findById(@Param("id") UUID id);
+
+    @Cacheable(value = CacheService.FEED_TITLES_CACHE, key = "#userId", condition = "#userId != null")
     @Query(value = "SELECT f.id, f.dto ->> 'title' AS title, f.dto ->> 'imageUrl' AS imageUrl FROM subscriptions s INNER JOIN feeds f ON s.feed_id = f.id WHERE s.user_id = :userid", nativeQuery = true)
     Collection<FeedTitleDTO> findFeedTitlesByUserId(@Param("userid") Long userId);
 
-    @Cacheable(value = "feedDTOs", key = "#feedId",condition = "#feedId != null")
+    @Cacheable(value = CacheService.FEED_DTOS_CACHE, key = "#feedId",condition = "#feedId != null")
     @Query(value="SELECT f.dto FROM Feed f WHERE f.id=:feed_id")
     Optional<FeedDTO> getFeedDTOById(@Param("feed_id") UUID feedId);
 
-    @Cacheable(value = "feedImages", key = "#feedId",condition = "#feedId != null")
+    @Cacheable(value = CacheService.FEED_IMAGE_CACHE, key = "#feedId",condition = "#feedId != null")
     @Query(value = "SELECT f.feedImage from Feed f where f.id=:feed_id")
     Optional<FeedImage> getFeedImageById(@Param("feed_id") UUID feedId);
 }

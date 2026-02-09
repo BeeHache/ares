@@ -14,6 +14,7 @@ import net.blackhacker.ares.utils.FeedDtoType;
 import net.blackhacker.ares.utils.URLConverter;
 import org.hibernate.annotations.Type;
 
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -29,7 +30,7 @@ import java.util.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Feed {
+public class Feed implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;

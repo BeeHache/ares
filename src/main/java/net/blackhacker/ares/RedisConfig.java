@@ -4,6 +4,7 @@ package net.blackhacker.ares;
 import net.blackhacker.ares.dto.FeedImageDTO;
 import net.blackhacker.ares.repository.crud.FeedImageDTORepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -49,7 +50,7 @@ public class RedisConfig {
     }
 
     @Bean
-    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
+    public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofHours(1)) // Default TTL
                 .disableCachingNullValues();

@@ -38,6 +38,7 @@ public class FeedService {
     private final URLFetchService urlFetchService;
     private final RssService rssService;
     private final JmsTemplate jmsTemplate;
+    private final CacheService cacheService;
     private final Long feedIntervalMs;
     private final Integer queryLimit;
 
@@ -47,6 +48,7 @@ public class FeedService {
             URLFetchService urlFetchService,
             RssService rssService,
             JmsTemplate jmsTemplate,
+            CacheService cacheService,
             @Value("${feed.interval_ms}") Long feedIntervalMs,
             @Value("${feed.query_limit}") Integer queryLimit) {
         this.feedRepository = feedRepository;
@@ -54,6 +56,7 @@ public class FeedService {
         this.urlFetchService = urlFetchService;
         this.rssService = rssService;
         this.jmsTemplate = jmsTemplate;
+        this.cacheService = cacheService;
         this.feedIntervalMs = feedIntervalMs;
         this.queryLimit = queryLimit;
     }
@@ -102,9 +105,10 @@ public class FeedService {
     }
 
     public Feed saveFeed(Feed feed){
-        Feed saved = feedRepository.save(feed);
-        jmsTemplate.convertAndSend(EventQueues.FEED_SAVED, feed.getId());
-        return saved;
+        Feed savedFeed =  feedRepository.save(feed);
+        cacheService.evictSingleCacheValue(CacheService.FEED_DTOS_CACHE, savedFeed.getId());
+        cacheService.evictSingleCacheValue(CacheService.FEED_IMAGE_CACHE, savedFeed.getId());
+        return savedFeed;
     }
 
     public Collection<Feed> saveFeeds(Collection<Feed> feeds){

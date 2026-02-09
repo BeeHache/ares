@@ -24,23 +24,25 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final EmailSenderService emailSenderService;
+    private final CacheService cacheService;
     private final EmailConfirmationRepository emailConfirmationRepository;
     private final TransactionTemplate transactionTemplate;
-    private final JmsTemplate jmsTemplate;
 
 
     final private String frontendUrl;
 
-    public UserService(UserRepository userRepository, EmailSenderService emailSenderService,
+    public UserService(UserRepository userRepository,
+                       EmailSenderService emailSenderService,
                        EmailConfirmationRepository emailConfirmationRepository,
+                       CacheService cacheService,
                        TransactionTemplate transactionTemplate,
                        JmsTemplate jmsTemplate,
                        @Value("${app.frontend.url:http://localhost:4200}") String frontendUrl) {
         this.userRepository = userRepository;
         this.emailSenderService = emailSenderService;
+        this.cacheService = cacheService;
         this.emailConfirmationRepository = emailConfirmationRepository;
         this.transactionTemplate = transactionTemplate;
-        this.jmsTemplate = jmsTemplate;
         this.frontendUrl = frontendUrl;
     }
 
@@ -131,7 +133,9 @@ public class UserService {
     }
 
     public User saveUser(User user){
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        cacheService.evictSingleCacheValue(CacheService.FEED_TITLES_CACHE, savedUser.getId());
+        return savedUser;
     }
 
     public boolean confirm(String code){
@@ -164,7 +168,6 @@ public class UserService {
         transactionTemplate.executeWithoutResult(status -> {
             user.getFeeds().add(feed);
             saveUser(user);
-            jmsTemplate.convertAndSend(EventQueues.SUBSCRIPTION_ADDED, new SubscriptionMsg(user.getId(), feed.getId()));
         });
     }
 }

@@ -37,6 +37,9 @@ class FeedServiceTest {
     private RssService rssService;
 
     @MockitoBean
+    private CacheService cacheService;
+
+    @MockitoBean
     private TransactionTemplate transactionTemplate;
 
     @MockitoBean

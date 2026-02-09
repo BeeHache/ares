@@ -39,6 +39,9 @@ class UserServiceTest {
     private EmailSenderService emailSenderService;
 
     @MockitoBean
+    private CacheService cacheService; // Added Mock
+
+    @MockitoBean
     private JavaMailSender javaMailSender;
 
     @MockitoBean

@@ -25,23 +25,6 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
-
-  pgadmin:
-    build: ./pgadmin
-    container_name: ares-pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5050:80"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    depends_on:
-      - postgres
-
   nginx:
     build: ./nginx
     container_name: ares-nginx
