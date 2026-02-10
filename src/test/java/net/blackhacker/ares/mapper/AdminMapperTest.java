@@ -1,34 +1,24 @@
 package net.blackhacker.ares.mapper;
 
-import net.blackhacker.ares.dto.AccountDTO;
 import net.blackhacker.ares.dto.AdminDTO;
-import net.blackhacker.ares.dto.RoleDTO;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Admins;
-import net.blackhacker.ares.model.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.util.HashSet;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest(classes = AdminMapper.class)
 @ExtendWith(MockitoExtension.class)
 class AdminMapperTest {
 
 
-    @MockitoBean
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
@@ -36,7 +26,7 @@ class AdminMapperTest {
 
     private Account account;
     private Admins admin;
-    private  AdminDTO adminDTO;
+    private AdminDTO adminDTO;
 
 
     @BeforeEach

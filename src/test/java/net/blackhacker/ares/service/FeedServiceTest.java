@@ -6,10 +6,9 @@ import net.blackhacker.ares.repository.jpa.FeedRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jms.core.JmsTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.net.MalformedURLException;
@@ -20,29 +19,28 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest(classes = FeedService.class)
 @ExtendWith(MockitoExtension.class)
 class FeedServiceTest {
 
-    @MockitoBean
+    @Mock
     private FeedRepository feedRepository;
 
-    @MockitoBean
+    @Mock
     private FeedImageDTORepository  feedImageDTORepository;
 
-    @MockitoBean
+    @Mock
     private URLFetchService  urlFetchService;
 
-    @MockitoBean
+    @Mock
     private RssService rssService;
 
-    @MockitoBean
+    @Mock
     private CacheService cacheService;
 
-    @MockitoBean
+    @Mock
     private TransactionTemplate transactionTemplate;
 
-    @MockitoBean
+    @Mock
     private JmsTemplate jmsTemplate;
 
 

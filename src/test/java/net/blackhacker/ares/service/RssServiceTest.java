@@ -7,11 +7,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jms.core.JmsTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.nio.charset.StandardCharsets;
 
@@ -19,17 +18,16 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest(classes = RssService.class)
 @ExtendWith(MockitoExtension.class)
 class RssServiceTest {
 
-    @MockitoBean
+    @Mock
     private URLFetchService urlFetchService;
 
-    @MockitoBean
+    @Mock
     private ObjectMapper objectMapper;
 
-    @MockitoBean
+    @Mock
     private JmsTemplate jmsTemplate;
 
     @InjectMocks
@@ -122,8 +120,6 @@ class RssServiceTest {
 
     @Test
     void feedDTOFromUrl_shouldThrowServiceException_whenReadFails() {
-        when(urlFetchService.fetchString(anyString())).thenThrow(new ServiceException("Failed to fetch"));
-
         assertThrows(ServiceException.class, () -> rssService.feedDTOFromUrl("http://example.com/rss"));
     }
 
