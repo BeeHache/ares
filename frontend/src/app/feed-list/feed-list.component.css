@@ -77,6 +77,11 @@ h2 {
   background-color: #e9ecef;
 }
 
+.feed-row.selected {
+  background-color: #e2e6ea;
+  border-left: 4px solid #007bff;
+}
+
 .feed-link {
   flex-grow: 1;
   display: flex;

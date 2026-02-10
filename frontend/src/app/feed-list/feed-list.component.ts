@@ -14,6 +14,7 @@ export class FeedListComponent implements OnInit {
   feeds: FeedTitle[] = [];
   totalUnread = 0; // Not yet supported by backend
   showImportModal = false;
+  selectedFeedId: string | null = null;
 
   constructor(
     private feedService: FeedService,
@@ -25,6 +26,11 @@ export class FeedListComponent implements OnInit {
   ngOnInit(): void {
     console.log('FeedListComponent: ngOnInit called'); // Debug log
     this.loadFeeds();
+
+    this.feedService.selectedFeed$.subscribe(feed => {
+        this.selectedFeedId = feed ? feed.id : null;
+        this.cdr.detectChanges();
+    });
   }
 
   loadFeeds() {
@@ -66,6 +72,9 @@ export class FeedListComponent implements OnInit {
       this.feedService.deleteFeed(id).subscribe({
         next: () => {
           this.feeds = this.feeds.filter(f => f.id !== id);
+          if (this.selectedFeedId === id) {
+              this.feedService.selectFeed(null);
+          }
           this.cdr.detectChanges(); // Force update
         },
         error: (err) => alert('Failed to delete feed')
