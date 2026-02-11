@@ -1,15 +1,10 @@
 package net.blackhacker.ares;
 
 
-import net.blackhacker.ares.dto.FeedImageDTO;
-import net.blackhacker.ares.repository.crud.FeedImageDTORepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.ReadingConverter;
-import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -17,11 +12,7 @@ import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 
-import java.net.URI;
-import java.net.URL;
 import java.time.Duration;
-import java.util.Optional;
-import java.util.UUID;
 
 @Configuration
 @EnableRedisRepositories(basePackages = "net.blackhacker.ares.repository.crud")

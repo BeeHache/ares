@@ -1,6 +1,5 @@
 package net.blackhacker.ares.controller;
 
-import net.blackhacker.ares.EventQueues;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.mapper.UserMapper;

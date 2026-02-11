@@ -4,10 +4,8 @@ import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
-import org.springframework.http.MediaType;
 
 import java.io.Serializable;
-import java.net.URL;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 

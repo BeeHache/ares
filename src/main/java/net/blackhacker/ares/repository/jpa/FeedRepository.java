@@ -4,8 +4,6 @@ import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.FeedTitleDTO;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.FeedImage;
-import net.blackhacker.ares.service.CacheService;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
