@@ -66,7 +66,7 @@ public class RegistrationControllerTest {
         User user = new User();
         user.setId(1L);
         user.setEmail(userDTO.getEmail());
-        user.setFeeds(new java.util.ArrayList<>());
+        user.setFeeds(new java.util.HashSet<>());
 
         // Mock the validator to do nothing (pass the validation)
         doNothing().when(userDTOValidator).validateUserForRegistration(any(UserDTO.class));

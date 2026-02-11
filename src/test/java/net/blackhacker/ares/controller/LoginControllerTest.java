@@ -12,10 +12,7 @@ import net.blackhacker.ares.security.JwtAuthenticationFilter;
 import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.mapper.UserMapper;
 import net.blackhacker.ares.model.User;
-import net.blackhacker.ares.service.AccountService;
-import net.blackhacker.ares.service.JWTService;
-import net.blackhacker.ares.service.RefreshTokenService;
-import net.blackhacker.ares.service.UserService;
+import net.blackhacker.ares.service.*;
 import net.blackhacker.ares.validation.UserDTOValidator;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -67,6 +64,9 @@ class LoginControllerTest {
 
     @MockitoBean
     private JWTService jwtService; // Your custom service to sign tokens
+
+    @MockitoBean
+    private CacheService cacheService;
 
     @MockitoBean
     private RefreshTokenService refreshTokenService;

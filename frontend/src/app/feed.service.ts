@@ -23,6 +23,8 @@ export interface FeedItem {
 export interface FeedTitle {
   id: string;
   title: string;
+  imageUrl?: string;
+  isPodcast?: boolean;
 }
 
 export interface Feed {

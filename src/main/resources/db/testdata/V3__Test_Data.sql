@@ -19,11 +19,11 @@ VALUES ('user2@ares.com', (SELECT id FROM accounts WHERE username = 'user2@ares.
 ON CONFLICT (email) DO NOTHING;
 
 -- 3. Insert Feeds
-INSERT INTO feeds (url, is_podcast, last_modified)
+INSERT INTO feeds (url, podcast, last_modified)
 VALUES ('https://feeds.bbci.co.uk/news/rss.xml', 'N', CURRENT_TIMESTAMP - INTERVAL '24 hours')
 ON CONFLICT (url) DO NOTHING;
 
-INSERT INTO feeds (url, is_podcast, last_modified)
+INSERT INTO feeds (url, podcast, last_modified)
 VALUES ('https://feeds.npr.org/500005/podcast.xml', 'Y', CURRENT_TIMESTAMP - INTERVAL '24 hours')
 ON CONFLICT (url) DO NOTHING;
 

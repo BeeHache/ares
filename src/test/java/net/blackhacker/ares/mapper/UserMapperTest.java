@@ -13,9 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -30,7 +28,7 @@ class UserMapperTest {
     @InjectMocks
     private UserMapper userMapper;
 
-    private List<Feed> feeds;
+    private Set<Feed> feeds;
     private Account account;
     private User user;
     private Feed feed1;
@@ -53,7 +51,7 @@ class UserMapperTest {
         feed2 = new Feed();
         feed2.setId(UUID.randomUUID());
 
-        feeds = new ArrayList<>();
+        feeds = new HashSet<>();
         feeds.add(feed1);
         feeds.add(feed2);
         user.setFeeds(feeds);

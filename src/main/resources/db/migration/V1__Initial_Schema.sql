@@ -46,15 +46,16 @@ create table if not exists account_roles (
 create table if not exists feeds (
     id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     url varchar(512) not null unique,
-    is_podcast varchar(1) not null default 'N',
+    podcast varchar(1) not null default 'N',
     last_modified timestamp with time zone,
     dto JSONB,
-    CHECK (is_podcast IN ('Y', 'N'))
+    CHECK (podcast IN ('Y', 'N'))
 );
 
 create index if not exists ix_feeds_last_mod on feeds (last_modified);
 create index if not exists ix_feeds_dto_title on feeds ((dto ->>'title'));
 create index if not exists ix_feeds_dto_description on feeds ((dto ->> 'description'));
+create index if not exists ix_feeds_dto_podcast on feeds ((dto ->> 'podcast'));
 create index if not exists ix_feeds_dto on feeds USING GIN (dto);
 
 create table if not exists feed_image (

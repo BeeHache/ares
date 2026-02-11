@@ -12,6 +12,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jms.core.JmsTemplate;
 
+import java.net.URI;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -89,7 +91,11 @@ class RssServiceTest {
                 .fetchBytes(eq("http://example.com/rss"), any()))
                 .thenReturn(ResponseEntity.ok(rssContentBytes));
 
-        FeedDTO result = rssService.feedDTOFromUrl("http://example.com/rss");
+        URL url=null;
+        try {
+            url = new URI("http://example.com/rss").toURL();
+        } catch (Exception e) {fail();}
+        FeedDTO result = rssService.feedDTOFromUrl(url);
 
         assertNotNull(result);
         assertEquals("Test Feed", result.getTitle());
@@ -110,17 +116,27 @@ class RssServiceTest {
         // An RSS feed with a channel but no items is valid XML but results in empty items list.
 
 
+        URL url=null;
+        try {
+            url = new URI("http://example.com/rss").toURL();
+        } catch (Exception e) {fail();}
+
         when(urlFetchService.fetchBytes(eq("http://example.com/rss"), any()))
                 .thenReturn(emptyRssOkResponse);
 
-        FeedDTO result = rssService.feedDTOFromUrl("http://example.com/rss");
+        FeedDTO result = rssService.feedDTOFromUrl(url);
 
         assertNull(result);
     }
 
     @Test
     void feedDTOFromUrl_shouldThrowServiceException_whenReadFails() {
-        assertThrows(ServiceException.class, () -> rssService.feedDTOFromUrl("http://example.com/rss"));
+        final URL url;
+        try {
+            url = new URI("http://example.com/rss").toURL();
+            assertThrows(ServiceException.class, () -> rssService.feedDTOFromUrl(url));
+        } catch (Exception e) {fail();}
+
     }
 
     @Test

@@ -1,12 +1,10 @@
 package net.blackhacker.ares.service;
 
 import lombok.extern.slf4j.Slf4j;
-import net.blackhacker.ares.EventQueues;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.EmailConfirmationCode;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
-import net.blackhacker.ares.msg.SubscriptionMsg;
 import net.blackhacker.ares.repository.crud.EmailConfirmationRepository;
 import net.blackhacker.ares.repository.jpa.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +12,6 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 

@@ -5,10 +5,7 @@ import net.blackhacker.ares.dto.TokenDTO;
 import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.RefreshToken;
-import net.blackhacker.ares.service.AccountService;
-import net.blackhacker.ares.service.JWTService;
-import net.blackhacker.ares.service.RefreshTokenService;
-import net.blackhacker.ares.service.UserService;
+import net.blackhacker.ares.service.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,15 +26,20 @@ public class LoginController {
     private final RefreshTokenService refreshTokenService;
     private final AccountService accountService;
     private final UserService userService;
+    private final CacheService cacheService;
     private final AuthenticationManager authenticationManager;
     private final JWTService jwtService; // Your custom service to sign tokens
 
-    public LoginController(RefreshTokenService refreshTokenService, AccountService accountService,
+    public LoginController(RefreshTokenService refreshTokenService,
+                           AccountService accountService,
                            UserService userService,
-                           AuthenticationManager authenticationManager, JWTService jwtService){
+                           CacheService cacheService,
+                           AuthenticationManager authenticationManager,
+                           JWTService jwtService){
         this.refreshTokenService = refreshTokenService;
         this.accountService = accountService;
         this.userService = userService;
+        this.cacheService = cacheService;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
     }
@@ -104,10 +106,19 @@ public class LoginController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
-        if (refreshToken != null) {
+    public ResponseEntity<?> logout(@CookieValue(name = "refreshToken", required = false) String refreshTokenString) {
+        if (refreshTokenString == null) {
             log.debug("Logout request with token");
-            refreshTokenService.deleteRefreshToken(refreshToken);
+            Optional<RefreshToken>  optionalRefreshToken = refreshTokenService.findByToken(refreshTokenString);
+            refreshTokenService.deleteRefreshToken(refreshTokenString);
+
+            //looks up user via the refreshtoken and clears the titles cache for that user on loggout
+            refreshTokenService.findByToken(refreshTokenString)
+                .flatMap(refreshToken -> accountService.findAccountByUsername(refreshToken.getUsername()))
+                .flatMap(userService::getUserByAccount)
+                .ifPresent(user -> {
+                    cacheService.evictSingleCacheValue(CacheService.FEED_TITLES_CACHE, user.getId());
+                });
         } else {
             log.debug("Logout request without token");
         }

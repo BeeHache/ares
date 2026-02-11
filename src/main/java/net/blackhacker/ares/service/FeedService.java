@@ -11,6 +11,7 @@ import net.blackhacker.ares.model.FeedImage;
 import net.blackhacker.ares.repository.crud.FeedImageDTORepository;
 import net.blackhacker.ares.repository.jpa.FeedRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -84,20 +85,26 @@ public class FeedService {
         }
     }
 
+    @Cacheable(value = CacheService.FEED_CACHE, unless = "#result=null")
     public Feed getFeedById(UUID id){
         return feedRepository.findById(id).orElse(null);
     }
 
+    @Cacheable(value = CacheService.FEED_IMAGE_CACHE, key = "#id",condition = "#id != null")
     public Optional<FeedImage> getFeedImageById(UUID id){
         return feedRepository.getFeedImageById(id);
     }
 
+    @Cacheable(value = CacheService.FEED_DTOS_CACHE, key = "#id",condition = "#id != null")
     public Optional<FeedDTO> getFeedDTO(UUID id){
         return feedRepository.getFeedDTOById(id);
     }
 
+    @Cacheable(value = CacheService.FEED_TITLES_CACHE, key = "#userId", condition = "#userId != null")
     public Collection<FeedTitleDTO> getFeedTitles(@NonNull Long userId) {
-        return feedRepository.findFeedTitlesByUserId(userId);
+        return feedRepository.findFeedTitlesByUserId(userId).stream()
+                .filter(dto -> dto.getTitle() != null)
+                .toList();
     }
 
     public Optional<Feed> getFeedByUrl(URL url){

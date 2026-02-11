@@ -3,7 +3,10 @@
 
 <div class="feed-items-container" *ngIf="feed; else noFeed">
   <div class="feed-header">
-    <h3>{{ feed.title }}</h3>
+    <div class="header-top">
+        <h3>{{ feed.title }}</h3>
+        <button class="unsubscribe-btn" (click)="deleteFeed()">Unsubscribe</button>
+    </div>
     <p class="feed-description" *ngIf="feed.description" [innerHTML]="feed.description"></p>
     <a [href]="feed.link" target="_blank" class="feed-source-link">Visit Website</a>
   </div>

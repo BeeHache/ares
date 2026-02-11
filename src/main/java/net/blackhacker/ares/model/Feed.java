@@ -41,7 +41,7 @@ public class Feed implements Serializable {
 
     @Column
     @Convert(converter = BooleanConverter.class)
-    private boolean isPodcast = false;
+    private boolean podcast = false;
 
     @Column(nullable = false)
     private ZonedDateTime lastModified = ZonedDateTime.now();
@@ -71,10 +71,14 @@ public class Feed implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Feed feed = (Feed) o;
-        return Objects.equals(url, feed.url);
+        if (id != null && feed.getId() != null) return Objects.equals(id, feed.getId());
+        if (url != null && feed.getUrl() != null) return Objects.equals(url, feed.getUrl());
+        return false;
     }
     @Override
     public int hashCode() {
-        return url != null ? url.hashCode() : super.hashCode();
+        if (id != null) return id.hashCode();
+        if (url != null) return url.toString().hashCode();
+        return super.hashCode();
     }
 }

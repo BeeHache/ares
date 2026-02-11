@@ -27,18 +27,14 @@ public interface FeedRepository extends JpaRepository<Feed, UUID> {
 
     Optional<Feed> findByUrl(@Param("url") URL url);
 
-    @Cacheable(value = CacheService.FEED_CACHE, unless = "#result=null")
     Optional<Feed> findById(@Param("id") UUID id);
 
-    @Cacheable(value = CacheService.FEED_TITLES_CACHE, key = "#userId", condition = "#userId != null")
-    @Query(value = "SELECT f.id, f.dto ->> 'title' AS title, f.dto ->> 'imageUrl' AS imageUrl FROM subscriptions s INNER JOIN feeds f ON s.feed_id = f.id WHERE s.user_id = :userid", nativeQuery = true)
+    @Query(value = "SELECT f.id, f.dto ->> 'title' AS title, f.dto ->> 'imageUrl' AS imageUrl, f.dto ->> 'isPodcast' as isPodcast FROM subscriptions s INNER JOIN feeds f ON s.feed_id = f.id WHERE s.user_id = :userid", nativeQuery = true)
     Collection<FeedTitleDTO> findFeedTitlesByUserId(@Param("userid") Long userId);
 
-    @Cacheable(value = CacheService.FEED_DTOS_CACHE, key = "#feedId",condition = "#feedId != null")
     @Query(value="SELECT f.dto FROM Feed f WHERE f.id=:feed_id")
     Optional<FeedDTO> getFeedDTOById(@Param("feed_id") UUID feedId);
 
-    @Cacheable(value = CacheService.FEED_IMAGE_CACHE, key = "#feedId",condition = "#feedId != null")
     @Query(value = "SELECT f.feedImage from Feed f where f.id=:feed_id")
     Optional<FeedImage> getFeedImageById(@Param("feed_id") UUID feedId);
 }
