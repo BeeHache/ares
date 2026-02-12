@@ -5,10 +5,11 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.io.Serializable;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public interface FeedTitleDTO extends Serializable {
+public interface FeedSummaryDTO extends Serializable {
     String getId();
     String getTitle();
+    String getDescription();
+    String getLink();
     String getImageUrl();
     Boolean getIsPodcast();
-    String getPubdate();
 }

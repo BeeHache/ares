@@ -103,7 +103,7 @@ class RssServiceTest {
         assertEquals("http://example.com", result.getLink());
         assertNotNull(result.getItems());
         assertEquals(1, result.getItems().size());
-        assertEquals("Item Title", result.getItems().get(0).getTitle());
+        assertEquals("Item Title", result.getItems().iterator().next().getTitle());
     }
 
     @Test

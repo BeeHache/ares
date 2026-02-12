@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.EventQueues;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.FeedImageDTO;
+import net.blackhacker.ares.dto.FeedSummaryDTO;
 import net.blackhacker.ares.dto.FeedTitleDTO;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.FeedImage;
@@ -103,6 +104,13 @@ public class FeedService {
     @Cacheable(value = CacheService.FEED_TITLES_CACHE, key = "#userId", condition = "#userId != null")
     public Collection<FeedTitleDTO> getFeedTitles(@NonNull Long userId) {
         return feedRepository.findFeedTitlesByUserId(userId).stream()
+                .filter(dto -> dto.getTitle() != null)
+                .toList();
+    }
+
+    @Cacheable(value = CacheService.FEED_SUMMARIES_CACHE, key = "#userId", condition = "#userId != null")
+    public Collection<FeedSummaryDTO> getFeedSummaries(@NonNull Long userId) {
+        return feedRepository.findFeedSummariesByUserId(userId).stream()
                 .filter(dto -> dto.getTitle() != null)
                 .toList();
     }

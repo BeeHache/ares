@@ -135,8 +135,13 @@ public class RssService {
             }).toList();
 
             feedDto.getItems().addAll(feedItems);
-            // if ANY feedItem has an enclosure that this is a podcast
-            feedDto.setIsPodcast(feedItems.stream().anyMatch(rssItem -> !rssItem.getEnclosures().isEmpty()));
+            // if ANY feedItem has an enclosure then this feed a podcast
+            feedDto.setIsPodcast(feedItems.stream().anyMatch(feedItemDTO -> !feedItemDTO.getEnclosures().isEmpty()));
+
+            if (feedItems.stream().findFirst().isPresent()) {
+                feedDto.setPublishedDate(feedItems.stream().findFirst().get().getDate());
+            }
+
             return Optional.of(feedDto);
 
         } catch (Exception e) {

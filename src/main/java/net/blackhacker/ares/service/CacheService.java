@@ -11,6 +11,7 @@ public class CacheService {
     final static public String FEED_DTOS_CACHE = "FEED_DTOS_CACHE";
     final static public String FEED_IMAGE_CACHE = "FEED_IMAGE_CACHE";
     final static public String FEED_TITLES_CACHE = "FEED_TITLES_CACHE";
+    final static public String FEED_SUMMARIES_CACHE = "FEED_SUMMARIES_CACHE";
 
     final static public String SUBSCRIPTION_CACHE = "SUBSCRIPTION_CACHE";
 

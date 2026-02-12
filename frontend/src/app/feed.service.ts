@@ -27,6 +27,15 @@ export interface FeedTitle {
   isPodcast?: boolean;
 }
 
+export interface FeedSummary {
+  id: string;
+  title: string;
+  description?: string;
+  link: string;
+  imageUrl?: string;
+  isPodcast?: boolean;
+}
+
 export interface Feed {
   id: string;
   title: string;
@@ -60,6 +69,10 @@ export class FeedService {
 
   getFeedTitles(): Observable<FeedTitle[]> {
       return this.http.get<FeedTitle[]>(`${this.apiUrl}/titles`);
+  }
+
+  getFeedSummaries(): Observable<FeedSummary[]> {
+      return this.http.get<FeedSummary[]>(`${this.apiUrl}/summaries`);
   }
 
   getFeeds(): Observable<Feed[]> {

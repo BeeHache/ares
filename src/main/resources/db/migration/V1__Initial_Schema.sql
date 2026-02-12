@@ -56,6 +56,7 @@ create index if not exists ix_feeds_last_mod on feeds (last_modified);
 create index if not exists ix_feeds_dto_title on feeds ((dto ->>'title'));
 create index if not exists ix_feeds_dto_description on feeds ((dto ->> 'description'));
 create index if not exists ix_feeds_dto_podcast on feeds ((dto ->> 'podcast'));
+create index if not exists ix_feeds_dto_pudate on feeds ((dto -> 'items' -> 0 ->> 'date'));
 create index if not exists ix_feeds_dto on feeds USING GIN (dto);
 
 create table if not exists feed_image (

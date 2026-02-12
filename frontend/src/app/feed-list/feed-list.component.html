@@ -1,17 +1,21 @@
 <div class="feed-list-container">
   <h2>My Feeds</h2>
 
-  <div class="actions">
-    <button class="btn" (click)="addFeed()">Add Feed</button>
-    <button class="btn" (click)="openImportModal()">Import OPML</button>
+  <div class="search-container">
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Search feeds..."
+      [(ngModel)]="searchQuery"
+      (ngModelChange)="filterFeeds()">
   </div>
 
   <div class="summary">
-    <a href="#" class="summary-link active">All Feeds ({{ feeds.length }})</a>
+    <a href="#" class="summary-link active">Feeds ({{ filteredFeeds.length }})</a>
   </div>
 
   <ul class="feed-items">
-    <li *ngFor="let feed of feeds" class="feed-item">
+    <li *ngFor="let feed of filteredFeeds" class="feed-item">
       <div class="feed-row" [class.selected]="feed.id === selectedFeedId">
         <a href="javascript:void(0)" class="feed-link" (click)="selectFeed(feed)">
           <div class="feed-icon-wrapper">
@@ -24,13 +28,11 @@
     </li>
   </ul>
 
-  <div *ngIf="feeds.length === 0" class="no-feeds">
-      <p>No feeds found. Add one to get started!</p>
+  <div *ngIf="filteredFeeds.length === 0 && feeds.length > 0" class="no-results">
+      <p>No feeds match your search.</p>
   </div>
 
-  <app-opml-import
-    *ngIf="showImportModal"
-    (close)="closeImportModal()"
-    (importSuccess)="onImportSuccess()">
-  </app-opml-import>
+  <div *ngIf="feeds.length === 0" class="no-feeds">
+      <p>No feeds found.</p>
+  </div>
 </div>

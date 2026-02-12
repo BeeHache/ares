@@ -12,25 +12,23 @@ h2 {
   color: #343a40;
 }
 
-.actions {
-  margin-bottom: 20px;
-  display: flex;
-  gap: 10px;
+.search-container {
+  margin-bottom: 15px;
 }
 
-.btn {
-  padding: 8px 12px;
-  border: none;
+.search-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ced4da;
   border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9em;
-  flex-grow: 1;
-  background-color: #007bff;
-  color: white;
+  font-size: 1rem;
+  box-sizing: border-box;
 }
 
-.btn:hover {
-  background-color: #0056b3;
+.search-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
 }
 
 .summary {
@@ -133,4 +131,11 @@ h2 {
   font-size: 14px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   border: 2px solid white;
+}
+
+.no-results {
+    text-align: center;
+    color: #6c757d;
+    margin-top: 20px;
+    font-style: italic;
 }

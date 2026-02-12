@@ -1,6 +1,7 @@
 package net.blackhacker.ares.repository.jpa;
 
 import net.blackhacker.ares.dto.FeedDTO;
+import net.blackhacker.ares.dto.FeedSummaryDTO;
 import net.blackhacker.ares.dto.FeedTitleDTO;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.FeedImage;
@@ -20,19 +21,22 @@ import java.util.UUID;
 @Repository
 public interface FeedRepository extends JpaRepository<Feed, UUID> {
 
-    @Query("SELECT f FROM Feed f WHERE f.lastModified < :dt OR f.lastModified IS NULL")
+    @Query(Queries.FIND_MODIFIED_BEFORE)
     Page<Feed> findModifiedBefore(@Param("dt") ZonedDateTime zonedDateTime, Pageable pageable);
 
     Optional<Feed> findByUrl(@Param("url") URL url);
 
     Optional<Feed> findById(@Param("id") UUID id);
 
-    @Query(value = "SELECT f.id, f.dto ->> 'title' AS title, f.dto ->> 'imageUrl' AS imageUrl, f.dto ->> 'isPodcast' as isPodcast FROM subscriptions s INNER JOIN feeds f ON s.feed_id = f.id WHERE s.user_id = :userid", nativeQuery = true)
+    @Query(value = Queries.FIND_FEED_TITLES_BY_USERID, nativeQuery = true)
     Collection<FeedTitleDTO> findFeedTitlesByUserId(@Param("userid") Long userId);
 
-    @Query(value="SELECT f.dto FROM Feed f WHERE f.id=:feed_id")
+    @Query(value = Queries.FIND_FEED_SUMMARIES_BY_USERID, nativeQuery = true)
+    Collection<FeedSummaryDTO> findFeedSummariesByUserId(@Param("userid") Long userId);
+
+    @Query(value=Queries.GET_FEED_DTO_BY_ID)
     Optional<FeedDTO> getFeedDTOById(@Param("feed_id") UUID feedId);
 
-    @Query(value = "SELECT f.feedImage from Feed f where f.id=:feed_id")
+    @Query(value = Queries.GET_FEED_IMAGE_BY_ID)
     Optional<FeedImage> getFeedImageById(@Param("feed_id") UUID feedId);
 }

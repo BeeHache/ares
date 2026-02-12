@@ -1,6 +1,7 @@
 package net.blackhacker.ares.controller;
 
 import net.blackhacker.ares.dto.FeedDTO;
+import net.blackhacker.ares.dto.FeedSummaryDTO;
 import net.blackhacker.ares.dto.FeedTitleDTO;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Feed;
@@ -47,9 +48,20 @@ public class FeedController {
     }
 
     @GetMapping("/titles")
-    public Collection<FeedTitleDTO> getFeedTitles(@AuthenticationPrincipal Account principal) {
+    public ResponseEntity<Collection<FeedTitleDTO>> getFeedTitles(@AuthenticationPrincipal Account principal) {
         User user = userService.getUserByAccount(principal).get();
-        return feedService.getFeedTitles(user.getId());
+        Collection<FeedTitleDTO> titles = feedService.getFeedTitles(user.getId());
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(titles);
+    }
+    @GetMapping("/summaries")
+    public ResponseEntity<Collection<FeedSummaryDTO>> getFeedSummary(@AuthenticationPrincipal Account principal) {
+        User user = userService.getUserByAccount(principal).get();
+        Collection<FeedSummaryDTO> summaries = feedService.getFeedSummaries(user.getId());
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(summaries);
     }
 
     @GetMapping
