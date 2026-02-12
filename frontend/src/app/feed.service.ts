@@ -25,6 +25,7 @@ export interface FeedTitle {
   title: string;
   imageUrl?: string;
   isPodcast?: boolean;
+  pubdate?: string;
 }
 
 export interface FeedSummary {

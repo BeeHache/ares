@@ -34,7 +34,12 @@ export class FeedListComponent implements OnInit {
   loadFeeds() {
     this.feedService.getFeedTitles().subscribe({
       next: (data) => {
-        this.feeds = data;
+        // Sort by pubdate descending (newest first)
+        this.feeds = data.sort((a, b) => {
+            const dateA = a.pubdate ? new Date(a.pubdate).getTime() : 0;
+            const dateB = b.pubdate ? new Date(b.pubdate).getTime() : 0;
+            return dateB - dateA;
+        });
         this.filterFeeds();
         this.cdr.detectChanges();
       },

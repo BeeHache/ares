@@ -9,10 +9,19 @@
     </div>
     <p class="feed-description" *ngIf="feed.description" [innerHTML]="feed.description"></p>
     <a [href]="feed.link" target="_blank" class="feed-source-link">Visit Website</a>
+
+    <div class="search-container">
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search articles..."
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="filterItems()">
+    </div>
   </div>
 
   <div class="items-list">
-    <div *ngFor="let item of items" class="item-card">
+    <div *ngFor="let item of filteredItems" class="item-card">
       <h4><a [href]="item.link" target="_blank">{{ item.title }}</a></h4>
       <div class="item-meta">
         <span *ngIf="item.date">{{ item.date | date:'medium' }}</span>
@@ -24,7 +33,7 @@
 
           <!-- Audio Player -->
           <div *ngIf="enclosure.type?.startsWith('audio/')" class="audio-player">
-            <audio controls preload="none">
+            <audio controls preload="metadata">
               <source [src]="enclosure.url" [type]="enclosure.type">
               Your browser does not support the audio element.
             </audio>
@@ -32,7 +41,7 @@
 
           <!-- Video Player -->
           <div *ngIf="enclosure.type?.startsWith('video/')" class="video-player">
-            <video controls preload="none" style="max-width: 100%; height: auto;">
+            <video controls preload="metadata" style="max-width: 100%; height: auto;">
               <source [src]="enclosure.url" [type]="enclosure.type">
               Your browser does not support the video element.
             </video>
@@ -47,6 +56,10 @@
       </div>
 
       <p class="item-description" *ngIf="item.description" [innerHTML]="item.description"></p>
+    </div>
+
+    <div *ngIf="filteredItems.length === 0 && items.length > 0" class="no-results">
+        <p>No articles match your search.</p>
     </div>
 
     <div *ngIf="items.length === 0" class="no-items">
