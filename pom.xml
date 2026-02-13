@@ -32,7 +32,6 @@
         <rss-reader.version>3.12.0</rss-reader.version>
         <opml-parser.version>3.1.0</opml-parser.version>
         <postgres.version>42.7.8</postgres.version>
-        <derby.version>10.16.1.1</derby.version>
         <jjwt.version>0.13.0</jjwt.version>
         <compiler.version>3.8.1</compiler.version>
         <httpcompents.version>5.6</httpcompents.version>
@@ -154,7 +153,26 @@
             <artifactId>flyway-database-postgresql</artifactId>
             <version>${flywaydb.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.togglz</groupId>
+            <artifactId>togglz-spring-boot-starter</artifactId>
+            <version>${togglz.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.togglz</groupId>
+            <artifactId>togglz-console</artifactId>
+            <version>${togglz.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.togglz</groupId>
+            <artifactId>togglz-redis</artifactId>
+            <version>${togglz.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.togglz</groupId>
+            <artifactId>togglz-spring-security</artifactId>
+            <version>${togglz.version}</version>
+        </dependency>
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
