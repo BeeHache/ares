@@ -1,11 +1,11 @@
-package net.blackhacker.ares.dto;
+package net.blackhacker.ares.projection;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.io.Serializable;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public interface FeedSummaryDTO extends Serializable {
+public interface FeedSummaryProjection extends Serializable {
     String getId();
     String getTitle();
     String getDescription();

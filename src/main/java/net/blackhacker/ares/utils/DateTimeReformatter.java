@@ -2,6 +2,7 @@ package net.blackhacker.ares.utils;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Slf4j
@@ -13,7 +14,7 @@ public class DateTimeReformatter {
     };
 
     static public String reformat(String input) {
-    String output = "";
+        String output = "";
         for (DateTimeFormatter formatter : inputFormats) {
             try {
                 output =  outputFormat.format(formatter.parse(input));
@@ -26,5 +27,18 @@ public class DateTimeReformatter {
             log.error("DateTimeReformatter: Couldn't reformat date: {}", input);
         }
         return output;
+    }
+
+    static public ZonedDateTime parse (String input){
+        for (DateTimeFormatter format : inputFormats) {
+            try {
+                return ZonedDateTime.parse(input, format);
+            } catch (Throwable e) {
+                //ignore exception and fall through
+            }
+        }
+
+        log.error("DateTimeReformatter: Couldn't reformat date: {}", input);
+        return null;
     }
 }

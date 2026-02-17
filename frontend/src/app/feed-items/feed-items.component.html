@@ -27,31 +27,38 @@
         <span *ngIf="item.date">{{ item.date | date:'medium' }}</span>
       </div>
 
-      <!-- Enclosures (Audio/Video Player) -->
-      <div *ngIf="item.enclosures && item.enclosures.length > 0" class="enclosures">
-        <div *ngFor="let enclosure of item.enclosures">
+      <!-- Enclosures (Audio/Video Player) - Lazy Loaded -->
+      <div *ngIf="item.enclosures && item.enclosures.length > 0"
+           class="enclosures-wrapper"
+           appLazyLoad
+           (visible)="onItemVisible(item)"
+           style="min-height: 50px;"> <!-- Placeholder height -->
 
-          <!-- Audio Player -->
-          <div *ngIf="enclosure.type?.startsWith('audio/')" class="audio-player">
-            <audio controls preload="metadata">
-              <source [src]="enclosure.url" [type]="enclosure.type">
-              Your browser does not support the audio element.
-            </audio>
-          </div>
+        <div *ngIf="isItemVisible(item)" class="enclosures">
+            <div *ngFor="let enclosure of item.enclosures">
 
-          <!-- Video Player -->
-          <div *ngIf="enclosure.type?.startsWith('video/')" class="video-player">
-            <video controls preload="metadata" style="max-width: 100%; height: auto;">
-              <source [src]="enclosure.url" [type]="enclosure.type">
-              Your browser does not support the video element.
-            </video>
-          </div>
+              <!-- Audio Player -->
+              <div *ngIf="enclosure.type?.startsWith('audio/')" class="audio-player">
+                <audio controls preload="metadata">
+                  <source [src]="enclosure.url" [type]="enclosure.type">
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
 
-          <!-- Download Link (for other types) -->
-          <div *ngIf="!enclosure.type?.startsWith('audio/') && !enclosure.type?.startsWith('video/')" class="file-download">
-             <a [href]="enclosure.url" target="_blank">Download {{ enclosure.type }}</a>
-          </div>
+              <!-- Video Player -->
+              <div *ngIf="enclosure.type?.startsWith('video/')" class="video-player">
+                <video controls preload="metadata" style="max-width: 100%; height: auto;">
+                  <source [src]="enclosure.url" [type]="enclosure.type">
+                  Your browser does not support the video element.
+                </video>
+              </div>
 
+              <!-- Download Link (for other types) -->
+              <div *ngIf="!enclosure.type?.startsWith('audio/') && !enclosure.type?.startsWith('video/')" class="file-download">
+                 <a [href]="enclosure.url" target="_blank">Download {{ enclosure.type }}</a>
+              </div>
+
+            </div>
         </div>
       </div>
 
@@ -62,8 +69,14 @@
         <p>No articles match your search.</p>
     </div>
 
-    <div *ngIf="items.length === 0" class="no-items">
+    <div *ngIf="items.length === 0 && !loading" class="no-items">
         <p>No items found in this feed.</p>
+    </div>
+
+    <div class="load-more-container" *ngIf="hasMore && !searchQuery && items.length > 0">
+        <button class="btn load-more-btn" (click)="loadMore()" [disabled]="loadingMore">
+            {{ loadingMore ? 'Loading...' : 'Load More' }}
+        </button>
     </div>
   </div>
 </div>

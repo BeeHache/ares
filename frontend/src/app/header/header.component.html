@@ -10,6 +10,11 @@
 
     <div class="nav-links" [class.active]="isMenuOpen">
 
+      <form class="search-form" (submit)="onSearch()" *ngIf="authService.currentUser$ | async">
+        <input type="text" placeholder="Search articles..." [(ngModel)]="searchQuery" name="q">
+        <button type="submit">🔍</button>
+      </form>
+
       <div class="dropdown">
         <button class="dropbtn">About</button>
         <div class="dropdown-content">

@@ -1,12 +1,10 @@
 package net.blackhacker.ares.model;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.utils.BooleanConverter;
@@ -35,9 +33,19 @@ public class Feed implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column
+    private String title;
+
+    @Column
+    private String description;
+
     @Column(nullable = false, unique = true)
     @Convert(converter = URLConverter.class)
     private URL url;
+
+    @Column
+    @Convert(converter = URLConverter.class)
+    private URL link;
 
     @Column
     @Convert(converter = BooleanConverter.class)
@@ -48,6 +56,19 @@ public class Feed implements Serializable {
 
     @OneToOne(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
     private FeedImage feedImage;
+
+    @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL)
+    private Set<FeedItem> feedItems = new TreeSet<>(new Comparator<FeedItem>() {
+        @Override
+        public int compare(@NonNull FeedItem o1, @NonNull FeedItem o2) {
+            if (o1.getDate() == null) {
+                return o2.getDate() == null ? 0 : -1;
+            } else if (o2.getDate() == null) {
+                return 1;
+            }
+            return - o1.getDate().compareTo(o2.getDate());
+        }
+    });
 
     @Type(FeedDtoType.class)
     @Column(name = "dto",columnDefinition = "JSONB")
@@ -80,5 +101,12 @@ public class Feed implements Serializable {
         if (id != null) return id.hashCode();
         if (url != null) return url.toString().hashCode();
         return super.hashCode();
+    }
+
+    public ZonedDateTime getPubdate() {
+        if (!getFeedItems().iterator().hasNext()) {
+            return ZonedDateTime.now();
+        }
+        return getFeedItems().iterator().next().getDate();
     }
 }

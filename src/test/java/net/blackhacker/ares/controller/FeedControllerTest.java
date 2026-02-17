@@ -2,6 +2,7 @@ package net.blackhacker.ares.controller;
 
 import net.blackhacker.ares.TestConfig;
 import net.blackhacker.ares.dto.FeedDTO;
+import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
@@ -72,6 +73,9 @@ class FeedControllerTest {
 
     @MockitoBean
     private JmsTemplate jmsTemplate;
+
+    @MockitoBean
+    private FeedMapper feedMapper;
 
     private Optional<User> optionalUser;
     private User principal;

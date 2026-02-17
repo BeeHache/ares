@@ -8,13 +8,18 @@ import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.dto.EnclosureDTO;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.FeedItemDTO;
+import net.blackhacker.ares.model.Enclosure;
 import net.blackhacker.ares.model.Feed;
+import net.blackhacker.ares.model.FeedImage;
+import net.blackhacker.ares.model.FeedItem;
 import net.blackhacker.ares.utils.DateTimeReformatter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.net.*;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,20 +38,12 @@ public class RssService {
         this.urlFetchService = urlFetchService;
     }
 
-    public FeedDTO feedDTOFromUrl(URL url) {
-        try {
-            Optional<FeedDTO> optionalFeedDTO = buildFeedDTO(url);
-            return optionalFeedDTO.orElse(null);
-        } catch (Exception e) {
-                throw new ServiceException("Can't read from " + url.toString(), e);
-        }
-    }
 
-    public Feed feedFromUrl(String urlString) {
+    public Feed feedFromUrl(@NonNull String urlString) {
         return feedFromUrl( new Feed(), urlString);
     }
 
-    public Feed feedFromUrl(@NonNull Feed feed, String urlString) {
+    public Feed feedFromUrl(@NonNull Feed feed, @NonNull String urlString) {
         try {
             feed.setUrl(new URI(urlString).toURL());
             if (updateFeed(feed)) {
@@ -62,15 +59,89 @@ public class RssService {
         if (feed.getUrl() == null) {
             return false;
         }
-        Optional<FeedDTO> optionalFeedDTOFeedDTO = buildFeedDTO(feed.getUrl());
-        if (optionalFeedDTOFeedDTO.isEmpty()) {
+
+        List<Item> rssItems = parseRss(feed.getUrl().toString());
+
+        if (rssItems.isEmpty()) {
             return false;
         }
 
-        FeedDTO feedDTO = optionalFeedDTOFeedDTO.get();
-        feedDTO.setId(feed.getId());
-        feed.setDto(feedDTO);
-        feed.setPodcast(feedDTO.getIsPodcast());
+        // Get channel info from 1st item
+        Channel channel = rssItems.get(0).getChannel();
+        feed.setTitle(channel.getTitle());
+        feed.setDescription(channel.getDescription());
+        try {
+            feed.setLink(new URI(channel.getLink()).toURL());
+
+        } catch(Exception e) {
+
+        }
+        if  (channel.getImage().isPresent()) {
+            try {
+                FeedImage feedImage = new FeedImage();
+                feedImage.setImageUrl(new URI(channel.getImage().get().getUrl()).toURL());
+
+            } catch (Exception e) {
+
+            }
+        }
+
+        List<FeedItem> feedItems = rssItems.stream().map(rssItem -> {
+
+            final FeedItem feedItem = new FeedItem();
+            feedItem.setFeed(feed);
+
+            if (rssItem.getTitle().isPresent()) {
+                feedItem.setTitle(rssItem.getTitle().get());
+            }
+            if (rssItem.getDescription().isPresent()) {
+                feedItem.setDescription(rssItem.getDescription().get());
+            }
+            if (rssItem.getLink().isPresent()) {
+                try {
+                    feedItem.setLink(new URI(rssItem.getLink().get()).toURL());
+                }catch(Exception e) {
+
+                }
+            }
+            if(rssItem.getPubDate().isPresent()){
+                String pubdate = rssItem.getPubDate().get();
+                feedItem.setDate(DateTimeReformatter.parse(pubdate));
+            }
+
+            //  Loop through each enclosure and add it to the FeedItem
+            rssItem.getEnclosures().forEach(
+                    rssEnclosure -> {
+                        try {
+                            Enclosure enclosure = new Enclosure();
+                            try {
+                                enclosure.setUrl(new URI(rssEnclosure.getUrl()).toURL());
+                            } catch(Exception e) {
+
+                            }
+                            if(rssEnclosure.getLength().isPresent()) {
+                                enclosure.setLength(rssEnclosure.getLength().get());
+                            }
+                            enclosure.setType(rssEnclosure.getType());
+                            feedItem.getEnclosures().add(enclosure);
+                        } catch (Exception e) {
+                            log.error(e.getMessage(), e);
+                        }
+                    }
+            );
+
+            if (rssItem.getUpdated().isPresent()){
+                feedItem.setDate(ZonedDateTime.parse(rssItem.getUpdated().get(), DateTimeFormatter.ISO_DATE_TIME));
+            }
+
+            return feedItem;
+        }).toList();
+
+        feed.getFeedItems().addAll(feedItems);
+        // if ANY feedItem has an enclosure then this feed a podcast
+        feed.setPodcast(feedItems.stream().anyMatch(
+                feedItem -> !feedItem.getEnclosures().isEmpty()));
+
         return true;
     }
 
@@ -136,11 +207,8 @@ public class RssService {
 
             feedDto.getItems().addAll(feedItems);
             // if ANY feedItem has an enclosure then this feed a podcast
-            feedDto.setIsPodcast(feedItems.stream().anyMatch(feedItemDTO -> !feedItemDTO.getEnclosures().isEmpty()));
-
-            if (feedItems.stream().findFirst().isPresent()) {
-                feedDto.setPublishedDate(feedItems.stream().findFirst().get().getDate());
-            }
+            feedDto.setIsPodcast(feedItems.stream()
+                    .anyMatch(feedItemDTO -> !feedItemDTO.getEnclosures().isEmpty()));
 
             return Optional.of(feedDto);
 

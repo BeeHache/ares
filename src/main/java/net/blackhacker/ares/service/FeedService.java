@@ -3,27 +3,27 @@ package net.blackhacker.ares.service;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.EventQueues;
-import net.blackhacker.ares.dto.FeedDTO;
-import net.blackhacker.ares.dto.FeedImageDTO;
-import net.blackhacker.ares.dto.FeedSummaryDTO;
-import net.blackhacker.ares.dto.FeedTitleDTO;
+import net.blackhacker.ares.dto.*;
+import net.blackhacker.ares.mapper.FeedItemMapper;
+import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.FeedImage;
+import net.blackhacker.ares.model.FeedItem;
+import net.blackhacker.ares.projection.FeedItemProjection;
+import net.blackhacker.ares.projection.FeedSummaryProjection;
+import net.blackhacker.ares.projection.FeedTitleProjection;
 import net.blackhacker.ares.repository.crud.FeedImageDTORepository;
+import net.blackhacker.ares.repository.jpa.FeedItemRepository;
 import net.blackhacker.ares.repository.jpa.FeedRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Import Transactional
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -36,29 +36,41 @@ import java.util.stream.Stream;
 public class FeedService {
 
     private final FeedRepository feedRepository;
+    private final FeedItemRepository feedItemRepository;
     private final FeedImageDTORepository feedImageDTORepository;
     private final URLFetchService urlFetchService;
     private final RssService rssService;
     private final JmsTemplate jmsTemplate;
+    private final TransactionTemplate transactionTemplate;
     private final CacheService cacheService;
     private final Long feedIntervalMs;
     private final Integer queryLimit;
+    private final FeedMapper feedMapper;
+    private final FeedItemMapper feedItemMapper;
 
     public FeedService(
             FeedRepository feedRepository,
+            FeedItemRepository feedItemRepository,
             FeedImageDTORepository feedImageDTORepository,
             URLFetchService urlFetchService,
             RssService rssService,
             JmsTemplate jmsTemplate,
+            TransactionTemplate transactionTemplate,
             CacheService cacheService,
+            FeedMapper feedMapper,
+            FeedItemMapper feedItemMapper,
             @Value("${feed.interval_ms}") Long feedIntervalMs,
             @Value("${feed.query_limit}") Integer queryLimit) {
         this.feedRepository = feedRepository;
+        this.feedItemRepository = feedItemRepository;
         this.feedImageDTORepository = feedImageDTORepository;
         this.urlFetchService = urlFetchService;
         this.rssService = rssService;
         this.jmsTemplate = jmsTemplate;
+        this.transactionTemplate = transactionTemplate;
         this.cacheService = cacheService;
+        this.feedMapper = feedMapper;
+        this.feedItemMapper = feedItemMapper;
         this.feedIntervalMs = feedIntervalMs;
         this.queryLimit = queryLimit;
     }
@@ -86,33 +98,31 @@ public class FeedService {
         }
     }
 
-    @Cacheable(value = CacheService.FEED_CACHE, unless = "#result=null")
-    public Feed getFeedById(UUID id){
-        return feedRepository.findById(id).orElse(null);
+
+    @NonNull public Optional<Feed> getFeedById(@NonNull UUID id){
+        return feedRepository.findById(id);
     }
 
-    @Cacheable(value = CacheService.FEED_IMAGE_CACHE, key = "#id",condition = "#id != null")
-    public Optional<FeedImage> getFeedImageById(UUID id){
+    public Optional<FeedImage> getFeedImageById(@NonNull UUID id){
         return feedRepository.getFeedImageById(id);
     }
 
-    @Cacheable(value = CacheService.FEED_DTOS_CACHE, key = "#id",condition = "#id != null")
-    public Optional<FeedDTO> getFeedDTO(UUID id){
-        return feedRepository.getFeedDTOById(id);
-    }
-
-    @Cacheable(value = CacheService.FEED_TITLES_CACHE, key = "#userId", condition = "#userId != null")
-    public Collection<FeedTitleDTO> getFeedTitles(@NonNull Long userId) {
+    public Collection<FeedTitleProjection> getFeedTitles(@NonNull Long userId) {
         return feedRepository.findFeedTitlesByUserId(userId).stream()
                 .filter(dto -> dto.getTitle() != null)
                 .toList();
     }
 
-    @Cacheable(value = CacheService.FEED_SUMMARIES_CACHE, key = "#userId", condition = "#userId != null")
-    public Collection<FeedSummaryDTO> getFeedSummaries(@NonNull Long userId) {
+    public Collection<FeedSummaryProjection> getFeedSummaries(@NonNull Long userId) {
         return feedRepository.findFeedSummariesByUserId(userId).stream()
                 .filter(dto -> dto.getTitle() != null)
                 .toList();
+    }
+
+    public Collection<FeedItemDTO> getFeedItems(@NonNull UUID feedId, int pageNumber) {
+        Pageable pageable = PageRequest.of(pageNumber, 50, Sort.by("date").descending());
+        Slice<FeedItem> page = feedItemRepository.findByFeedId(feedId, pageable);
+        return page.stream().map(feedItemMapper::toDTO).toList();
     }
 
     public Optional<Feed> getFeedByUrl(URL url){
@@ -121,6 +131,7 @@ public class FeedService {
 
     public Feed saveFeed(Feed feed){
         Feed savedFeed =  feedRepository.save(feed);
+        sendUpdateFeedMessage(feed.getId());
         cacheService.evictSingleCacheValue(CacheService.FEED_DTOS_CACHE, savedFeed.getId());
         cacheService.evictSingleCacheValue(CacheService.FEED_IMAGE_CACHE, savedFeed.getId());
         return savedFeed;
@@ -184,18 +195,20 @@ public class FeedService {
     }
 
     @JmsListener(destination = EventQueues.FEED_SAVED)
-    @Transactional // Added Transactional annotation
     public void updateFeed(UUID feedId){
-        try {
+        transactionTemplate.executeWithoutResult(status -> {
             feedRepository.findById(feedId).ifPresent(feed -> {
                 if (rssService.updateFeed(feed)) {
-                    updateFeedImage(feed.getFeedImage());
-                    saveFeed(feed);
+                    try {
+                        updateFeedImage(feed.getFeedImage());
+                        saveFeed(feed);
+                    } catch (Throwable e) {
+                        status.setRollbackOnly();
+                        log.error("Error updating feed: {}: {}", feedId, e.getMessage());
+                    }
                 }
             });
-        } catch (Exception e) {
-            log.error("Error updating feed: {}: {}", feedId, e.getMessage());
-        }
+        });
     }
 
     public void updateFeedImage(FeedImage feedImage) {
@@ -222,5 +235,9 @@ public class FeedService {
                 feedImageDTORepository.save(feedImageDTO);
             }
         });
+    }
+
+    public Collection<FeedItemProjection> searchItems(String query) {
+        return feedRepository.searchItems(query);
     }
 }

@@ -45,8 +45,12 @@ create table if not exists account_roles (
 
 create table if not exists feeds (
     id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    title varchar(255),
+    description text,
     url varchar(512) not null unique,
+    link varchar(512),
     podcast varchar(1) not null default 'N',
+    pubdate timestamp with time zone,
     last_modified timestamp with time zone,
     dto JSONB,
     CHECK (podcast IN ('Y', 'N'))
@@ -58,6 +62,26 @@ create index if not exists ix_feeds_dto_description on feeds ((dto ->> 'descript
 create index if not exists ix_feeds_dto_podcast on feeds ((dto ->> 'podcast'));
 create index if not exists ix_feeds_dto_pudate on feeds ((dto -> 'items' -> 0 ->> 'date'));
 create index if not exists ix_feeds_dto on feeds USING GIN (dto);
+
+create table if not exists feed_items(
+    id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    feed_id UUID NOT NULL,
+    title varchar(255),
+    description text,
+    link varchar(512),
+    date timestamp with time zone,
+    FOREIGN KEY (feed_id) references feeds(id) ON DELETE CASCADE
+);
+
+create table if not exists enclosures(
+    id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    feed_item_id UUID,
+    url varchar(512),
+    length BIGINT,
+    type varchar(64),
+    FOREIGN KEY (feed_item_id) references feed_items(id) ON DELETE CASCADE
+);
+
 
 create table if not exists feed_image (
     id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),

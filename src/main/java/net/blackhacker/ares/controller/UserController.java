@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController()
@@ -103,14 +104,16 @@ public class UserController {
     @DeleteMapping("/feeds/{id}")
     public ResponseEntity<Void> deleteFeed(@PathVariable("id") UUID id, @AuthenticationPrincipal Account principal) {
         User user = userService.getUserByAccount(principal).get();
-        Feed feed = feedService.getFeedById(id);
+        Optional<Feed> feed = feedService.getFeedById(id);
 
-        if (feed == null){
+        if (feed.isEmpty()){
             return ResponseEntity.notFound().build();
         }
 
-        user.getFeeds().remove(feed);
-        feedService.saveFeed(feed);
+        Feed foundFeed = feed.get();
+
+        user.getFeeds().remove(foundFeed);
+        feedService.saveFeed(foundFeed);
         userService.saveUser(user);
         return ResponseEntity.ok().build();
     }

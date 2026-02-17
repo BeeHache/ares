@@ -84,6 +84,10 @@ export class FeedService {
     return this.http.get<Feed>(`${this.apiUrl}/${id}`);
   }
 
+  getFeedItems(feedId: string, page: number): Observable<FeedItem[]> {
+      return this.http.get<FeedItem[]>(`${this.apiUrl}/${feedId}/items/${page}`);
+  }
+
   addFeed(link: string): Observable<Feed> {
     return this.http.put<Feed>(`${this.apiUrl}`, null, { params: { link } });
   }
@@ -100,5 +104,9 @@ export class FeedService {
 
   importOpmlUrl(url: string): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/import`, null, { params: { url } });
+  }
+
+  search(query: string): Observable<FeedItem[]> {
+      return this.http.get<FeedItem[]>(`${this.apiUrl}/search`, { params: { q: query } });
   }
 }
