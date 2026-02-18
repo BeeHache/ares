@@ -69,11 +69,11 @@ export class FeedService {
   }
 
   getFeedTitles(): Observable<FeedTitle[]> {
-      return this.http.get<FeedTitle[]>(`${this.apiUrl}/titles`);
+      return this.http.get<FeedTitle[]>(`${this.apiUrl}`);
   }
 
   getFeedSummaries(): Observable<FeedSummary[]> {
-      return this.http.get<FeedSummary[]>(`${this.apiUrl}/summaries`);
+      return this.http.get<FeedSummary[]>(`${this.apiUrl}`);
   }
 
   getFeeds(): Observable<Feed[]> {

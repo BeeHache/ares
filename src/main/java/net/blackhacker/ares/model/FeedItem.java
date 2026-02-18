@@ -34,7 +34,7 @@ public class FeedItem implements Serializable {
     @Column
     private String description;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     @Convert(converter = URLConverter.class)
     private URL link;
 
@@ -53,11 +53,13 @@ public class FeedItem implements Serializable {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         FeedItem feedItem = (FeedItem) o;
-        return Objects.equals(getId(), feedItem.getId()) && Objects.equals(getLink(), feedItem.getLink());
+        return Objects.equals(getLink(), feedItem.getLink())
+                && Objects.equals(getTitle(), feedItem.getTitle())
+                && Objects.equals(getDate(), feedItem.getDate());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getLink());
+        return Objects.hash(getDate(), getLink(), getTitle());
     }
 }

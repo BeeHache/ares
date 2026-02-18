@@ -7,18 +7,14 @@ import net.blackhacker.ares.dto.*;
 import net.blackhacker.ares.mapper.FeedItemMapper;
 import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.model.Feed;
-import net.blackhacker.ares.model.FeedImage;
 import net.blackhacker.ares.model.FeedItem;
 import net.blackhacker.ares.projection.FeedItemProjection;
 import net.blackhacker.ares.projection.FeedSummaryProjection;
 import net.blackhacker.ares.projection.FeedTitleProjection;
-import net.blackhacker.ares.repository.crud.FeedImageDTORepository;
 import net.blackhacker.ares.repository.jpa.FeedItemRepository;
 import net.blackhacker.ares.repository.jpa.FeedRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.*;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -37,23 +33,21 @@ public class FeedService {
 
     private final FeedRepository feedRepository;
     private final FeedItemRepository feedItemRepository;
-    private final FeedImageDTORepository feedImageDTORepository;
-    private final URLFetchService urlFetchService;
     private final RssService rssService;
+    private final FeedPageService feedPageService;
     private final JmsTemplate jmsTemplate;
     private final TransactionTemplate transactionTemplate;
     private final CacheService cacheService;
     private final Long feedIntervalMs;
     private final Integer queryLimit;
-    private final FeedMapper feedMapper;
     private final FeedItemMapper feedItemMapper;
 
     public FeedService(
             FeedRepository feedRepository,
             FeedItemRepository feedItemRepository,
-            FeedImageDTORepository feedImageDTORepository,
             URLFetchService urlFetchService,
             RssService rssService,
+            FeedPageService feedPageService,
             JmsTemplate jmsTemplate,
             TransactionTemplate transactionTemplate,
             CacheService cacheService,
@@ -63,13 +57,11 @@ public class FeedService {
             @Value("${feed.query_limit}") Integer queryLimit) {
         this.feedRepository = feedRepository;
         this.feedItemRepository = feedItemRepository;
-        this.feedImageDTORepository = feedImageDTORepository;
-        this.urlFetchService = urlFetchService;
         this.rssService = rssService;
+        this.feedPageService = feedPageService;
         this.jmsTemplate = jmsTemplate;
         this.transactionTemplate = transactionTemplate;
         this.cacheService = cacheService;
-        this.feedMapper = feedMapper;
         this.feedItemMapper = feedItemMapper;
         this.feedIntervalMs = feedIntervalMs;
         this.queryLimit = queryLimit;
@@ -103,10 +95,6 @@ public class FeedService {
         return feedRepository.findById(id);
     }
 
-    public Optional<FeedImage> getFeedImageById(@NonNull UUID id){
-        return feedRepository.getFeedImageById(id);
-    }
-
     public Collection<FeedTitleProjection> getFeedTitles(@NonNull Long userId) {
         return feedRepository.findFeedTitlesByUserId(userId).stream()
                 .filter(dto -> dto.getTitle() != null)
@@ -132,8 +120,17 @@ public class FeedService {
     public Feed saveFeed(Feed feed){
         Feed savedFeed =  feedRepository.save(feed);
         sendUpdateFeedMessage(feed.getId());
-        cacheService.evictSingleCacheValue(CacheService.FEED_DTOS_CACHE, savedFeed.getId());
-        cacheService.evictSingleCacheValue(CacheService.FEED_IMAGE_CACHE, savedFeed.getId());
+
+        //evict each cached page
+        Optional<Integer> feedPageCount = feedPageService.getTotalPages(feed.getId());
+        if (feedPageCount.isPresent()) {
+            for (int i = 1; i <= feedPageCount.get(); i++) {
+                String key = savedFeed.getId().toString() + ":" + i;
+                cacheService.evictSingleCacheValue(CacheService.FEED_DTOS_CACHE, key);
+            }
+            feedPageService.deletePageNumbers(feed.getId());
+        }
+
         return savedFeed;
     }
 
@@ -200,7 +197,6 @@ public class FeedService {
             feedRepository.findById(feedId).ifPresent(feed -> {
                 if (rssService.updateFeed(feed)) {
                     try {
-                        updateFeedImage(feed.getFeedImage());
                         saveFeed(feed);
                     } catch (Throwable e) {
                         status.setRollbackOnly();
@@ -208,32 +204,6 @@ public class FeedService {
                     }
                 }
             });
-        });
-    }
-
-    public void updateFeedImage(FeedImage feedImage) {
-        if (feedImage == null){
-            return;
-        }
-        // fetch image content from cache
-        feedImageDTORepository.findById(feedImage.getId()).ifPresentOrElse(fidto -> {
-            feedImage.setContent(fidto.getContent());
-            feedImage.setContentType(MediaType.parseMediaType(fidto.getContentType()));
-        }, () -> {
-            // fetch image content from internet
-            ResponseEntity<byte[]> response = urlFetchService.fetchBytes(feedImage.getImageUrl().toString());
-            if (response.getStatusCode().is2xxSuccessful()) {
-                feedImage.setContent(response.getBody());
-                feedImage.setContentType(response.getHeaders().getContentType());
-
-                // store image content to cache
-                FeedImageDTO feedImageDTO = new FeedImageDTO();
-                feedImageDTO.setId(feedImage.getId());
-                feedImageDTO.setImageUrl(feedImage.getImageUrl().toString());
-                feedImageDTO.setContent(feedImage.getContent());
-                feedImageDTO.setContentType(feedImage.getContentType().toString());
-                feedImageDTORepository.save(feedImageDTO);
-            }
         });
     }
 

@@ -48,37 +48,71 @@ public class Feed implements Serializable {
     private URL link;
 
     @Column
+    @Convert(converter = URLConverter.class)
+    private URL imageUrl;
+
+    @Column
     @Convert(converter = BooleanConverter.class)
     private boolean podcast = false;
 
+    @Column
+    private ZonedDateTime pubdate;
+
     @Column(nullable = false)
     private ZonedDateTime lastModified = ZonedDateTime.now();
-
-    @OneToOne(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
-    private FeedImage feedImage;
 
     @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL)
     private Set<FeedItem> feedItems = new TreeSet<>(new Comparator<FeedItem>() {
         @Override
         public int compare(@NonNull FeedItem o1, @NonNull FeedItem o2) {
+            int dateComparison;
             if (o1.getDate() == null) {
-                return o2.getDate() == null ? 0 : -1;
+                dateComparison = o2.getDate() == null ? 0 : -1;
             } else if (o2.getDate() == null) {
-                return 1;
+                dateComparison = 1;
+            } else {
+                dateComparison = -o1.getDate().compareTo(o2.getDate());
             }
-            return - o1.getDate().compareTo(o2.getDate());
+            
+            if (dateComparison != 0) {
+                return dateComparison;
+            }
+            
+            // Break ties with Link (which should be unique)
+            if (o1.getLink() != null && o2.getLink() != null) {
+                return o1.getLink().toString().compareTo(o2.getLink().toString());
+            }
+            
+            // Fallback to Title if Link is missing (rare)
+            if (o1.getTitle() != null && o2.getTitle() != null) {
+                return o1.getTitle().compareTo(o2.getTitle());
+            }
+            
+            return 0; // Truly equal
         }
     });
-
-    @Type(FeedDtoType.class)
-    @Column(name = "dto",columnDefinition = "JSONB")
-    private FeedDTO dto;
 
     public void setUrlFromString(String urlString) {
         try {
             this.url = new URI(urlString).toURL();
         } catch (MalformedURLException | URISyntaxException e) {
-            log.error(e.getMessage());
+            log.error("Could not create URL from {}", urlString,e);
+        }
+    }
+
+    public void setLinkFromString(String urlString) {
+        try {
+            this.link = new URI(urlString).toURL();
+        } catch (MalformedURLException | URISyntaxException e) {
+            log.error(" {}", urlString,e);
+        }
+    }
+
+    public void setImageUrlFromString(String urlString) {
+        try {
+            this.imageUrl = new URI(urlString).toURL();
+        } catch (MalformedURLException | URISyntaxException e) {
+            log.error("Could not create URL from {}", urlString,e);
         }
     }
 
@@ -101,12 +135,5 @@ public class Feed implements Serializable {
         if (id != null) return id.hashCode();
         if (url != null) return url.toString().hashCode();
         return super.hashCode();
-    }
-
-    public ZonedDateTime getPubdate() {
-        if (!getFeedItems().iterator().hasNext()) {
-            return ZonedDateTime.now();
-        }
-        return getFeedItems().iterator().next().getDate();
     }
 }

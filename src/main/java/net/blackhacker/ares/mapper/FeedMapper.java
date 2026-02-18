@@ -15,11 +15,6 @@ import java.time.format.DateTimeFormatter;
 @Slf4j
 @Component
 public class FeedMapper implements ModelDTOMapper<Feed, FeedDTO> {
-    final private FeedItemMapper feedItemMapper;
-
-    public FeedMapper(FeedItemMapper feedItemMapper) {
-        this.feedItemMapper = feedItemMapper;
-    }
 
     @Override
     public FeedDTO toDTO(Feed feed) {
@@ -30,8 +25,10 @@ public class FeedMapper implements ModelDTOMapper<Feed, FeedDTO> {
         if (feed.getLink()!=null) {
             feedDTO.setLink(feed.getLink().toString());
         }
+        if (feed.getImageUrl()!=null){
+            feedDTO.setImageUrl(feed.getImageUrl().toString());
+        }
         feedDTO.setIsPodcast(feed.isPodcast());
-        feedDTO.getItems().addAll(feed.getFeedItems().stream().map(feedItemMapper::toDTO).toList());
         return feedDTO;
     }
 
@@ -41,17 +38,9 @@ public class FeedMapper implements ModelDTOMapper<Feed, FeedDTO> {
         feed.setId(feedDTO.getId());
         feed.setTitle(feedDTO.getTitle());
         feed.setDescription(feedDTO.getDescription());
-        try {
-            feed.setLink(new URI(feedDTO.getLink()).toURL());
-        } catch(Exception e) {
-            log.error(e.getMessage());
-        }
+        feed.setLinkFromString(feedDTO.getLink());
+        feed.setImageUrlFromString(feedDTO.getImageUrl());
         feed.setPodcast(feedDTO.getIsPodcast());
-        feed.getFeedItems().addAll(feedDTO.getItems().stream().map(feedItemDTO -> {
-            FeedItem fi = feedItemMapper.toModel(feedItemDTO);
-            fi.setFeed(feed);
-            return fi;
-        }).toList());
         return feed;
     }
 }

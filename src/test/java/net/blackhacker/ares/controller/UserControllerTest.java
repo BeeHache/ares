@@ -1,6 +1,7 @@
 package net.blackhacker.ares.controller;
 
 import net.blackhacker.ares.TestConfig;
+import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.security.CustomAccessDeniedHandler;
 import net.blackhacker.ares.security.JwtAuthenticationEntryPoint;
@@ -66,6 +67,9 @@ class UserControllerTest {
 
     @MockitoBean
     private UserMapper userMapper;
+
+    @MockitoBean
+    private FeedMapper feedMapper;
 
     @MockitoBean
     private UserDTOValidator userDTOValidator;
@@ -150,7 +154,7 @@ class UserControllerTest {
 
         mockMvc.perform(multipart("/api/user/import")
                     .file(multipartFile))
-                .andExpect(status().isAccepted());
+                .andExpect(status().isOk());
         
         verify(multipartFileValidator).validateMultipartFile(any());
     }

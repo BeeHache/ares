@@ -25,9 +25,6 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class FeedMapperTest {
 
-    @Mock
-    private FeedItemMapper feedItemMapper;
-
     @InjectMocks
     private FeedMapper feedMapper;
 
@@ -46,8 +43,6 @@ class FeedMapperTest {
         FeedItemDTO feedItemDTO = new FeedItemDTO();
         feedItemDTO.setDate(now.format(DateTimeFormatter.ISO_INSTANT));
 
-        when(feedItemMapper.toDTO(any(FeedItem.class))).thenReturn(feedItemDTO);
-
         FeedDTO dto = feedMapper.toDTO(feed);
 
         assertNotNull(dto);
@@ -55,8 +50,6 @@ class FeedMapperTest {
         assertEquals("Feed Description", dto.getDescription());
         assertEquals("http://example.com/feed", dto.getLink());
         assertTrue(dto.getIsPodcast());
-        assertEquals(now.format(DateTimeFormatter.ISO_INSTANT), dto.getPublishedDate());
-        assertEquals(1, dto.getItems().size());
     }
 
     @Test
@@ -76,8 +69,6 @@ class FeedMapperTest {
         FeedItem fi =  new FeedItem();
         fi.setDate(now);
 
-        when(feedItemMapper.toModel(any(FeedItemDTO.class))).thenReturn(fi);
-
         Feed feed = feedMapper.toModel(dto);
 
         assertNotNull(feed);
@@ -85,7 +76,5 @@ class FeedMapperTest {
         assertEquals("Feed Description", feed.getDescription());
         assertEquals("http://example.com/feed", feed.getLink().toString());
         assertTrue(feed.isPodcast());
-        assertEquals(dateStr, feed.getPubdate().format(DateTimeFormatter.ISO_INSTANT));
-        assertEquals(1, feed.getFeedItems().size());
     }
 }

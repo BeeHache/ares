@@ -117,7 +117,7 @@ public class LoginController {
                 .flatMap(refreshToken -> accountService.findAccountByUsername(refreshToken.getUsername()))
                 .flatMap(userService::getUserByAccount)
                 .ifPresent(user -> {
-                    cacheService.evictSingleCacheValue(CacheService.FEED_TITLES_CACHE, user.getId());
+                    cacheService.evictSingleCacheValue(CacheService.FEED_DTOS_CACHE, user.getId());
                 });
         } else {
             log.debug("Logout request without token");

@@ -26,6 +26,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
@@ -96,7 +97,8 @@ class FeedControllerTest {
         feed = new Feed();
         feed.setUrlFromString("https://tech.blog/rss");
         feed.setId(UUID.randomUUID());
-        feed.setDto(feedDTO);
+        feed.setTitle("Tech Blog");
+        feed.setLinkFromString("https://tech.blog");
         user.setFeeds(Set.of(feed));
 
     }
@@ -105,6 +107,7 @@ class FeedControllerTest {
     void getFeed_shouldReturnFeedList_whenUserIsAuthenticated() throws Exception {
 
         when(userService.getUserByAccount(any(Account.class))).thenReturn(optionalUser);
+        when(feedMapper.toDTO(any(Feed.class))).thenReturn(feedDTO);
 
         Authentication auth = new TestingAuthenticationToken(principal, null, "ROLE_USER");
 

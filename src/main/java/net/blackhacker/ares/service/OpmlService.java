@@ -5,7 +5,6 @@ import be.ceau.opml.entity.Opml;
 import be.ceau.opml.entity.Outline;
 import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.model.Feed;
-import net.blackhacker.ares.model.FeedImage;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -93,10 +92,7 @@ public class OpmlService {
 
                     feed.setUrl(new URI(xmlUrl).toURL());
                     if (imageUrl != null && !imageUrl.isEmpty()) {
-                        FeedImage feedImage = new FeedImage();
-                        feedImage.setImageUrl(new URI(imageUrl).toURL());
-                        feedImage.setFeed(feed);
-                        feed.setFeedImage(feedImage);
+                        feed.setImageUrl(new URI(imageUrl).toURL());
                     }
                     feeds.add(feed);
                 }

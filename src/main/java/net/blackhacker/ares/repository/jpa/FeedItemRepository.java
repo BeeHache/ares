@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.net.URL;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -18,4 +20,6 @@ public interface FeedItemRepository extends JpaRepository<FeedItem, UUID> {
             countQuery = "SELECT count(*) from feed_items where feed_id=:feedId",
             nativeQuery = true)
     Slice<FeedItem> findByFeedId(@Param("feedId")UUID feedId, Pageable pageable);
+
+    Optional<FeedItem> findByLink(URL link);
 }

@@ -1,7 +1,6 @@
 package net.blackhacker.ares.service;
 
 import net.blackhacker.ares.model.Feed;
-import net.blackhacker.ares.repository.crud.FeedImageDTORepository;
 import net.blackhacker.ares.repository.jpa.FeedRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,9 +23,6 @@ class FeedServiceTest {
 
     @Mock
     private FeedRepository feedRepository;
-
-    @Mock
-    private FeedImageDTORepository  feedImageDTORepository;
 
     @Mock
     private URLFetchService  urlFetchService;

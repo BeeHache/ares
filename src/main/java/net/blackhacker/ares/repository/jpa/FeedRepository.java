@@ -1,12 +1,9 @@
 package net.blackhacker.ares.repository.jpa;
 
-import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.projection.FeedItemProjection;
-import net.blackhacker.ares.projection.FeedProjection;
 import net.blackhacker.ares.projection.FeedSummaryProjection;
 import net.blackhacker.ares.projection.FeedTitleProjection;
 import net.blackhacker.ares.model.Feed;
-import net.blackhacker.ares.model.FeedImage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -38,16 +35,10 @@ public interface FeedRepository extends JpaRepository<Feed, UUID> {
                     "FROM subscriptions s INNER JOIN feeds f ON s.feed_id = f.id " +
                     "WHERE s.user_id = :userid";
 
-    String GET_FEED_IMAGE_BY_ID = "SELECT f.feedImage from Feed f where f.id=:feed_id";
-
     String SEARCH_ITEMS =
-            "SELECT " +
-                    "item ->> 'title' as title, " +
-                    "item ->> 'description' as description, " +
-                    "item ->> 'link' as link, " +
-                    "item ->> 'date' as date " +
-                    "FROM feeds f, jsonb_array_elements(f.dto -> 'items') item " +
-                    "WHERE to_tsvector('english', item) @@ plainto_tsquery('english', :query)";
+            "SELECT title, description, link, date " +
+            "FROM feed_items " +
+            "WHERE search_vector @@ plainto_tsquery('english', :query)";
 
     @Query(FIND_MODIFIED_BEFORE)
     Page<Feed> findModifiedBefore(@Param("dt") ZonedDateTime zonedDateTime, Pageable pageable);
@@ -59,9 +50,6 @@ public interface FeedRepository extends JpaRepository<Feed, UUID> {
 
     @Query(value = FIND_FEED_SUMMARIES_BY_USERID, nativeQuery = true)
     Collection<FeedSummaryProjection> findFeedSummariesByUserId(@Param("userid") Long userId);
-
-    @Query(value = GET_FEED_IMAGE_BY_ID)
-    Optional<FeedImage> getFeedImageById(@Param("feed_id") UUID feedId);
 
     @Query(value = SEARCH_ITEMS, nativeQuery = true)
     Collection<FeedItemProjection> searchItems(@Param("query") String query);

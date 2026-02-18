@@ -49,29 +49,35 @@ create table if not exists feeds (
     description text,
     url varchar(512) not null unique,
     link varchar(512),
+    image_url varchar(512),
     podcast varchar(1) not null default 'N',
     pubdate timestamp with time zone,
     last_modified timestamp with time zone,
-    dto JSONB,
+    search_vector tsvector, -- Added for full-text search
     CHECK (podcast IN ('Y', 'N'))
 );
 
+create index if not exists ix_feeds_podcast on feeds (podcast);
+create index if not exists ix_feeds_pudate on feeds (pubdate);
 create index if not exists ix_feeds_last_mod on feeds (last_modified);
-create index if not exists ix_feeds_dto_title on feeds ((dto ->>'title'));
-create index if not exists ix_feeds_dto_description on feeds ((dto ->> 'description'));
-create index if not exists ix_feeds_dto_podcast on feeds ((dto ->> 'podcast'));
-create index if not exists ix_feeds_dto_pudate on feeds ((dto -> 'items' -> 0 ->> 'date'));
-create index if not exists ix_feeds_dto on feeds USING GIN (dto);
+create index if not exists ix_feeds_search_vector on feeds USING GIN (search_vector);
 
 create table if not exists feed_items(
     id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
     feed_id UUID NOT NULL,
     title varchar(255),
     description text,
-    link varchar(512),
+    link varchar(512) NOT NULL UNIQUE,
     date timestamp with time zone,
+    last_modified timestamp with time zone,
+    search_vector tsvector, -- Added for full-text search
     FOREIGN KEY (feed_id) references feeds(id) ON DELETE CASCADE
 );
+
+create index if not exists ix_feed_items_link on feed_items (link);
+create index if not exists ix_feed_items_date on feed_items (date);
+create index if not exists ix_feed_items_search_vector on feed_items USING GIN (search_vector);
+
 
 create table if not exists enclosures(
     id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -111,8 +117,30 @@ END;
 $$ language 'plpgsql';
 
 DROP TRIGGER IF EXISTS update_feeds_last_modified ON feeds;
-
 CREATE TRIGGER update_feeds_last_modified
 BEFORE UPDATE ON feeds
 FOR EACH ROW
 EXECUTE PROCEDURE update_last_modified_column();
+
+DROP TRIGGER IF EXISTS update_feed_items_last_modified ON feed_items;
+CREATE TRIGGER update_feed_items_last_modified
+    BEFORE UPDATE ON feed_items
+    FOR EACH ROW
+EXECUTE PROCEDURE update_last_modified_column();
+
+CREATE OR REPLACE FUNCTION update_search_vector_column() RETURNS TRIGGER AS $$
+BEGIN
+    NEW.search_vector :=
+            setweight(to_tsvector('english', coalesce(NEW.title, '')), 'A') ||
+            setweight(to_tsvector('english', coalesce(NEW.description, '')), 'B');
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS tsvectorupdate_feeds ON feeds;
+CREATE TRIGGER tsvectorupdate_feeds BEFORE INSERT OR UPDATE
+    ON feeds FOR EACH ROW EXECUTE FUNCTION update_search_vector_column();
+
+DROP TRIGGER IF EXISTS tsvectorupdate_feed_items ON feed_items;
+CREATE TRIGGER tsvectorupdate_feed_items BEFORE INSERT OR UPDATE
+    ON feed_items FOR EACH ROW EXECUTE FUNCTION update_search_vector_column();

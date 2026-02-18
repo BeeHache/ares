@@ -131,7 +131,7 @@ public class UserService {
 
     public User saveUser(User user){
         User savedUser = userRepository.save(user);
-        cacheService.evictSingleCacheValue(CacheService.FEED_TITLES_CACHE, savedUser.getId());
+        cacheService.evictSingleCacheValue(CacheService.FEED_DTOS_CACHE, savedUser.getId());
         return savedUser;
     }
 
