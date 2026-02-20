@@ -1,6 +1,5 @@
 package net.blackhacker.ares.service;
 
-import jakarta.annotation.PostConstruct;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.EventQueues;
@@ -12,6 +11,8 @@ import net.blackhacker.ares.projection.FeedItemProjection;
 import net.blackhacker.ares.repository.jpa.FeedItemRepository;
 import net.blackhacker.ares.repository.jpa.FeedRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.*;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.core.JmsTemplate;
@@ -64,7 +65,7 @@ public class FeedService {
         this.queryLimit = queryLimit;
     }
 
-    @PostConstruct
+    @EventListener(ApplicationReadyEvent.class)
     public void startup() {
         updateFeeds();
     }

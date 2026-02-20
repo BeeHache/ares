@@ -7,10 +7,7 @@ import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.security.JwtAuthenticationFilter;
-import net.blackhacker.ares.service.FeedService;
-import net.blackhacker.ares.service.JWTService;
-import net.blackhacker.ares.service.OpmlService;
-import net.blackhacker.ares.service.UserService;
+import net.blackhacker.ares.service.*;
 import net.blackhacker.ares.validation.MultipartFileValidator;
 import net.blackhacker.ares.validation.URLValidator;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,6 +47,12 @@ class FeedControllerTest {
 
     @MockitoBean
     private FeedService feedService;
+
+    @MockitoBean
+    private FeedPageService feedPageService;
+
+    @MockitoBean
+    private RssService rssService;
 
     @MockitoBean
     private UserService userService;
@@ -104,7 +107,7 @@ class FeedControllerTest {
     }
 
     @Test
-    void getFeed_shouldReturnFeedList_whenUserIsAuthenticated() throws Exception {
+    void getFeeds_shouldReturnFeedList_whenUserIsAuthenticated() throws Exception {
 
         when(userService.getUserByAccount(any(Account.class))).thenReturn(optionalUser);
         when(feedMapper.toDTO(any(Feed.class))).thenReturn(feedDTO);
@@ -122,7 +125,7 @@ class FeedControllerTest {
     }
 
     @Test
-    void getFeed_shouldReturnEmptyList_whenUserHasNoFeeds() throws Exception {
+    void getFeeds_shouldReturnEmptyList_whenUserHasNoFeeds() throws Exception {
         User user = new User();
         user.setFeeds(Collections.emptySet());
 

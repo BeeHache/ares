@@ -43,6 +43,7 @@ class URLFetchServiceTest {
         when(requestHeadersSpec.headers(any())).thenReturn(requestHeadersSpec);
         when(requestHeadersSpec.cookies(any())).thenReturn(requestHeadersSpec);
         when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.onStatus(any(java.util.function.Predicate.class), any(RestClient.ResponseSpec.ErrorHandler.class))).thenReturn(responseSpec);
     }
 
     @Test
@@ -50,7 +51,6 @@ class URLFetchServiceTest {
         String url = "https://example.com";
         String expectedBody = "response body";
         ResponseEntity<String> expectedResponse = ResponseEntity.ok(expectedBody);
-
         when(responseSpec.toEntity(String.class)).thenReturn(expectedResponse);
 
         ResponseEntity<String> result = urlFetchService.fetchString(url);
@@ -81,7 +81,6 @@ class URLFetchServiceTest {
         String url = "https://example.com/image.png";
         byte[] expectedBody = new byte[]{1, 2, 3};
         ResponseEntity<byte[]> expectedResponse = ResponseEntity.ok(expectedBody);
-
         when(responseSpec.toEntity(byte[].class)).thenReturn(expectedResponse);
 
         ResponseEntity<byte[]> result = urlFetchService.fetchBytes(url);

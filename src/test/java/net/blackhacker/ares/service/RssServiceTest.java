@@ -2,6 +2,7 @@ package net.blackhacker.ares.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.blackhacker.ares.model.Feed;
+import net.blackhacker.ares.repository.jpa.FeedItemRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +29,9 @@ class RssServiceTest {
 
     @Mock
     private JmsTemplate jmsTemplate;
+
+    @Mock
+    private FeedItemRepository feedItemRepository;
 
     @InjectMocks
     private RssService rssService;

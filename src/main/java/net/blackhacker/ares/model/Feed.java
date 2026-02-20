@@ -78,6 +78,9 @@ public class Feed implements Serializable {
 
     public void setImageUrlFromString(String urlString) {
         try {
+            if (urlString==null) {
+                return;
+            }
             this.imageUrl = new URI(urlString).toURL();
         } catch (MalformedURLException | URISyntaxException e) {
             log.error("Could not create URL from {}", urlString,e);
