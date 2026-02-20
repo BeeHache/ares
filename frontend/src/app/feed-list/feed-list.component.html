@@ -1,5 +1,11 @@
 <div class="feed-list-container">
-  <h2>My Feeds</h2>
+  <div class="header-row">
+    <h2>My Feeds</h2>
+    <button class="view-toggle-btn" (click)="toggleViewMode()" [title]="viewMode === 'list' ? 'Switch to Grid View' : 'Switch to List View'">
+      <span *ngIf="viewMode === 'list'">⊞</span>
+      <span *ngIf="viewMode === 'grid'">☰</span>
+    </button>
+  </div>
 
   <div class="search-container">
     <input
@@ -14,7 +20,7 @@
     <a href="#" class="summary-link active">Feeds ({{ filteredFeeds.length }})</a>
   </div>
 
-  <ul class="feed-items">
+  <ul class="feed-items" [class.view-mode-grid]="viewMode === 'grid'">
     <li *ngFor="let feed of filteredFeeds" class="feed-item">
       <div class="feed-row" [class.selected]="feed.id === selectedFeedId">
         <a href="javascript:void(0)" class="feed-link" (click)="selectFeed(feed)">
@@ -23,7 +29,7 @@
             <div *ngIf="!feed.imageUrl" class="feed-icon-placeholder" [title]="feed.title">{{ feed.title?.charAt(0) || '?' }}</div>
             <span *ngIf="feed.isPodcast" class="podcast-indicator" title="Podcast">🎙</span>
           </div>
-          <div class="feed-info">
+          <div class="feed-info" *ngIf="viewMode === 'list'">
               <span class="feed-title">{{ feed.title || 'Untitled Feed' }}</span>
               <span class="feed-date" *ngIf="feed.pubdate">{{ feed.pubdate | date:'shortDate' }}</span>
           </div>

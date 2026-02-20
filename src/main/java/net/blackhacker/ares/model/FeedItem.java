@@ -29,12 +29,15 @@ public class FeedItem implements Serializable {
     private UUID id;
 
     @Column
+    private String guid;
+
+    @Column
     private String title;
 
     @Column
     private String description;
 
-    @Column(unique = true, nullable = false)
+    @Column
     @Convert(converter = URLConverter.class)
     private URL link;
 
@@ -53,13 +56,12 @@ public class FeedItem implements Serializable {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         FeedItem feedItem = (FeedItem) o;
-        return Objects.equals(getLink(), feedItem.getLink())
-                && Objects.equals(getTitle(), feedItem.getTitle())
-                && Objects.equals(getDate(), feedItem.getDate());
+        return Objects.equals(getTitle(), feedItem.getTitle()) &&
+                Objects.equals(getFeed().getId(), feedItem.getFeed().getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getDate(), getLink(), getTitle());
+        return Objects.hash(getTitle(), getFeed().getId());
     }
 }

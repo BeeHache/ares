@@ -64,16 +64,20 @@ create index if not exists ix_feeds_search_vector on feeds USING GIN (search_vec
 
 create table if not exists feed_items(
     id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    guid varchar(255),
     feed_id UUID NOT NULL,
-    title varchar(255),
+    title varchar(255) NOT NULL,
     description text,
-    link varchar(512) NOT NULL UNIQUE,
+    link varchar(512),
     date timestamp with time zone,
     last_modified timestamp with time zone,
     search_vector tsvector, -- Added for full-text search
-    FOREIGN KEY (feed_id) references feeds(id) ON DELETE CASCADE
+    FOREIGN KEY (feed_id) references feeds(id) ON DELETE CASCADE,
+    UNIQUE (feed_id, title)
 );
 
+create index if not exists ix_feed_items_guid on feed_items (guid);
+create index if not exists ix_feed_items_title on feed_items (title);
 create index if not exists ix_feed_items_link on feed_items (link);
 create index if not exists ix_feed_items_date on feed_items (date);
 create index if not exists ix_feed_items_search_vector on feed_items USING GIN (search_vector);
@@ -118,13 +122,13 @@ $$ language 'plpgsql';
 
 DROP TRIGGER IF EXISTS update_feeds_last_modified ON feeds;
 CREATE TRIGGER update_feeds_last_modified
-BEFORE UPDATE ON feeds
+BEFORE INSERT OR UPDATE ON feeds
 FOR EACH ROW
 EXECUTE PROCEDURE update_last_modified_column();
 
 DROP TRIGGER IF EXISTS update_feed_items_last_modified ON feed_items;
 CREATE TRIGGER update_feed_items_last_modified
-    BEFORE UPDATE ON feed_items
+    BEFORE INSERT OR UPDATE ON feed_items
     FOR EACH ROW
 EXECUTE PROCEDURE update_last_modified_column();
 

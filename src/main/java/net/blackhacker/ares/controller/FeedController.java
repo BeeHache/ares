@@ -28,19 +28,21 @@ public class FeedController {
     private final FeedService feedService;
     private final UserService userService;
     private final OpmlService opmlService;
+    private final RssService rssService;
     private final FeedPageService feedPageService;
     private final URLValidator urlValidator;
     private final FeedMapper feedMapper;
     private final MultipartFileValidator multipartFileValidator;
 
     public FeedController(FeedService feedService,  UserService userService, FeedPageService feedPageService,
-                          OpmlService opmlService, URLValidator urlValidator,
+                          OpmlService opmlService, RssService rssService, URLValidator urlValidator,
                           MultipartFileValidator multipartFileValidator,
                           FeedMapper feedMapper) {
         this.feedService = feedService;
         this.userService = userService;
         this.opmlService = opmlService;
         this.feedPageService = feedPageService;
+        this.rssService = rssService;
         this.urlValidator = urlValidator;
         this.feedMapper = feedMapper;
         this.multipartFileValidator = multipartFileValidator;

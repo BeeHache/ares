@@ -6,9 +6,30 @@
   overflow-y: auto;
 }
 
-h2 {
-  margin-top: 0;
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
+}
+
+h2 {
+  margin: 0;
+  color: #343a40;
+}
+
+.view-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #6c757d;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.view-toggle-btn:hover {
+  background-color: #e9ecef;
   color: #343a40;
 }
 
@@ -56,42 +77,97 @@ h2 {
   padding: 0;
   margin: 0;
   display: flex;
-  flex-wrap: wrap; /* Allow wrapping if many feeds */
-  gap: 2px;
+  flex-direction: column; /* Default List View */
+  gap: 10px;
 }
 
 .feed-item {
-  /* margin-bottom removed to rely on flex gap */
+  width: 100%;
+}
+
+/* Grid View Styles */
+.feed-items.view-mode-grid {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 2px; /* Minimal gap */
+  justify-content: flex-start; /* Align left */
+}
+
+.feed-items.view-mode-grid .feed-item {
+  width: calc(25% - 1.5px); /* 4 columns with small gap */
+  min-width: auto;
+}
+
+.feed-items.view-mode-grid .feed-row {
+  border: none;
+  background-color: transparent;
+  padding: 0; /* Remove padding to pack tight */
+  border-radius: 0; /* Square look */
+}
+
+.feed-items.view-mode-grid .feed-row:hover {
+  transform: none; /* Disable scale effect for tight grid */
+  filter: brightness(0.9); /* Dim slightly on hover instead */
+  box-shadow: none;
+}
+
+.feed-items.view-mode-grid .feed-row.selected .feed-icon {
+  box-shadow: inset 0 0 0 3px #007bff; /* Inner ring */
+}
+
+.feed-items.view-mode-grid .feed-row.selected {
+    border: none;
+    background-color: transparent;
+}
+
+.feed-items.view-mode-grid .feed-link {
+  justify-content: center;
+  padding: 0;
+  gap: 0;
+}
+
+.feed-items.view-mode-grid .feed-icon-wrapper {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+}
+
+.feed-items.view-mode-grid .feed-icon,
+.feed-items.view-mode-grid .feed-icon-placeholder {
+    border-radius: 0; /* Square icons */
 }
 
 .feed-row {
-  display: flex;
-  align-items: center;
   background-color: white;
   border-radius: 8px;
-  padding: 5px;
+  padding: 10px;
   transition: transform 0.2s;
+  border: 1px solid transparent;
 }
 
 .feed-row:hover {
-  transform: scale(1.05);
+  transform: scale(1.02);
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .feed-row.selected {
-  border: 2px solid #007bff;
+  border-color: #007bff;
+  background-color: #f0f7ff;
 }
 
 .feed-link {
-  display: block;
+  display: flex;
+  align-items: center;
   text-decoration: none;
   color: #343a40;
+  gap: 15px;
 }
 
 .feed-icon-wrapper {
   position: relative;
-  width: 76px;
+  width: 76px; /* Increased size for list view */
   height: 76px;
+  flex-shrink: 0;
 }
 
 .feed-icon {
@@ -111,29 +187,49 @@ h2 {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 24px;
+  font-size: 32px; /* Larger font */
   font-weight: bold;
   text-transform: uppercase;
 }
 
+.feed-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.feed-title {
+  font-weight: bold;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feed-date {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-top: 4px;
+}
+
 .podcast-indicator {
   position: absolute;
-  bottom: -5px;
-  right: -5px;
-  background-color: #6f42c1; /* Purple for podcast */
+  bottom: 2px;
+  right: 2px;
+  background-color: #6f42c1;
   color: white;
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 14px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  border: 2px solid white;
+  font-size: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  border: 1px solid white;
 }
 
-.no-results {
+.no-results, .no-feeds {
     text-align: center;
     color: #6c757d;
     margin-top: 20px;

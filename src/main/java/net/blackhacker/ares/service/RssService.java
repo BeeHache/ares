@@ -38,11 +38,11 @@ public class RssService {
     }
 
 
-    public Feed feedFromUrl(@NonNull String urlString) {
-        return feedFromUrl( new Feed(), urlString);
+    public Feed buildFeedFromUrl(@NonNull String urlString) {
+        return buildFeedFromUrl( new Feed(), urlString);
     }
 
-    public Feed feedFromUrl(@NonNull Feed feed, @NonNull String urlString) {
+    public Feed buildFeedFromUrl(@NonNull Feed feed, @NonNull String urlString) {
         try {
             feed.setUrl(new URI(urlString).toURL());
             if (updateFeed(feed)) {
@@ -90,8 +90,20 @@ public class RssService {
             final FeedItem feedItem = new FeedItem();
             feedItem.setFeed(feed);
 
+            if (rssItem.getGuid().isPresent()) {
+                feedItem.setGuid(rssItem.getGuid().get());
+                if (feedItemRepository.findByGuid(feedItem.getGuid()).isPresent()) {
+                    //The item is already in the DB
+                    return null;
+                }
+            }
+
             if (rssItem.getTitle().isPresent()) {
                 feedItem.setTitle(rssItem.getTitle().get());
+                if (feedItem.getGuid() == null &&  feedItemRepository.findByFeedAndTitle(feedItem.getId(), rssItem.getTitle().get()).isPresent()) {
+                    //The item is already in the DB
+                    return null;
+                }
             }
             if (rssItem.getDescription().isPresent()) {
                 feedItem.setDescription(rssItem.getDescription().get());
@@ -103,11 +115,6 @@ public class RssService {
                 } catch(Exception e) {
                     log.warn("Could not resolve item link: {}", rssItem.getLink().orElse("null"));
                 }
-            }
-            
-            // If link is still null, we can't save this item. Return null and filter later.
-            if (feedItem.getLink() == null) {
-                return null;
             }
 
             if(rssItem.getPubDate().isPresent()){
@@ -142,10 +149,8 @@ public class RssService {
             }
 
             return feedItem;
-        }).filter(fi -> {
-            return Objects.nonNull(fi) &&
-                    feedItemRepository.findByLink(fi.getLink()).isEmpty(); // the link doesnot
-        }).toList();
+        }).filter(Objects::nonNull) //filter not null items
+                .toList();
 
         if (!feedItems.isEmpty()) {
             //Feed items are sorted by date newest to oldest.

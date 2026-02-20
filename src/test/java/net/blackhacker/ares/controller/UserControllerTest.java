@@ -143,7 +143,7 @@ class UserControllerTest {
 
     @Test
     @WithMockUser(username = "test@example.com")
-    void importOpmlFromUrl_shouldReturnAccepted_whenFileIsValid() throws Exception {
+    void subscribeUserToFeedsFromUrl_shouldReturnAccepted_whenFileIsValid() throws Exception {
         MockMultipartFile multipartFile = new MockMultipartFile(
                 "file",
                 "feeds.opml",

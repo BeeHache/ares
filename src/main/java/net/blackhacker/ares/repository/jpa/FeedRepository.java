@@ -5,6 +5,7 @@ import net.blackhacker.ares.projection.FeedSummaryProjection;
 import net.blackhacker.ares.projection.FeedTitleProjection;
 import net.blackhacker.ares.model.Feed;
 import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,7 +21,7 @@ import java.util.UUID;
 @Repository
 public interface FeedRepository extends JpaRepository<Feed, UUID> {
 
-    String FIND_MODIFIED_BEFORE = "SELECT f FROM Feed f WHERE f.lastModified < :dt OR f.lastModified IS NULL";
+    String FIND_MODIFIED_BEFORE = "SELECT f.id FROM Feed f WHERE f.lastModified < :dt OR f.lastModified IS NULL";
     String  FIND_FEED_TITLES_BY_USERID =
             "SELECT f.id, f.title, f.podcast, " +
                     "(select img.image_url from feed_image img where img.feed_id=f.id) as imageUrl, " +
@@ -40,8 +41,9 @@ public interface FeedRepository extends JpaRepository<Feed, UUID> {
             "FROM feed_items " +
             "WHERE search_vector @@ plainto_tsquery('english', :query)";
 
+    @EntityGraph(attributePaths = {"feedItems"})
     @Query(FIND_MODIFIED_BEFORE)
-    Page<Feed> findModifiedBefore(@Param("dt") ZonedDateTime zonedDateTime, Pageable pageable);
+    Page<UUID> findFeedIdsModifiedBefore(@Param("dt") ZonedDateTime zonedDateTime, Pageable pageable);
 
     Optional<Feed> findByUrl(@Param("url") URL url);
 

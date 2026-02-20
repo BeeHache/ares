@@ -1,16 +1,14 @@
 package net.blackhacker.ares.service;
 
+import jakarta.annotation.PostConstruct;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.EventQueues;
 import net.blackhacker.ares.dto.*;
 import net.blackhacker.ares.mapper.FeedItemMapper;
-import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.FeedItem;
 import net.blackhacker.ares.projection.FeedItemProjection;
-import net.blackhacker.ares.projection.FeedSummaryProjection;
-import net.blackhacker.ares.projection.FeedTitleProjection;
 import net.blackhacker.ares.repository.jpa.FeedItemRepository;
 import net.blackhacker.ares.repository.jpa.FeedRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,7 +49,6 @@ public class FeedService {
             JmsTemplate jmsTemplate,
             TransactionTemplate transactionTemplate,
             CacheService cacheService,
-            FeedMapper feedMapper,
             FeedItemMapper feedItemMapper,
             @Value("${feed.interval_ms}") Long feedIntervalMs,
             @Value("${feed.query_limit}") Integer queryLimit) {
@@ -67,6 +64,11 @@ public class FeedService {
         this.queryLimit = queryLimit;
     }
 
+    @PostConstruct
+    public void startup() {
+        updateFeeds();
+    }
+
     public Feed addFeed(String link) {
         log.info("Adding feed: {}", link);
         try {
@@ -77,7 +79,7 @@ public class FeedService {
                 return oFeed.get();
             }
             
-            Feed feed = rssService.feedFromUrl(link);
+            Feed feed = rssService.buildFeedFromUrl(link);
             Feed savedFeed = feedRepository.save(feed);
             log.info("Feed added successfully: {}", link);
             return savedFeed;
@@ -95,31 +97,14 @@ public class FeedService {
         return feedRepository.findById(id);
     }
 
-    public Collection<FeedTitleProjection> getFeedTitles(@NonNull Long userId) {
-        return feedRepository.findFeedTitlesByUserId(userId).stream()
-                .filter(dto -> dto.getTitle() != null)
-                .toList();
-    }
-
-    public Collection<FeedSummaryProjection> getFeedSummaries(@NonNull Long userId) {
-        return feedRepository.findFeedSummariesByUserId(userId).stream()
-                .filter(dto -> dto.getTitle() != null)
-                .toList();
-    }
-
     public Collection<FeedItemDTO> getFeedItems(@NonNull UUID feedId, int pageNumber) {
         Pageable pageable = PageRequest.of(pageNumber, 50, Sort.by("date").descending());
         Slice<FeedItem> page = feedItemRepository.findByFeedId(feedId, pageable);
         return page.stream().map(feedItemMapper::toDTO).toList();
     }
 
-    public Optional<Feed> getFeedByUrl(URL url){
-        return feedRepository.findByUrl(url);
-    }
-
     public Feed saveFeed(Feed feed){
         Feed savedFeed =  feedRepository.save(feed);
-        sendUpdateFeedMessage(feed.getId());
 
         //evict each cached page
         Optional<Integer> feedPageCount = feedPageService.getTotalPages(feed.getId());
@@ -148,7 +133,11 @@ public class FeedService {
         }
 
         //save the new feeds to the DB
-        Stream<Feed> savedFeeds = newFeeds.stream().map(this::saveFeed);
+        Stream<Feed> savedFeeds = newFeeds.stream().map(this::saveFeed)
+                .map(feed -> {
+                    rssService.updateFeed(feed);
+                    return feed;
+                });
 
         //combind and return
         return Stream.concat(existingFeeds.stream(), savedFeeds).toList();
@@ -164,19 +153,17 @@ public class FeedService {
 
         for (int page=0; true; page++) {
             Pageable pageable = PageRequest.of(page, queryLimit, Sort.by("lastModified"));
-            Page<Feed> feeds  = feedRepository.findModifiedBefore(fiveMinutesAgo, pageable);
-            if (feeds.isEmpty()){
+            Page<UUID> feedIds  = feedRepository.findFeedIdsModifiedBefore(fiveMinutesAgo, pageable);
+            if (feedIds.isEmpty()){
                 log.debug("No feeds to update");
                 break;
             }
 
-            log.debug("Found {} feeds to update", feeds.getNumberOfElements());
+            log.debug("Found {} feeds to update", feedIds.getNumberOfElements());
 
-            feeds.forEach(feed ->{
-                sendUpdateFeedMessage(feed.getId());
-            });
+            feedIds.forEach(this::sendUpdateFeedMessage);
 
-            if (feeds.getTotalElements() < queryLimit){
+            if (feedIds.getTotalElements() < queryLimit){
                 break;
             }
 

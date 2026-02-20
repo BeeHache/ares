@@ -1,5 +1,8 @@
 package net.blackhacker.ares.service;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -8,6 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class URLFetchService {
 
@@ -41,6 +45,11 @@ public class URLFetchService {
                     c.forEach(httpCookies::add);
                 })
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, (request, response) ->{
+                    if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
+                        log.error(String.format("HTTP 404 Not Found: %s", urlString));
+                    }
+                })
                 .toEntity(String.class);
     }
 
@@ -68,6 +77,11 @@ public class URLFetchService {
                     c.forEach(httpCookies::add);
                 })
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, (request, response) ->{
+                    if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
+                        log.error(String.format("HTTP 404 Not Found: %s", urlString));
+                    }
+                })
                 .toEntity(byte[].class);
 
     }

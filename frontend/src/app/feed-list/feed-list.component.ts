@@ -16,6 +16,7 @@ export class FeedListComponent implements OnInit {
   totalUnread = 0;
   selectedFeedId: string | null = null;
   searchQuery = '';
+  viewMode: 'list' | 'grid' = 'list';
 
   constructor(
     private feedService: FeedService,
@@ -23,12 +24,23 @@ export class FeedListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Load user's preferred view mode from localStorage
+    const savedViewMode = localStorage.getItem('feedListViewMode') as 'list' | 'grid';
+    if (savedViewMode) {
+      this.viewMode = savedViewMode;
+    }
+
     this.loadFeeds();
 
     this.feedService.selectedFeed$.subscribe(feed => {
         this.selectedFeedId = feed ? feed.id : null;
         this.cdr.detectChanges();
     });
+  }
+
+  toggleViewMode(): void {
+    this.viewMode = this.viewMode === 'list' ? 'grid' : 'list';
+    localStorage.setItem('feedListViewMode', this.viewMode);
   }
 
   loadFeeds() {
@@ -53,7 +65,7 @@ export class FeedListComponent implements OnInit {
     } else {
       const lowerCaseQuery = this.searchQuery.toLowerCase();
       this.filteredFeeds = this.feeds.filter(feed =>
-        feed.title.toLowerCase().includes(lowerCaseQuery)
+        feed.title?.toLowerCase().includes(lowerCaseQuery)
       );
     }
   }

@@ -1,16 +1,12 @@
 package net.blackhacker.ares.model;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.utils.BooleanConverter;
-import net.blackhacker.ares.utils.FeedDtoType;
 import net.blackhacker.ares.utils.URLConverter;
-import org.hibernate.annotations.Type;
 
 import java.io.Serializable;
 import java.net.MalformedURLException;
@@ -62,35 +58,7 @@ public class Feed implements Serializable {
     private ZonedDateTime lastModified = ZonedDateTime.now();
 
     @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL)
-    private Set<FeedItem> feedItems = new TreeSet<>(new Comparator<FeedItem>() {
-        @Override
-        public int compare(@NonNull FeedItem o1, @NonNull FeedItem o2) {
-            int dateComparison;
-            if (o1.getDate() == null) {
-                dateComparison = o2.getDate() == null ? 0 : -1;
-            } else if (o2.getDate() == null) {
-                dateComparison = 1;
-            } else {
-                dateComparison = -o1.getDate().compareTo(o2.getDate());
-            }
-            
-            if (dateComparison != 0) {
-                return dateComparison;
-            }
-            
-            // Break ties with Link (which should be unique)
-            if (o1.getLink() != null && o2.getLink() != null) {
-                return o1.getLink().toString().compareTo(o2.getLink().toString());
-            }
-            
-            // Fallback to Title if Link is missing (rare)
-            if (o1.getTitle() != null && o2.getTitle() != null) {
-                return o1.getTitle().compareTo(o2.getTitle());
-            }
-            
-            return 0; // Truly equal
-        }
-    });
+    private Set<FeedItem> feedItems = new HashSet<>();
 
     public void setUrlFromString(String urlString) {
         try {

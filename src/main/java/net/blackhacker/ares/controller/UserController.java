@@ -14,9 +14,8 @@ import net.blackhacker.ares.validation.MultipartFileValidator;
 import net.blackhacker.ares.validation.URLValidator;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -59,22 +58,24 @@ public class UserController {
     }
 
     @PostMapping("/import")
+    @Async
     void importOpmlFromFile(@RequestParam("file") MultipartFile file, @AuthenticationPrincipal Account account) {
         multipartFileValidator.validateMultipartFile(file);
         final User user = userService.getUserByAccount(account).get();
         Collection<Feed> feeds = feedService.saveFeeds(opmlService.importFile(file));
-        importOpml(user,feeds);
+        subscribeUserToFeeds(user,feeds);
     }
 
     @PutMapping("/import")
+    @Async
     void importOpmlFromUrl(@RequestParam("url") String url, @AuthenticationPrincipal Account account) {
         urlValidator.validateURL(url);
         final User user = userService.getUserByAccount(account).get();
         Collection<Feed> feeds = opmlService.importFeed(url);
-        importOpml(user,feeds);
+        subscribeUserToFeeds(user,feeds);
     }
 
-    private void importOpml (final User user, Collection<Feed> feeds) {
+    private void subscribeUserToFeeds(final User user, Collection<Feed> feeds) {
         feeds.forEach(feed -> {
             userService.subscribeUserToFeed(user, feed);
         });

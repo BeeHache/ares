@@ -22,4 +22,9 @@ public interface FeedItemRepository extends JpaRepository<FeedItem, UUID> {
     Slice<FeedItem> findByFeedId(@Param("feedId")UUID feedId, Pageable pageable);
 
     Optional<FeedItem> findByLink(URL link);
+
+    Optional<FeedItem> findByGuid(String guid);
+
+    @Query(value="SELECT * from feed_items f where f.feed_id=:feed_id and f.title=:title", nativeQuery = true)
+    Optional<FeedItem> findByFeedAndTitle(@Param("feed_id")UUID feedId, @Param("title")String title);
 }

@@ -59,7 +59,7 @@ class FeedServiceTest {
         assertNotNull(result);
         assertEquals(existingFeed, result);
         verify(feedRepository, times(1)).findByUrl(new URI(link).toURL());
-        verify(rssService, never()).feedFromUrl(anyString());
+        verify(rssService, never()).buildFeedFromUrl(anyString());
         verify(feedRepository, never()).save(any(Feed.class));
     }
 
@@ -71,7 +71,7 @@ class FeedServiceTest {
         newFeed.setUrlFromString(link);
 
         when(feedRepository.findByUrl(new URI(link).toURL())).thenReturn(Optional.empty());
-        when(rssService.feedFromUrl(link)).thenReturn(newFeed);
+        when(rssService.buildFeedFromUrl(link)).thenReturn(newFeed);
         when(feedRepository.save(newFeed)).thenReturn(newFeed);
 
         // Act
@@ -81,7 +81,7 @@ class FeedServiceTest {
         assertNotNull(result);
         assertEquals(newFeed, result);
         verify(feedRepository, times(1)).findByUrl(new URI(link).toURL());
-        verify(rssService, times(1)).feedFromUrl(link);
+        verify(rssService, times(1)).buildFeedFromUrl(link);
         verify(feedRepository, times(1)).save(newFeed);
     }
 }

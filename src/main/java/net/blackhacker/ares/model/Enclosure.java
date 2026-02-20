@@ -24,7 +24,7 @@ public class Enclosure {
     @Convert(converter = URLConverter.class)
     private URL url;
 
-    @Column(nullable = false)
+    @Column
     private Long length;
 
     @Column(nullable = false)

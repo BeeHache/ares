@@ -1,7 +1,6 @@
 package net.blackhacker.ares.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.model.Feed;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,8 +11,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jms.core.JmsTemplate;
 
-import java.net.URI;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -85,23 +82,23 @@ class RssServiceTest {
     }
 
     @Test
-    void feedFromUrl_shouldReturnFeed_whenRssIsValid() {
+    void feedFromUrl_shouldReturnBuildFeed_whenRssIsValid() {
 
         when(urlFetchService
                 .fetchBytes(eq("http://example.com/rss"), any()))
                 .thenReturn(ResponseEntity.ok(invalidRssString.getBytes(StandardCharsets.UTF_8)));
 
-        Feed result = rssService.feedFromUrl("http://example.com/rss");
+        Feed result = rssService.buildFeedFromUrl("http://example.com/rss");
         assertNotNull(result);
     }
 
     @Test
-    void feedFromUrl_shouldReturnNull_whenRssIsEmpty() {
+    void buildFeedFromUrl_shouldReturnNull_whenRssIsEmpty() {
         when(urlFetchService
                 .fetchBytes(anyString(), any()))
                 .thenReturn(ResponseEntity.ok(emptyRssString.getBytes(StandardCharsets.UTF_8)));
 
-        Feed result = rssService.feedFromUrl("http://example.com/rss");
+        Feed result = rssService.buildFeedFromUrl("http://example.com/rss");
 
         assertNull(result);
     }
