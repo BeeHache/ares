@@ -2,7 +2,35 @@
   <div class="profile-header">
     <h2>User Profile</h2>
     <p><strong>Email:</strong> {{ user.email }}</p>
-    <!-- Add other profile details here as needed -->
+
+    <div class="actions">
+      <h3>Manage Feeds</h3>
+      <button class="btn" (click)="addFeed()">Add Feed</button>
+      <button class="btn" (click)="openImportModal()">Import OPML</button>
+    </div>
+  </div>
+
+  <div class="feed-list-section">
+      <h3>Subscribed Feeds ({{ feedSummaries.length }})</h3>
+      <div class="feed-grid">
+          <div *ngFor="let feed of feedSummaries" class="feed-card">
+              <div class="feed-icon-wrapper">
+                  <img *ngIf="feed.imageUrl" [src]="feed.imageUrl" class="feed-icon" alt="" onerror="this.style.display='none'">
+                  <div *ngIf="!feed.imageUrl" class="feed-icon-placeholder">{{ feed.title.charAt(0) }}</div>
+                  <span *ngIf="feed.isPodcast" class="podcast-indicator" title="Podcast">🎙</span>
+              </div>
+              <div class="feed-info">
+                  <h4><a [href]="feed.link" target="_blank">{{ feed.title }}</a></h4>
+                  <p class="feed-desc" *ngIf="feed.description" [innerHTML]="feed.description"></p>
+              </div>
+              <div class="feed-actions">
+                  <button class="delete-btn" (click)="deleteFeed(feed.id, feed.title)" title="Unsubscribe">×</button>
+              </div>
+          </div>
+      </div>
+      <div *ngIf="feedSummaries.length === 0" class="no-feeds">
+          <p>You haven't subscribed to any feeds yet.</p>
+      </div>
   </div>
 </div>
 
@@ -13,3 +41,9 @@
 <div *ngIf="error" class="error">
   <p>{{ error }}</p>
 </div>
+
+<app-opml-import
+  *ngIf="showImportModal"
+  (close)="closeImportModal()"
+  (importSuccess)="onImportSuccess()">
+</app-opml-import>

@@ -3,38 +3,80 @@
 
 <div class="feed-items-container" *ngIf="feed; else noFeed">
   <div class="feed-header">
-    <h3>{{ feed.title }}</h3>
+    <div class="header-top">
+        <h3>{{ feed.title }}</h3>
+        <button class="unsubscribe-btn" (click)="deleteFeed()">Unsubscribe</button>
+    </div>
     <p class="feed-description" *ngIf="feed.description" [innerHTML]="feed.description"></p>
     <a [href]="feed.link" target="_blank" class="feed-source-link">Visit Website</a>
+
+    <div class="search-container">
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search articles..."
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="filterItems()">
+    </div>
   </div>
 
   <div class="items-list">
-    <div *ngFor="let item of items" class="item-card">
+    <div *ngFor="let item of filteredItems" class="item-card">
       <h4><a [href]="item.link" target="_blank">{{ item.title }}</a></h4>
       <div class="item-meta">
         <span *ngIf="item.date">{{ item.date | date:'medium' }}</span>
       </div>
 
-      <!-- Enclosures (Audio Player) -->
-      <div *ngIf="item.enclosures && item.enclosures.length > 0" class="enclosures">
-        <div *ngFor="let enclosure of item.enclosures">
-          <div *ngIf="enclosure.type?.startsWith('audio/')" class="audio-player">
-            <audio controls preload="none">
-              <source [src]="enclosure.url" [type]="enclosure.type">
-              Your browser does not support the audio element.
-            </audio>
-          </div>
-          <div *ngIf="!enclosure.type?.startsWith('audio/')" class="file-download">
-             <a [href]="enclosure.url" target="_blank">Download {{ enclosure.type }}</a>
-          </div>
+      <!-- Enclosures (Audio/Video Player) - Lazy Loaded -->
+      <div *ngIf="item.enclosures && item.enclosures.length > 0"
+           class="enclosures-wrapper"
+           appLazyLoad
+           (visible)="onItemVisible(item)"
+           style="min-height: 50px;"> <!-- Placeholder height -->
+
+        <div *ngIf="isItemVisible(item)" class="enclosures">
+            <div *ngFor="let enclosure of item.enclosures">
+
+              <!-- Audio Player -->
+              <div *ngIf="enclosure.type?.startsWith('audio/')" class="audio-player">
+                <audio controls preload="metadata">
+                  <source [src]="enclosure.url" [type]="enclosure.type">
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
+
+              <!-- Video Player -->
+              <div *ngIf="enclosure.type?.startsWith('video/')" class="video-player">
+                <video controls preload="metadata" style="max-width: 100%; height: auto;">
+                  <source [src]="enclosure.url" [type]="enclosure.type">
+                  Your browser does not support the video element.
+                </video>
+              </div>
+
+              <!-- Download Link (for other types) -->
+              <div *ngIf="!enclosure.type?.startsWith('audio/') && !enclosure.type?.startsWith('video/')" class="file-download">
+                 <a [href]="enclosure.url" target="_blank">Download {{ enclosure.type }}</a>
+              </div>
+
+            </div>
         </div>
       </div>
 
       <p class="item-description" *ngIf="item.description" [innerHTML]="item.description"></p>
     </div>
 
-    <div *ngIf="items.length === 0" class="no-items">
+    <div *ngIf="filteredItems.length === 0 && items.length > 0" class="no-results">
+        <p>No articles match your search.</p>
+    </div>
+
+    <div *ngIf="items.length === 0 && !loading" class="no-items">
         <p>No items found in this feed.</p>
+    </div>
+
+    <div class="load-more-container" *ngIf="hasMore && !searchQuery && items.length > 0">
+        <button class="btn load-more-btn" (click)="loadMore()" [disabled]="loadingMore">
+            {{ loadingMore ? 'Loading...' : 'Load More' }}
+        </button>
     </div>
   </div>
 </div>

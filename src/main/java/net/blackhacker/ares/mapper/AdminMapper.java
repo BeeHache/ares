@@ -6,8 +6,6 @@ import net.blackhacker.ares.model.Admins;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.stream.Collectors;
-
 @Component
 public class AdminMapper implements ModelDTOMapper<Admins, AdminDTO>{
 

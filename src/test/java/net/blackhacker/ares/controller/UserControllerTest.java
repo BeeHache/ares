@@ -1,5 +1,7 @@
 package net.blackhacker.ares.controller;
 
+import net.blackhacker.ares.TestConfig;
+import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.security.CustomAccessDeniedHandler;
 import net.blackhacker.ares.security.JwtAuthenticationEntryPoint;
@@ -19,8 +21,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -40,6 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import({TestConfig.class, GlobalExceptionHandler.class})
 class UserControllerTest {
 
     @Autowired
@@ -65,6 +68,9 @@ class UserControllerTest {
     private UserMapper userMapper;
 
     @MockitoBean
+    private FeedMapper feedMapper;
+
+    @MockitoBean
     private UserDTOValidator userDTOValidator;
 
     @MockitoBean
@@ -84,9 +90,6 @@ class UserControllerTest {
 
     @MockitoBean
     private TransactionTemplate transactionTemplate;
-
-    @MockitoBean
-    private JmsTemplate jmsTemplate;
 
     private Account account;
     private User user;
@@ -136,7 +139,7 @@ class UserControllerTest {
 
     @Test
     @WithMockUser(username = "test@example.com")
-    void importOpmlFromUrl_shouldReturnAccepted_whenFileIsValid() throws Exception {
+    void subscribeUserToFeedsFromUrl_shouldReturnAccepted_whenFileIsValid() throws Exception {
         MockMultipartFile multipartFile = new MockMultipartFile(
                 "file",
                 "feeds.opml",
@@ -147,7 +150,7 @@ class UserControllerTest {
 
         mockMvc.perform(multipart("/api/user/import")
                     .file(multipartFile))
-                .andExpect(status().isAccepted());
+                .andExpect(status().isOk());
         
         verify(multipartFileValidator).validateMultipartFile(any());
     }

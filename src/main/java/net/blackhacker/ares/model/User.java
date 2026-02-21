@@ -27,7 +27,7 @@ public class User  {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "feed_id")
     )
-    private Collection<Feed> feeds = new HashSet<>();
+    private Set<Feed> feeds = new HashSet<>();
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "account_id")

@@ -75,14 +75,21 @@ public class OpmlService {
         Collection<Feed> feeds = new ArrayList<>();
         for (Outline outlineItem : outlines){
             try {
-                String xmlUrl = outlineItem.getAttribute("xmlUrl");
                 String title = outlineItem.getAttribute("text");
+                String author = outlineItem.getAttribute("author");
+                String description = outlineItem.getAttribute("description");
+                String category = outlineItem.getAttribute("category");
+                String link = outlineItem.getAttribute("link");
+                String xmlUrl = outlineItem.getAttribute("xmlUrl");
                 String imageUrl = outlineItem.getAttribute("imageUrl");
                 if (xmlUrl != null && !xmlUrl.isEmpty()) {
                     Feed feed = new Feed();
-                    if (title != null && !title.isEmpty()) {
-                        feed.setTitle(title);
+                    feed.setTitle(title);
+                    feed.setDescription(description);
+                    if (link != null && !link.isEmpty()) {
+                        feed.setLink(new URI(link).toURL());
                     }
+
                     feed.setUrl(new URI(xmlUrl).toURL());
                     if (imageUrl != null && !imageUrl.isEmpty()) {
                         feed.setImageUrl(new URI(imageUrl).toURL());

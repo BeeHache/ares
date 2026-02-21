@@ -9,30 +9,26 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest(classes = UserMapper.class)
 @ExtendWith(MockitoExtension.class)
 class UserMapperTest {
 
 
-    @MockitoBean
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserMapper userMapper;
 
-    private List<Feed> feeds;
+    private Set<Feed> feeds;
     private Account account;
     private User user;
     private Feed feed1;
@@ -55,7 +51,7 @@ class UserMapperTest {
         feed2 = new Feed();
         feed2.setId(UUID.randomUUID());
 
-        feeds = new ArrayList<>();
+        feeds = new HashSet<>();
         feeds.add(feed1);
         feeds.add(feed2);
         user.setFeeds(feeds);

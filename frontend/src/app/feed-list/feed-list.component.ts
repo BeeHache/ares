@@ -1,87 +1,76 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FeedService, FeedTitle, Feed } from '../feed.service';
-import { OpmlImportComponent } from '../opml-import/opml-import.component';
+import { FormsModule } from '@angular/forms';
+import { FeedService, FeedTitle } from '../feed.service';
 
 @Component({
   selector: 'app-feed-list',
   standalone: true,
-  imports: [CommonModule, OpmlImportComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './feed-list.component.html',
   styleUrl: './feed-list.component.css'
 })
 export class FeedListComponent implements OnInit {
   feeds: FeedTitle[] = [];
-  totalUnread = 0; // Not yet supported by backend
-  showImportModal = false;
+  filteredFeeds: FeedTitle[] = [];
+  totalUnread = 0;
+  selectedFeedId: string | null = null;
+  searchQuery = '';
+  viewMode: 'list' | 'grid' = 'list';
 
   constructor(
     private feedService: FeedService,
     private cdr: ChangeDetectorRef
-  ) {
-    console.log('FeedListComponent: Constructor called'); // Debug log
-  }
+  ) {}
 
   ngOnInit(): void {
-    console.log('FeedListComponent: ngOnInit called'); // Debug log
+    // Load user's preferred view mode from localStorage
+    const savedViewMode = localStorage.getItem('feedListViewMode') as 'list' | 'grid';
+    if (savedViewMode) {
+      this.viewMode = savedViewMode;
+    }
+
     this.loadFeeds();
+
+    this.feedService.selectedFeed$.subscribe(feed => {
+        this.selectedFeedId = feed ? feed.id : null;
+        this.cdr.detectChanges();
+    });
+  }
+
+  toggleViewMode(): void {
+    this.viewMode = this.viewMode === 'list' ? 'grid' : 'list';
+    localStorage.setItem('feedListViewMode', this.viewMode);
   }
 
   loadFeeds() {
     this.feedService.getFeedTitles().subscribe({
       next: (data) => {
-        console.log('Feeds received from backend:', data); // Debug log
-        this.feeds = data;
-        this.cdr.detectChanges(); // Force update
+        // Sort by pubdate descending (newest first)
+        this.feeds = data.sort((a, b) => {
+            const dateA = a.pubdate ? new Date(a.pubdate).getTime() : 0;
+            const dateB = b.pubdate ? new Date(b.pubdate).getTime() : 0;
+            return dateB - dateA;
+        });
+        this.filterFeeds();
+        this.cdr.detectChanges();
       },
       error: (err) => console.error('Error loading feeds', err)
     });
   }
 
+  filterFeeds() {
+    if (!this.searchQuery) {
+      this.filteredFeeds = this.feeds;
+    } else {
+      const lowerCaseQuery = this.searchQuery.toLowerCase();
+      this.filteredFeeds = this.feeds.filter(feed =>
+        feed.title?.toLowerCase().includes(lowerCaseQuery)
+      );
+    }
+  }
+
   selectFeed(feed: FeedTitle) {
-      console.log('FeedListComponent: selectFeed called with:', feed); // Debug log
       this.feedService.selectFeed(feed);
-  }
-
-  addFeed() {
-    const link = prompt('Enter RSS Feed URL:');
-    if (link) {
-      this.feedService.addFeed(link).subscribe({
-        next: (newFeed) => {
-          console.log('Feed added:', newFeed); // Debug log
-          this.feeds.push(newFeed);
-          this.cdr.detectChanges(); // Force update
-        },
-        error: (err) => alert('Failed to add feed: ' + (err.error?.message || err.message))
-      });
-    }
-  }
-
-  deleteFeed(id: string | undefined) {
-    if (id === undefined) {
-        console.error('Cannot delete feed without ID');
-        return;
-    }
-    if (confirm('Are you sure you want to unsubscribe?')) {
-      this.feedService.deleteFeed(id).subscribe({
-        next: () => {
-          this.feeds = this.feeds.filter(f => f.id !== id);
-          this.cdr.detectChanges(); // Force update
-        },
-        error: (err) => alert('Failed to delete feed')
-      });
-    }
-  }
-
-  openImportModal() {
-      this.showImportModal = true;
-  }
-
-  closeImportModal() {
-      this.showImportModal = false;
-  }
-
-  onImportSuccess() {
-      this.loadFeeds(); // Refresh list
   }
 }

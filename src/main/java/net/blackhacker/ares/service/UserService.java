@@ -3,11 +3,13 @@ package net.blackhacker.ares.service;
 import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.EmailConfirmationCode;
+import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
-import net.blackhacker.ares.repository.EmailConfirmationRepository;
-import net.blackhacker.ares.repository.UserRepository;
+import net.blackhacker.ares.repository.crud.EmailConfirmationRepository;
+import net.blackhacker.ares.repository.jpa.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -18,17 +20,24 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final EmailSenderService emailSenderService;
+    private final CacheService cacheService;
     private final EmailConfirmationRepository emailConfirmationRepository;
+    private final TransactionTemplate transactionTemplate;
 
 
     final private String frontendUrl;
 
-    public UserService(UserRepository userRepository, EmailSenderService emailSenderService,
+    public UserService(UserRepository userRepository,
+                       EmailSenderService emailSenderService,
                        EmailConfirmationRepository emailConfirmationRepository,
+                       CacheService cacheService,
+                       TransactionTemplate transactionTemplate,
                        @Value("${app.frontend.url:http://localhost:4200}") String frontendUrl) {
         this.userRepository = userRepository;
         this.emailSenderService = emailSenderService;
+        this.cacheService = cacheService;
         this.emailConfirmationRepository = emailConfirmationRepository;
+        this.transactionTemplate = transactionTemplate;
         this.frontendUrl = frontendUrl;
     }
 
@@ -119,7 +128,9 @@ public class UserService {
     }
 
     public User saveUser(User user){
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        cacheService.evictSingleCacheValue(CacheService.FEED_DTOS_CACHE, savedUser.getId());
+        return savedUser;
     }
 
     public boolean confirm(String code){
@@ -146,5 +157,12 @@ public class UserService {
 
         return true;
 
+    }
+
+    public void subscribeUserToFeed(User user, Feed feed) {
+        transactionTemplate.executeWithoutResult(status -> {
+            user.getFeeds().add(feed);
+            saveUser(user);
+        });
     }
 }

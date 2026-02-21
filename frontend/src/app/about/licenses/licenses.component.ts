@@ -51,8 +51,7 @@ SOFTWARE.`;
         { name: 'Mailhog', license: 'MIT License', url: 'https://github.com/mailhog/MailHog' },
         { name: 'Nginx', version: 'alpine', license: 'BSD 2-Clause', url: 'https://hub.docker.com/_/nginx' },
         { name: 'PostgreSQL', version: '15-alpine', license: 'PostgreSQL License', url: 'https://hub.docker.com/_/postgres' },
-        { name: 'Redis', version: '7-alpine', license: 'BSD 3-Clause', url: 'https://hub.docker.com/_/redis' },
-        { name: 'ActiveMQ', version: '6.2.0', license: 'Apache License 2.0', url: 'https://activemq.apache.org/' }
+        { name: 'Redis', version: '7-alpine', license: 'BSD 3-Clause', url: 'https://hub.docker.com/_/redis' }
       ]
     },
     {
@@ -64,8 +63,8 @@ SOFTWARE.`;
         { name: 'Spring Boot Data JPA Starter', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-data-jpa' },
         { name: 'Spring Boot Mail Starter', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-boot' },
         { name: 'Spring Boot Thymeleaf Starter', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-boot' },
-        { name: 'Spring Boot ActiveMQ Starter', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-boot' },
-        { name: 'Spring Data Redis', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-data-redis' }
+        { name: 'Spring Data Redis', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-data-redis' },
+        { name: 'Flyway Core', version: '12.0.0', license: 'Apache License 2.0', url: 'https://flywaydb.org/' }
       ]
     },
     {
@@ -80,11 +79,12 @@ SOFTWARE.`;
       name: 'Utilities & Libraries',
       dependencies: [
         { name: 'Angular', version: '21.0.0', license: 'MIT License', url: 'https://angular.io/' },
-        { name: 'Jackson Databind', version: '2.13.4.2', license: 'Apache License 2.0', url: 'https://github.com/FasterXML/jackson-databind' },
+        { name: 'Jackson Databind', version: '3.0.4', license: 'Apache License 2.0', url: 'https://github.com/FasterXML/jackson-databind' },
         { name: 'JJWT (Java JWT)', version: '0.13.0', license: 'Apache License 2.0', url: 'https://github.com/jwtk/jjwt' },
         { name: 'opml-parser', version: '3.1.0', license: 'Apache License 2.0', url: 'https://github.com/mdewilde/opml-parser' },
         { name: 'Project Lombok', version: '1.18.42', license: 'MIT License', url: 'https://projectlombok.org/' },
-        { name: 'rss-reader', version: '3.12.0', license: 'MIT License', url: 'https://github.com/w3stling/rssreader' }
+        { name: 'rss-reader', version: '3.12.0', license: 'MIT License', url: 'https://github.com/w3stling/rssreader' },
+        { name: 'Togglz', version: '4.6.0', license: 'Apache License 2.0', url: 'https://www.togglz.org/' }
       ]
     },
     {

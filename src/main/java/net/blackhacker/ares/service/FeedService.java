@@ -2,50 +2,69 @@ package net.blackhacker.ares.service;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import net.blackhacker.ares.Constants;
-import net.blackhacker.ares.dto.FeedTitleDTO;
+import net.blackhacker.ares.dto.*;
+import net.blackhacker.ares.events.FeedSavedEvent;
+import net.blackhacker.ares.mapper.FeedItemMapper;
 import net.blackhacker.ares.model.Feed;
-import net.blackhacker.ares.repository.FeedRepository;
+import net.blackhacker.ares.model.FeedItem;
+import net.blackhacker.ares.projection.FeedItemProjection;
+import net.blackhacker.ares.repository.jpa.FeedItemRepository;
+import net.blackhacker.ares.repository.jpa.FeedRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.jms.annotation.JmsListener;
-import org.springframework.jms.core.JmsTemplate;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Import Transactional
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
 public class FeedService {
 
     private final FeedRepository feedRepository;
+    private final FeedItemRepository feedItemRepository;
     private final RssService rssService;
-    private final JmsTemplate jmsTemplate;
 
-    @Value("${feed.interval_ms}")
-    private long feedIntervalMs;
+    private final TransactionTemplate transactionTemplate;
 
-    @Value("${feed.query_limit}")
-    private int queryLimit;
+    private final Long feedIntervalMs;
+    private final Integer queryLimit;
+    private final FeedItemMapper feedItemMapper;
+    private final ApplicationEventPublisher publisher;
 
     public FeedService(
             FeedRepository feedRepository,
-           RssService rssService,
-            JmsTemplate jmsTemplate) {
+            FeedItemRepository feedItemRepository,
+            URLFetchService urlFetchService,
+            RssService rssService,
+            FeedPageService feedPageService,
+            TransactionTemplate transactionTemplate,
+            CacheService cacheService,
+            FeedItemMapper feedItemMapper,
+            ApplicationEventPublisher publisher,
+            @Value("${feed.interval_ms}") Long feedIntervalMs,
+            @Value("${feed.query_limit}") Integer queryLimit) {
         this.feedRepository = feedRepository;
+        this.feedItemRepository = feedItemRepository;
         this.rssService = rssService;
-        this.jmsTemplate = jmsTemplate;
+        this.transactionTemplate = transactionTemplate;
+        this.feedItemMapper = feedItemMapper;
+        this.publisher = publisher;
+        this.feedIntervalMs = feedIntervalMs;
+        this.queryLimit = queryLimit;
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void startup() {
+        updateFeeds();
     }
 
     public Feed addFeed(String link) {
@@ -58,7 +77,7 @@ public class FeedService {
                 return oFeed.get();
             }
             
-            Feed feed = rssService.feedFromUrl(link);
+            Feed feed = rssService.buildFeedFromUrl(link);
             Feed savedFeed = feedRepository.save(feed);
             log.info("Feed added successfully: {}", link);
             return savedFeed;
@@ -71,37 +90,45 @@ public class FeedService {
         }
     }
 
-    public Feed getFeedById(UUID id){
-        return feedRepository.findById(id).orElse(null);
+
+    @NonNull public Optional<Feed> getFeedById(@NonNull UUID id){
+        return feedRepository.findById(id);
     }
 
-    public Optional<String> getJsonData(UUID id){
-        return feedRepository.getJsonDataById(id);
-    }
-
-    public Collection<FeedTitleDTO> getFeedTitles(@NonNull Long userId) {
-        return feedRepository.findFeedTitlesByUserId(userId);
-    }
-
-    public Optional<Feed> getFeedByUrl(URL url){
-        return feedRepository.findByUrl(url);
+    public Collection<FeedItemDTO> getFeedItems(@NonNull UUID feedId, int pageNumber) {
+        Pageable pageable = PageRequest.of(pageNumber, 50, Sort.by("date").descending());
+        Slice<FeedItem> page = feedItemRepository.findByFeedId(feedId, pageable);
+        return page.stream().map(feedItemMapper::toDTO).toList();
     }
 
     public Feed saveFeed(Feed feed){
-        return feedRepository.save(feed);
+        Feed savedFeed =  feedRepository.save(feed);
+        publisher.publishEvent(new FeedSavedEvent(savedFeed.getId()));
+        return savedFeed;
     }
 
     public Collection<Feed> saveFeeds(Collection<Feed> feeds){
 
+        /*
+         * Separates feeds that exist in the DB already and those that are new.
+         */
+
         Collection<Feed> existingFeeds = new ArrayList<>();
-        Collection<Feed> nonExistingFeeds = new ArrayList<>();
+        Collection<Feed> newFeeds = new ArrayList<>();
         for (Feed feed : feeds){
             Optional<Feed> ofeed = feedRepository.findByUrl(feed.getUrl());
-            ofeed.ifPresentOrElse(existingFeeds::add, () -> nonExistingFeeds.add(feed));
+            ofeed.ifPresentOrElse(existingFeeds::add, () -> newFeeds.add(feed));
         }
 
-        existingFeeds.addAll(feedRepository.saveAll(nonExistingFeeds));
-        return existingFeeds;
+        //save the new feeds to the DB
+        Stream<Feed> savedFeeds = newFeeds.stream().map(this::saveFeed)
+                .map(feed -> {
+                    rssService.updateFeed(feed);
+                    return feed;
+                });
+
+        //combind and return
+        return Stream.concat(existingFeeds.stream(), savedFeeds).toList();
     }
 
     @Async
@@ -114,22 +141,17 @@ public class FeedService {
 
         for (int page=0; true; page++) {
             Pageable pageable = PageRequest.of(page, queryLimit, Sort.by("lastModified"));
-            Page<Feed> feeds  = feedRepository.findModifiedBefore(fiveMinutesAgo, pageable);
-            if (feeds.isEmpty()){
+            Page<UUID> feedIds  = feedRepository.findFeedIdsModifiedBefore(fiveMinutesAgo, pageable);
+            if (feedIds.isEmpty()){
                 log.debug("No feeds to update");
                 break;
             }
 
-            log.debug("Found {} feeds to update", feeds.getNumberOfElements());
+            log.debug("Found {} feeds to update", feedIds.getNumberOfElements());
 
-            int processed = 0;
-            feeds.forEach(feed ->{
-                sendUpdateFeedMessage(feed.getId());
-            });
+            feedIds.forEach(this::updateFeed);
 
-            log.debug("Processed {} feeds", processed);
-
-            if (feeds.getTotalElements() < queryLimit){
+            if (feedIds.getTotalElements() < queryLimit){
                 break;
             }
 
@@ -140,21 +162,22 @@ public class FeedService {
         log.info("Feed update cycle completed");
     }
 
-    private void sendUpdateFeedMessage(UUID feedId){
-        jmsTemplate.convertAndSend(Constants.UPDATE_FEED_QUEUE, feedId);
-    }
-
-    @JmsListener(destination = Constants.UPDATE_FEED_QUEUE)
-    @Transactional // Added Transactional annotation
     public void updateFeed(UUID feedId){
-        try {
+        transactionTemplate.executeWithoutResult(status -> {
             feedRepository.findById(feedId).ifPresent(feed -> {
                 if (rssService.updateFeed(feed)) {
-                    feedRepository.save(feed);
+                    try {
+                        saveFeed(feed);
+                    } catch (Throwable e) {
+                        status.setRollbackOnly();
+                        log.error("Error updating feed: {}: {}", feedId, e.getMessage());
+                    }
                 }
             });
-        } catch (Exception e) {
-            log.error("Error updating feed: {}: {}", feedId, e.getMessage());
-        }
+        });
+    }
+
+    public Collection<FeedItemProjection> searchItems(String query) {
+        return feedRepository.searchItems(query);
     }
 }

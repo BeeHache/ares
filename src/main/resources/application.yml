@@ -46,6 +46,11 @@ app:
   copyright:
     start-year: 2024
 
+togglz:
+  console:
+    path: /features
+    secured: false
+
 user:
   password:
     min_length: 8

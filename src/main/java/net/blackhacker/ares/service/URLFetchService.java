@@ -1,12 +1,17 @@
 package net.blackhacker.ares.service;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class URLFetchService {
 
@@ -40,6 +45,11 @@ public class URLFetchService {
                     c.forEach(httpCookies::add);
                 })
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, (request, response) ->{
+                    if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
+                        log.error(String.format("HTTP 404 Not Found: %s", urlString));
+                    }
+                })
                 .toEntity(String.class);
     }
 
@@ -55,8 +65,8 @@ public class URLFetchService {
     public ResponseEntity<byte[]> fetchBytes(String urlString,
                                              Map<String, String> headersMap,
                                              Map<String, String> cookiesMap) {
-        final Map<String, String> h = headersMap==null?new HashMap<>():headersMap;
-        final Map<String, String> c = cookiesMap==null?new HashMap<>():cookiesMap;
+        final Map<String, String> h = headersMap==null ? Collections.emptyMap() : headersMap;
+        final Map<String, String> c = cookiesMap==null ? Collections.emptyMap() : cookiesMap;
 
         return restClient.get()
                 .uri(urlString)
@@ -67,6 +77,11 @@ public class URLFetchService {
                     c.forEach(httpCookies::add);
                 })
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, (request, response) ->{
+                    if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
+                        log.error(String.format("HTTP 404 Not Found: %s", urlString));
+                    }
+                })
                 .toEntity(byte[].class);
 
     }

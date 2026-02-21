@@ -3,16 +3,16 @@ package net.blackhacker.ares.service;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.EmailConfirmationCode;
 import net.blackhacker.ares.model.User;
-import net.blackhacker.ares.repository.EmailConfirmationRepository;
-import net.blackhacker.ares.repository.UserRepository;
+import net.blackhacker.ares.repository.crud.EmailConfirmationRepository;
+import net.blackhacker.ares.repository.jpa.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.thymeleaf.TemplateEngine;
 
 import java.time.ZonedDateTime;
@@ -23,24 +23,29 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest(classes = UserService.class)
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-    @MockitoBean
+    @Mock
     private UserRepository userRepository;
 
-    @MockitoBean
+    @Mock
     private EmailConfirmationRepository emailConfirmationRepository;
 
-    @MockitoBean
+    @Mock
     private EmailSenderService emailSenderService;
 
-    @MockitoBean
+    @Mock
+    private CacheService cacheService; // Added Mock
+
+    @Mock
     private JavaMailSender javaMailSender;
 
-    @MockitoBean
+    @Mock
     private TemplateEngine templateEngine;
+
+    @Mock
+    private TransactionTemplate transactionTemplate;
 
     @InjectMocks
     private UserService userService;
@@ -86,8 +91,7 @@ class UserServiceTest {
     @Test
     void registerUser_shouldSaveUser_whenEmailIsAvailable() {
         // Arrange
-
-        when(userRepository.existsByEmail(testEmail)).thenReturn(false);
+        
         when(userRepository.save(user)).thenReturn(user);
 
         // Act
@@ -101,15 +105,9 @@ class UserServiceTest {
 
     @Test
     void registerUser_shouldThrowException_whenEmailIsTakenAndEnabled() {
-
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(existingUser));
-        when(userRepository.save(any(User.class))).thenReturn(existingUser);
-        when(emailConfirmationRepository.save(any(EmailConfirmationCode.class))).thenReturn(ecc);
-        doNothing().when(emailSenderService).sendEmail(any(), any(), any(),
-                any(), any(), any(), any());
-
+        when(userRepository.findByEmail(existingUser.getEmail())).thenReturn(Optional.of(existingUser));
         assertThrows(ServiceException.class, () -> {
-            userService.registerUser(user);
+            userService.registerUser(existingUser);
         });
     }
 
@@ -118,8 +116,8 @@ class UserServiceTest {
 
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(existingNonenabledUser));
         when(emailConfirmationRepository.save(any(EmailConfirmationCode.class))).thenReturn(ecc);
-        doNothing().when(emailSenderService).sendEmail(any(), any(), any(),
-                any(), any(), any(), any());
+        doNothing().when(emailSenderService).sendEmail(anyString(), anyString(), anyString(),
+                anyString(), anyString(), anyString(), anyString(), anyString());
 
         User registeredUser = userService.registerUser(user);
 

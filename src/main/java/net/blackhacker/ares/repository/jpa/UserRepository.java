@@ -1,4 +1,4 @@
-package net.blackhacker.ares.repository;
+package net.blackhacker.ares.repository.jpa;
 
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.User;

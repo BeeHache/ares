@@ -3,14 +3,12 @@ package net.blackhacker.ares.model;
 
 import jakarta.persistence.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.utils.BooleanConverter;
 import net.blackhacker.ares.utils.URLConverter;
 
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -26,41 +24,66 @@ import java.util.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Feed {
+public class Feed implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
-    @Convert(converter = URLConverter.class)
-    private URL url;
-
-    @Column
+    @Column(length = 255)
     private String title;
 
     @Column
-    @Convert(converter = BooleanConverter.class)
-    private boolean isPodcast = false;
+    private String description;
 
-    @Column(nullable = false)
-    private ZonedDateTime lastModified = ZonedDateTime.now();
+    @Column(nullable = false, unique = true, length = 512)
+    @Convert(converter = URLConverter.class)
+    private URL url;
 
-    @Column
+    @Column(length = 512)
+    @Convert(converter = URLConverter.class)
+    private URL link;
+
+    @Column(length = 512)
     @Convert(converter = URLConverter.class)
     private URL imageUrl;
 
     @Column
-    @Convert(converter = URLConverter.class)
-    private URL linkUrl;
+    @Convert(converter = BooleanConverter.class)
+    private boolean podcast = false;
 
     @Column
-    String jsonData;
+    private ZonedDateTime pubdate;
+
+    @Column(nullable = false)
+    private ZonedDateTime lastModified = ZonedDateTime.now();
+
+    @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL)
+    private Set<FeedItem> feedItems = new HashSet<>();
 
     public void setUrlFromString(String urlString) {
         try {
             this.url = new URI(urlString).toURL();
         } catch (MalformedURLException | URISyntaxException e) {
-            log.error(e.getMessage());
+            log.error("Could not create URL from {}", urlString,e);
+        }
+    }
+
+    public void setLinkFromString(String urlString) {
+        try {
+            this.link = new URI(urlString).toURL();
+        } catch (MalformedURLException | URISyntaxException e) {
+            log.error(" {}", urlString,e);
+        }
+    }
+
+    public void setImageUrlFromString(String urlString) {
+        try {
+            if (urlString==null) {
+                return;
+            }
+            this.imageUrl = new URI(urlString).toURL();
+        } catch (MalformedURLException | URISyntaxException e) {
+            log.error("Could not create URL from {}", urlString,e);
         }
     }
 
@@ -74,10 +97,14 @@ public class Feed {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Feed feed = (Feed) o;
-        return Objects.equals(url, feed.url);
+        if (id != null && feed.getId() != null) return Objects.equals(id, feed.getId());
+        if (url != null && feed.getUrl() != null) return Objects.equals(url, feed.getUrl());
+        return false;
     }
     @Override
     public int hashCode() {
-        return url != null ? url.hashCode() : super.hashCode();
+        if (id != null) return id.hashCode();
+        if (url != null) return url.toString().hashCode();
+        return super.hashCode();
     }
 }

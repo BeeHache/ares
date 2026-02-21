@@ -3,6 +3,7 @@ package net.blackhacker.ares.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.Cookie;
+import net.blackhacker.ares.TestConfig;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.RefreshToken;
 import net.blackhacker.ares.security.CustomAccessDeniedHandler;
@@ -11,10 +12,7 @@ import net.blackhacker.ares.security.JwtAuthenticationFilter;
 import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.mapper.UserMapper;
 import net.blackhacker.ares.model.User;
-import net.blackhacker.ares.service.AccountService;
-import net.blackhacker.ares.service.JWTService;
-import net.blackhacker.ares.service.RefreshTokenService;
-import net.blackhacker.ares.service.UserService;
+import net.blackhacker.ares.service.*;
 import net.blackhacker.ares.validation.UserDTOValidator;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -23,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,7 +31,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.containsString;
@@ -46,6 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(LoginController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import({TestConfig.class, GlobalExceptionHandler.class})
 class LoginControllerTest {
 
     @Autowired
@@ -65,6 +64,9 @@ class LoginControllerTest {
 
     @MockitoBean
     private JWTService jwtService; // Your custom service to sign tokens
+
+    @MockitoBean
+    private CacheService cacheService;
 
     @MockitoBean
     private RefreshTokenService refreshTokenService;

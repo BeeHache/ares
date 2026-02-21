@@ -1,23 +1,19 @@
 package net.blackhacker.ares.controller;
 
-import net.blackhacker.ares.Constants;
-import net.blackhacker.ares.dto.FeedTitleDTO;
-import net.blackhacker.ares.dto.StringCacheDTO;
+import net.blackhacker.ares.dto.FeedDTO;
+import net.blackhacker.ares.dto.FeedItemDTO;
+import net.blackhacker.ares.mapper.FeedMapper;
+import net.blackhacker.ares.projection.FeedItemProjection;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
-import net.blackhacker.ares.repository.StringCacheRepository;
-import net.blackhacker.ares.service.FeedService;
-import net.blackhacker.ares.service.OpmlService;
-import net.blackhacker.ares.service.UserService;
+import net.blackhacker.ares.service.*;
 import net.blackhacker.ares.validation.MultipartFileValidator;
 import net.blackhacker.ares.validation.URLValidator;
 import org.jspecify.annotations.NonNull;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.jms.core.JmsTemplate;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,119 +28,86 @@ public class FeedController {
     private final FeedService feedService;
     private final UserService userService;
     private final OpmlService opmlService;
+    private final RssService rssService;
+    private final FeedPageService feedPageService;
     private final URLValidator urlValidator;
+    private final FeedMapper feedMapper;
     private final MultipartFileValidator multipartFileValidator;
-    private final TransactionTemplate transactionTemplate;
-    private final JmsTemplate jmsTemplate;
-    private final StringCacheRepository stringCacheRepository;
 
-    public FeedController(FeedService feedService,  UserService userService,
-                          OpmlService opmlService, URLValidator urlValidator,
+    public FeedController(FeedService feedService,  UserService userService, FeedPageService feedPageService,
+                          OpmlService opmlService, RssService rssService, URLValidator urlValidator,
                           MultipartFileValidator multipartFileValidator,
-                          TransactionTemplate transactionTemplate,
-                          JmsTemplate jmsTemplate,
-                          StringCacheRepository stringCacheRepository) {
+                          FeedMapper feedMapper) {
         this.feedService = feedService;
         this.userService = userService;
         this.opmlService = opmlService;
+        this.feedPageService = feedPageService;
+        this.rssService = rssService;
         this.urlValidator = urlValidator;
+        this.feedMapper = feedMapper;
         this.multipartFileValidator = multipartFileValidator;
-        this.transactionTemplate = transactionTemplate;
-        this.jmsTemplate = jmsTemplate;
-        this.stringCacheRepository = stringCacheRepository;
-    }
-
-    @GetMapping("/titles")
-    public Collection<FeedTitleDTO> getFeedTitles(@AuthenticationPrincipal Account principal) {
-        User user = userService.getUserByAccount(principal).get();
-        return feedService.getFeedTitles(user.getId());
     }
 
     @GetMapping
-    public ResponseEntity<Collection<String>> getFeed(@AuthenticationPrincipal Account principal) {
+    public Collection<FeedDTO> getFeeds(@AuthenticationPrincipal Account principal) {
         User user = userService.getUserByAccount(principal).get();
-        Collection<String> feeds = user.getFeeds().stream().map(Feed::getJsonData).toList();
-        return ResponseEntity
-                .ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(feeds);
+        return user.getFeeds().stream().map(feedMapper::toDTO).toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<String> getFeed(@PathVariable("id") UUID id) {
-
-
-        Optional<StringCacheDTO> oJson = stringCacheRepository.findById(id);
-        if (oJson.isPresent()) {
-            return ResponseEntity
-                    .ok()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(oJson.get().getString());
+    @Cacheable(value = CacheService.FEED_DTOS_CACHE, unless = "#result=null")
+    public FeedDTO getFeed(@PathVariable("id") UUID id) {
+        Optional<Feed> ofeed = feedService.getFeedById(id);
+        if (ofeed.isEmpty()) {
+            throw new ControllerException(HttpStatus.NOT_FOUND,  String.format("Feed with id %s not found", id));
         }
+        return feedMapper.toDTO(ofeed.get());
+    }
 
-        Optional<String> jsonData = feedService.getJsonData(id);
-        if (jsonData.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        //save data to cache
-        StringCacheDTO stringCacheDTO = new StringCacheDTO();
-        stringCacheDTO.setId(id);
-        stringCacheDTO.setString(jsonData.get());
-        stringCacheRepository.save(stringCacheDTO);
-
-        return ResponseEntity
-                .ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(jsonData.get());
+    @GetMapping("/{id}/items/{pageNumber}")
+    @Cacheable(value = CacheService.FEED_PAGE_CACHE, unless = "#result=null")
+    public Collection<FeedItemDTO> getFeedItems(@PathVariable("id") UUID feedId, @PathVariable("pageNumber")int pageNumber) {
+        feedPageService.storePageNumber(feedId, pageNumber);
+        return feedService.getFeedItems(feedId, pageNumber);
     }
 
     @PostMapping("/import")
-    ResponseEntity<Void> importOpmlFromFile(@RequestParam("file") MultipartFile file, @AuthenticationPrincipal Account account) {
+    void importOpmlFromFile(@RequestParam("file") MultipartFile file, @AuthenticationPrincipal Account account) {
         multipartFileValidator.validateMultipartFile(file);
         final User user = userService.getUserByAccount(account).get();
         Collection<Feed> feeds = feedService.saveFeeds(opmlService.importFile(file));
-        subscribeUserToFeeds(user,feeds);
-        return ResponseEntity.accepted().build();
+        feeds.forEach(feed -> {
+            userService.subscribeUserToFeed(user, feed);
+        });
     }
 
     @PutMapping
-    ResponseEntity<String> addFeed(@RequestParam("link") String link, @AuthenticationPrincipal @NonNull Account account){
+    FeedDTO addFeed(@RequestParam("link") String link, @AuthenticationPrincipal @NonNull Account account){
         urlValidator.validateURL(link);
 
         User user = userService.getUserByAccount(account).get();
         Feed feed = feedService.addFeed(link);
         user.getFeeds().add(feed);
         userService.saveUser(user);
-        return ResponseEntity.ok(feed.getJsonData());
+        return feedMapper.toDTO(feed);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteFeed(@PathVariable("id") UUID id, @AuthenticationPrincipal Account principal) {
+    public void deleteFeed(@PathVariable("id") UUID id, @AuthenticationPrincipal Account principal) {
         User user = userService.getUserByAccount(principal).get();
-        Feed feed = feedService.getFeedById(id);
+        Optional<Feed> feed = feedService.getFeedById(id);
 
-        if (feed == null){
-            return ResponseEntity.notFound().build();
+        if (feed.isEmpty()){
+            throw new ControllerException(HttpStatus.NOT_FOUND,  String.format("Feed with id %s not found", id));
         }
 
-        user.getFeeds().remove(feed);
-        feedService.saveFeed(feed);
+        Feed foundFeed = feed.get();
+        user.getFeeds().remove(foundFeed);
         userService.saveUser(user);
-        return ResponseEntity.ok().build();
     }
 
-    private void subscribeUserToFeeds(final User user, Collection<Feed> feeds) {
-        feeds.forEach(feed -> {
-            transactionTemplate.executeWithoutResult(status -> {
-                user.getFeeds().add(feed);
-                userService.saveUser(user);
-            });
-            sendUpdateFeedMessage(feed.getId());
-        });
-    }
-
-    private void sendUpdateFeedMessage(UUID feedId){
-        jmsTemplate.convertAndSend(Constants.UPDATE_FEED_QUEUE, feedId);
+    @GetMapping("/search")
+    public Collection<FeedItemProjection> search(@RequestParam("q") String query) {
+        return feedService.searchItems(query);
     }
 }

@@ -5,13 +5,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.util.MultiValueMap;
 
 import java.nio.charset.StandardCharsets;
@@ -19,18 +17,13 @@ import java.util.Collection;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest(classes = OpmlService.class)
 @ExtendWith(MockitoExtension.class)
 class OpmlServiceTest {
 
-    @MockitoBean
+    @Mock
     private URLFetchService urlFetchService;
-
-    @MockitoBean
-    private JmsTemplate jmsTemplate;
 
     @InjectMocks
     private OpmlService opmlService;
@@ -79,8 +72,6 @@ class OpmlServiceTest {
 
     @Test
     void importFile_shouldParseOpmlAndReturnFeeds() {
-        when(urlFetchService.fetchBytes(anyString())).thenReturn(imageResponseBytes);
-
         MockMultipartFile file = new MockMultipartFile("file", "test.opml", "text/xml", opmlContentString.getBytes(StandardCharsets.UTF_8));
         Collection<Feed> result = opmlService.importFile(file);
 
@@ -95,8 +86,6 @@ class OpmlServiceTest {
 
         // Mock the fetch for the OPML file itself
         when(urlFetchService.fetchString("http://example.com/opml")).thenReturn(opmlResponseString);
-        when(urlFetchService.fetchBytes(anyString())).thenReturn(imageResponseBytes);
-
         Collection<Feed> result = opmlService.importFeed("http://example.com/opml");
 
         assertNotNull(result);

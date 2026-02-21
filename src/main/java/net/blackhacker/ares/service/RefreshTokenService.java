@@ -2,7 +2,7 @@ package net.blackhacker.ares.service;
 
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.RefreshToken;
-import net.blackhacker.ares.repository.RefreshTokenRepository;
+import net.blackhacker.ares.repository.crud.RefreshTokenRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

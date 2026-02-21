@@ -1,12 +1,15 @@
 spring:
   application:
     name: Ares
+  main:
+    allow-bean-definition-overriding: true
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none # Disable Hibernate's schema validation
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+    defer-datasource-initialization: true
   sql:
     init:
       mode: never

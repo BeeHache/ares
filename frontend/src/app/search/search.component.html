@@ -1,0 +1,17 @@
+<div class="search-page-container">
+  <h2>Search Results for "{{ query }}"</h2>
+
+  <div *ngIf="loading" class="loading">Searching...</div>
+
+  <div *ngIf="!loading && results.length === 0" class="no-results">
+    No results found.
+  </div>
+
+  <div class="results-list">
+    <div *ngFor="let item of results" class="result-card">
+      <h3><a [href]="item.link" target="_blank">{{ item.title }}</a></h3>
+      <div class="meta" *ngIf="item.date">{{ item.date | date:'medium' }}</div>
+      <p class="description" [innerHTML]="item.description"></p>
+    </div>
+  </div>
+</div>

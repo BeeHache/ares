@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.blackhacker.ares.mapper.RoleMapper;
 import net.blackhacker.ares.model.Role;
-import net.blackhacker.ares.repository.RoleRepository;
+import net.blackhacker.ares.repository.jpa.RoleRepository;
 import net.blackhacker.ares.dto.RoleDTO;
 
 import org.springframework.http.ResponseEntity;

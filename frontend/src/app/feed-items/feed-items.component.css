@@ -11,9 +11,33 @@
   overflow-wrap: break-word;
 }
 
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
 .feed-header h3 {
   margin-top: 0;
   color: #333;
+  flex-grow: 1;
+  margin-right: 20px;
+}
+
+.unsubscribe-btn {
+    background-color: #fff;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+.unsubscribe-btn:hover {
+    background-color: #dc3545;
+    color: white;
 }
 
 .feed-description {
@@ -26,6 +50,25 @@
   margin-top: 10px;
   color: #007bff;
   text-decoration: none;
+}
+
+.search-container {
+    margin-top: 15px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
 }
 
 .items-list {
@@ -93,8 +136,9 @@
   font-size: 1.2em;
 }
 
-.no-items {
+.no-items, .no-results {
     text-align: center;
     color: #888;
     padding: 20px;
+    font-style: italic;
 }

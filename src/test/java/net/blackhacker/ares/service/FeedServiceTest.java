@@ -1,14 +1,12 @@
 package net.blackhacker.ares.service;
 
 import net.blackhacker.ares.model.Feed;
-import net.blackhacker.ares.repository.FeedRepository;
+import net.blackhacker.ares.repository.jpa.FeedRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.jms.core.JmsTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.net.MalformedURLException;
@@ -19,21 +17,23 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest(classes = FeedService.class)
 @ExtendWith(MockitoExtension.class)
 class FeedServiceTest {
 
-    @MockitoBean
+    @Mock
     private FeedRepository feedRepository;
 
-    @MockitoBean
+    @Mock
+    private URLFetchService  urlFetchService;
+
+    @Mock
     private RssService rssService;
 
-    @MockitoBean
-    private TransactionTemplate transactionTemplate;
+    @Mock
+    private CacheService cacheService;
 
-    @MockitoBean
-    private JmsTemplate jmsTemplate;
+    @Mock
+    private TransactionTemplate transactionTemplate;
 
 
     @InjectMocks
@@ -55,7 +55,7 @@ class FeedServiceTest {
         assertNotNull(result);
         assertEquals(existingFeed, result);
         verify(feedRepository, times(1)).findByUrl(new URI(link).toURL());
-        verify(rssService, never()).feedFromUrl(anyString());
+        verify(rssService, never()).buildFeedFromUrl(anyString());
         verify(feedRepository, never()).save(any(Feed.class));
     }
 
@@ -67,7 +67,7 @@ class FeedServiceTest {
         newFeed.setUrlFromString(link);
 
         when(feedRepository.findByUrl(new URI(link).toURL())).thenReturn(Optional.empty());
-        when(rssService.feedFromUrl(link)).thenReturn(newFeed);
+        when(rssService.buildFeedFromUrl(link)).thenReturn(newFeed);
         when(feedRepository.save(newFeed)).thenReturn(newFeed);
 
         // Act
@@ -77,7 +77,7 @@ class FeedServiceTest {
         assertNotNull(result);
         assertEquals(newFeed, result);
         verify(feedRepository, times(1)).findByUrl(new URI(link).toURL());
-        verify(rssService, times(1)).feedFromUrl(link);
+        verify(rssService, times(1)).buildFeedFromUrl(link);
         verify(feedRepository, times(1)).save(newFeed);
     }
 }

@@ -23,6 +23,18 @@ export interface FeedItem {
 export interface FeedTitle {
   id: string;
   title: string;
+  imageUrl?: string;
+  isPodcast?: boolean;
+  pubdate?: string;
+}
+
+export interface FeedSummary {
+  id: string;
+  title: string;
+  description?: string;
+  link: string;
+  imageUrl?: string;
+  isPodcast?: boolean;
 }
 
 export interface Feed {
@@ -57,46 +69,27 @@ export class FeedService {
   }
 
   getFeedTitles(): Observable<FeedTitle[]> {
-      return this.http.get<FeedTitle[]>(`${this.apiUrl}/titles`);
+      return this.http.get<FeedTitle[]>(`${this.apiUrl}`);
+  }
+
+  getFeedSummaries(): Observable<FeedSummary[]> {
+      return this.http.get<FeedSummary[]>(`${this.apiUrl}`);
   }
 
   getFeeds(): Observable<Feed[]> {
-    return this.http.get<string[]>(`${this.apiUrl}`).pipe(
-      map(feedStrings => feedStrings.map(json => {
-          try {
-              return typeof json === 'string' ? JSON.parse(json) : json;
-          } catch (e) {
-              console.error('Error parsing feed JSON', e);
-              return null;
-          }
-      }).filter(feed => feed !== null))
-    );
+    return this.http.get<Feed[]>(`${this.apiUrl}`);
   }
 
   getFeedById(id: string): Observable<Feed> {
-    return this.http.get<string>(`${this.apiUrl}/${id}`).pipe(
-        map(json => {
-            try {
-                return typeof json === 'string' ? JSON.parse(json) : json;
-            } catch (e) {
-                console.error('Error parsing feed JSON', e);
-                throw e;
-            }
-        })
-    );
+    return this.http.get<Feed>(`${this.apiUrl}/${id}`);
+  }
+
+  getFeedItems(feedId: string, page: number): Observable<FeedItem[]> {
+      return this.http.get<FeedItem[]>(`${this.apiUrl}/${feedId}/items/${page}`);
   }
 
   addFeed(link: string): Observable<Feed> {
-    return this.http.put<string>(`${this.apiUrl}`, null, { params: { link } }).pipe(
-        map(json => {
-            try {
-                return typeof json === 'string' ? JSON.parse(json) : json;
-            } catch (e) {
-                console.error('Error parsing feed JSON', e);
-                throw e;
-            }
-        })
-    );
+    return this.http.put<Feed>(`${this.apiUrl}`, null, { params: { link } });
   }
 
   deleteFeed(id: string): Observable<void> {
@@ -111,5 +104,9 @@ export class FeedService {
 
   importOpmlUrl(url: string): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/import`, null, { params: { url } });
+  }
+
+  search(query: string): Observable<FeedItem[]> {
+      return this.http.get<FeedItem[]>(`${this.apiUrl}/search`, { params: { q: query } });
   }
 }
