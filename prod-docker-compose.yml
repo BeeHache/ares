@@ -2,6 +2,7 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: ares-postgres
+    restart: always
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -14,12 +15,14 @@ services:
   redis:
     image: redis:7-alpine
     container_name: ares-redis
+    restart: always
     volumes:
       - redis_data:/data
 
   nginx:
-    build: ./nginx
+    image: ${IMAGE_REPO}/nginx:latest
     container_name: ares-nginx
+    restart: always
     ports:
       - "80:80"
       - "443:443"
@@ -30,8 +33,9 @@ services:
       - frontend
 
   backend:
-    build: .
+    image: ${IMAGE_REPO}/backend:latest
     container_name: ares-backend
+    restart: always
     environment:
       ACTIVE_PROFILE: prod
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
@@ -48,8 +52,9 @@ services:
       - redis
 
   frontend:
-    build: ./frontend
+    image: ${IMAGE_REPO}/frontend:latest
     container_name: ares-frontend
+    restart: always
     environment:
       PORT: 4000
       BACKEND_URL: http://backend:8080
