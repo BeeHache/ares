@@ -9,13 +9,13 @@ Ares is a robust RSS feed aggregator and podcast manager built with a modern tec
 *   **Spring Boot 4.x**: Core framework
 *   **Spring Security**: JWT-based authentication & RBAC
 *   **Spring Data JPA**: Database interaction
-*   **PostgreSQL**: Primary relational database
+*   **PostgreSQL**: Primary relational database with Full-Text Search
 *   **Redis**: Caching and Refresh Token storage
 *   **Thymeleaf**: Email templates
 *   **Testcontainers**: Integration testing
 
 ### Frontend
-*   **Angular**: Single Page Application (SPA) with Server-Side Rendering (SSR)
+*   **Angular 17+**: Single Page Application (SPA) with Server-Side Rendering (SSR)
 *   **Node.js**: Server-Side Rendering runtime
 
 ### Infrastructure
@@ -57,11 +57,11 @@ SPRING_MAIL_PASSWORD=pass
 
 ### 3. SSL Certificates (Production Only)
 For the production setup, you must provide SSL certificates for Nginx.
-1.  Create a directory: `mkdir -p docker/certs`
+1.  Create a directory: `mkdir -p nginx/certs`
 2.  Place your certificate (`server.crt`) and private key (`server.key`) in this directory.
     *   *For local testing, you can generate self-signed certs:*
         ```bash
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout docker/certs/server.key -out docker/certs/server.crt
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout nginx/certs/server.key -out nginx/certs/server.crt
         ```
 
 ### 4. Run with Docker Compose
@@ -107,7 +107,7 @@ ares/
 ├── src/main/resources  # Config, SQL scripts, Templates
 ├── src/test            # Unit & Integration Tests
 ├── frontend/           # Angular Frontend Source
-├── docker/             # Docker config (Nginx, Certs)
+├── nginx/              # Nginx config & Dockerfile
 ├── pgadmin/            # Custom pgAdmin build config
 ├── dev-docker-compose.yml  # Dev orchestration
 ├── prod-docker-compose.yml # Prod orchestration
@@ -118,6 +118,7 @@ ares/
 
 *   **Secure Auth**: Full registration and login flow with JWT access tokens and Redis-backed refresh tokens.
 *   **Feed Management**: Add, update, and delete RSS/Podcast feeds.
+*   **Full-Text Search**: Fast search across all feed items using Postgres tsvector.
 *   **OPML Support**: Import and export feed subscriptions via OPML files.
 *   **Role Management**: Hierarchical role system (Admin, User, etc.).
 *   **Email Notifications**: HTML email templates for account verification.
