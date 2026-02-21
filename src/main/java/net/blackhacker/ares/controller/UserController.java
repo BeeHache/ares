@@ -14,10 +14,8 @@ import net.blackhacker.ares.validation.MultipartFileValidator;
 import net.blackhacker.ares.validation.URLValidator;
 import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,8 +38,7 @@ public class UserController {
     public UserController(UserService userService, FeedService feedService, OpmlService opmlService,
                           UserMapper userMapper, FeedMapper feedMapper,
                           MultipartFileValidator multipartFileValidator,
-                          URLValidator urlValidator,  TransactionTemplate transactionTemplate,
-                          JmsTemplate jmsTemplate) {
+                          URLValidator urlValidator) {
         this.userService = userService;
         this.feedService = feedService;
         this.opmlService = opmlService;

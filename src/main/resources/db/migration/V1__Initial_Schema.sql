@@ -45,7 +45,7 @@ create table if not exists account_roles (
 
 create table if not exists feeds (
     id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
-    title varchar(255),
+    title varchar(512),
     description text,
     url varchar(512) not null unique,
     link varchar(512),
@@ -64,9 +64,9 @@ create index if not exists ix_feeds_search_vector on feeds USING GIN (search_vec
 
 create table if not exists feed_items(
     id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
-    guid varchar(255),
+    guid varchar(512),
     feed_id UUID NOT NULL,
-    title varchar(255) NOT NULL,
+    title varchar(512) NOT NULL,
     description text,
     link varchar(512),
     date timestamp with time zone,

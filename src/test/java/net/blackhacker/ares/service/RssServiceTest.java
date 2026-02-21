@@ -10,7 +10,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jms.core.JmsTemplate;
 
 import java.nio.charset.StandardCharsets;
 
@@ -26,9 +25,6 @@ class RssServiceTest {
 
     @Mock
     private ObjectMapper objectMapper;
-
-    @Mock
-    private JmsTemplate jmsTemplate;
 
     @Mock
     private FeedItemRepository feedItemRepository;

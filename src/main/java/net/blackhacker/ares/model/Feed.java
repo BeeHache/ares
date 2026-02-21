@@ -29,21 +29,21 @@ public class Feed implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column
+    @Column(length = 255)
     private String title;
 
     @Column
     private String description;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 512)
     @Convert(converter = URLConverter.class)
     private URL url;
 
-    @Column
+    @Column(length = 512)
     @Convert(converter = URLConverter.class)
     private URL link;
 
-    @Column
+    @Column(length = 512)
     @Convert(converter = URLConverter.class)
     private URL imageUrl;
 

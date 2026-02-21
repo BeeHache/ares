@@ -7,7 +7,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.net.MalformedURLException;
@@ -35,9 +34,6 @@ class FeedServiceTest {
 
     @Mock
     private TransactionTemplate transactionTemplate;
-
-    @Mock
-    private JmsTemplate jmsTemplate;
 
 
     @InjectMocks

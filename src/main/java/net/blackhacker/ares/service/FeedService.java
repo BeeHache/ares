@@ -2,8 +2,8 @@ package net.blackhacker.ares.service;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import net.blackhacker.ares.EventQueues;
 import net.blackhacker.ares.dto.*;
+import net.blackhacker.ares.events.FeedSavedEvent;
 import net.blackhacker.ares.mapper.FeedItemMapper;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.FeedItem;
@@ -12,10 +12,9 @@ import net.blackhacker.ares.repository.jpa.FeedItemRepository;
 import net.blackhacker.ares.repository.jpa.FeedRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.*;
-import org.springframework.jms.annotation.JmsListener;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -33,13 +32,13 @@ public class FeedService {
     private final FeedRepository feedRepository;
     private final FeedItemRepository feedItemRepository;
     private final RssService rssService;
-    private final FeedPageService feedPageService;
-    private final JmsTemplate jmsTemplate;
+
     private final TransactionTemplate transactionTemplate;
-    private final CacheService cacheService;
+
     private final Long feedIntervalMs;
     private final Integer queryLimit;
     private final FeedItemMapper feedItemMapper;
+    private final ApplicationEventPublisher publisher;
 
     public FeedService(
             FeedRepository feedRepository,
@@ -47,20 +46,18 @@ public class FeedService {
             URLFetchService urlFetchService,
             RssService rssService,
             FeedPageService feedPageService,
-            JmsTemplate jmsTemplate,
             TransactionTemplate transactionTemplate,
             CacheService cacheService,
             FeedItemMapper feedItemMapper,
+            ApplicationEventPublisher publisher,
             @Value("${feed.interval_ms}") Long feedIntervalMs,
             @Value("${feed.query_limit}") Integer queryLimit) {
         this.feedRepository = feedRepository;
         this.feedItemRepository = feedItemRepository;
         this.rssService = rssService;
-        this.feedPageService = feedPageService;
-        this.jmsTemplate = jmsTemplate;
         this.transactionTemplate = transactionTemplate;
-        this.cacheService = cacheService;
         this.feedItemMapper = feedItemMapper;
+        this.publisher = publisher;
         this.feedIntervalMs = feedIntervalMs;
         this.queryLimit = queryLimit;
     }
@@ -106,17 +103,7 @@ public class FeedService {
 
     public Feed saveFeed(Feed feed){
         Feed savedFeed =  feedRepository.save(feed);
-
-        //evict each cached page
-        Optional<Integer> feedPageCount = feedPageService.getTotalPages(feed.getId());
-        if (feedPageCount.isPresent()) {
-            for (int i = 1; i <= feedPageCount.get(); i++) {
-                String key = savedFeed.getId().toString() + ":" + i;
-                cacheService.evictSingleCacheValue(CacheService.FEED_DTOS_CACHE, key);
-            }
-            feedPageService.deletePageNumbers(feed.getId());
-        }
-
+        publisher.publishEvent(new FeedSavedEvent(savedFeed.getId()));
         return savedFeed;
     }
 
@@ -162,7 +149,7 @@ public class FeedService {
 
             log.debug("Found {} feeds to update", feedIds.getNumberOfElements());
 
-            feedIds.forEach(this::sendUpdateFeedMessage);
+            feedIds.forEach(this::updateFeed);
 
             if (feedIds.getTotalElements() < queryLimit){
                 break;
@@ -175,11 +162,6 @@ public class FeedService {
         log.info("Feed update cycle completed");
     }
 
-    private void sendUpdateFeedMessage(UUID feedId){
-        jmsTemplate.convertAndSend(EventQueues.FEED_SAVED, feedId);
-    }
-
-    @JmsListener(destination = EventQueues.FEED_SAVED)
     public void updateFeed(UUID feedId){
         transactionTemplate.executeWithoutResult(status -> {
             feedRepository.findById(feedId).ifPresent(feed -> {

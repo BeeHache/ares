@@ -9,7 +9,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.util.MultiValueMap;
 
@@ -25,9 +24,6 @@ class OpmlServiceTest {
 
     @Mock
     private URLFetchService urlFetchService;
-
-    @Mock
-    private JmsTemplate jmsTemplate;
 
     @InjectMocks
     private OpmlService opmlService;

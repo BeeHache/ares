@@ -28,16 +28,16 @@ public class FeedItem implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column
+    @Column(length = 255)
     private String guid;
 
-    @Column
+    @Column(length = 255)
     private String title;
 
     @Column
     private String description;
 
-    @Column
+    @Column(length = 512)
     @Convert(converter = URLConverter.class)
     private URL link;
 

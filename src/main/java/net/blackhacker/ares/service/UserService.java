@@ -8,7 +8,6 @@ import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.repository.crud.EmailConfirmationRepository;
 import net.blackhacker.ares.repository.jpa.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -33,7 +32,6 @@ public class UserService {
                        EmailConfirmationRepository emailConfirmationRepository,
                        CacheService cacheService,
                        TransactionTemplate transactionTemplate,
-                       JmsTemplate jmsTemplate,
                        @Value("${app.frontend.url:http://localhost:4200}") String frontendUrl) {
         this.userRepository = userRepository;
         this.emailSenderService = emailSenderService;
