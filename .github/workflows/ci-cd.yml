@@ -32,10 +32,10 @@ jobs:
           cache: maven
 
       - name: Build with Maven
-        run: mvn -B package --file pom.xml -DskipTests
+        run: mvn -B package --file backend/pom.xml -DskipTests
 
       - name: Run Tests
-        run: mvn -B test --file pom.xml
+        run: mvn -B test --file backend/pom.xml
 
       # Only push Docker image on 'main' branch push or manual trigger
       - name: Log in to the Container registry
@@ -50,7 +50,7 @@ jobs:
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./backend
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:latest
 
