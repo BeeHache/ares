@@ -21,6 +21,7 @@ services:
 
   nginx:
     image: ${IMAGE_REPO}/nginx:latest
+    build: ./nginx
     container_name: ares-nginx
     restart: always
     ports:
@@ -34,6 +35,7 @@ services:
 
   backend:
     image: ${IMAGE_REPO}/backend:latest
+    build: ./backend
     container_name: ares-backend
     restart: always
     environment:
@@ -53,6 +55,7 @@ services:
 
   frontend:
     image: ${IMAGE_REPO}/frontend:latest
+    build: ./frontend
     container_name: ares-frontend
     restart: always
     environment:

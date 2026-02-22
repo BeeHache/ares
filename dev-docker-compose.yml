@@ -38,7 +38,7 @@ services:
       - frontend
 
   backend:
-    build: .
+    build: ./backend
     container_name: ares-backend
     ports:
       - "8080:8080"
