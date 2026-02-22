@@ -9,7 +9,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   # ------------------------------------------------------------------
@@ -36,6 +35,10 @@ jobs:
 
       - name: Run Tests
         run: mvn -B test --file pom.xml
+
+      - name: Lowercase Image Name
+        run: |
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
 
       # Only push Docker image on 'main' branch push or manual trigger
       - name: Log in to the Container registry
@@ -81,6 +84,10 @@ jobs:
         working-directory: ./frontend
         run: npm run build -- --configuration production
 
+      - name: Lowercase Image Name
+        run: |
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+
       # Only push Docker image on 'main' branch push or manual trigger
       - name: Log in to the Container registry
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
@@ -111,6 +118,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Lowercase Image Name
+        run: |
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
@@ -136,6 +147,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Lowercase Image Name
+        run: |
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+
       - name: Copy docker-compose to server
         uses: appleboy/scp-action@master
         with:
@@ -156,7 +171,7 @@ jobs:
             
             # Create .env file from secret and append IMAGE_REPO
             echo "${{ secrets.ENV_FILE }}" > .env
-            echo "IMAGE_REPO=ghcr.io/${{ github.repository }}" >> .env
+            echo "IMAGE_REPO=ghcr.io/${{ env.IMAGE_NAME }}" >> .env
             
             # Login to GHCR on the server
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
