@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Unlock Your Account</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .otp-box {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 15px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 5px;
+            margin: 20px 0;
+            color: #007bff;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+        }
+        .warning {
+            color: #856404;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Unlock Your Account</h2>
+        </div>
+
+        <p>Hello <span th:text="${name}">User</span>,</p>
+
+        <p>We received a request to unlock your Ares account. Use the One-Time Password (OTP) below to complete the process:</p>
+
+        <div class="otp-box">
+            <span th:text="${otp}">123456</span>
+        </div>
+
+        <p>This code will expire in <span th:text="${expirationMinutes}">15</span> minutes.</p>
+
+        <div class="warning">
+            <strong>Security Alert:</strong> Never share this code with anyone. Ares support will never ask for your password or OTP.
+        </div>
+
+        <p>If you did not request this, please ignore this email or contact support if you believe your account has been compromised.</p>
+
+        <div class="footer">
+            <p>&copy; <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2024</span> Ares Application. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

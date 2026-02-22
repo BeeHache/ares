@@ -1,0 +1,84 @@
+spring:
+  application:
+    name: Ares
+  profiles:
+    active: ${ACTIVE_PROFILE}
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    # defer-datasource-initialization: true  <-- REMOVED THIS
+  sql:
+    init:
+      mode: never
+  data:
+    redis:
+      host: redis
+      port: 6379
+  activemq:
+    packages:
+      trusted: java.util,net.blackhacker.ares.dto
+  mail:
+    host: ${SPRING_MAIL_HOST:localhost}
+    port: ${SPRING_MAIL_PORT:1025}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SPRING_MAIL_SMTP_AUTH:true}
+          starttls:
+            enable: ${SPRING_MAIL_SMTP_STARTTLS_ENABLE:true}
+  flyway:
+    enabled: true
+    baseline-on-migrate: false # Set to false since DB is empty
+    locations: classpath:db/migration
+    placeholders:
+      ADMIN_EMAIL: ${ARES_ADMIN_EMAIL:admin@ares.com}
+      ADMIN_PASSWORD: ${ARES_ADMIN_PASSWORD:password}
+
+app:
+  copyright:
+    start-year: 2024
+
+togglz:
+  console:
+    path: /features
+    secured: false
+
+user:
+  password:
+    min_length: 8
+feed:
+  interval_ms: 300000 # 5 min
+  query_limit: 1000
+
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+    refresh_expiration_ms: 86400000 # 24 hr
+    access_expiration_ms: 3600000  # 1 hour
+
+logging:
+  file:
+    name: ${spring.application.name}.log
+    path: ./logs
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7
+      file-name-pattern: ${logging.file.path}/archived/${spring.application.name}-%d{yyyy-MM-dd}-%i.log.gz
+  level:
+    root: INFO
+    net.blackhacker.ares: ${LOG_LEVEL:DEBUG}
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:INFO}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
