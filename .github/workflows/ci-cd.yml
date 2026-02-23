@@ -151,22 +151,20 @@ jobs:
         run: |
           echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
 
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DO_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.DO_HOST }} >> ~/.ssh/known_hosts
+
       - name: Copy docker-compose to server
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.DO_HOST }}
-          username: ${{ secrets.DO_USERNAME }}
-          key: ${{ secrets.DO_SSH_KEY }}
-          source: "prod-docker-compose.yml"
-          target: "~/ares/"
+        run: |
+          scp -i ~/.ssh/id_rsa prod-docker-compose.yml ${{ secrets.DO_USERNAME }}@${{ secrets.DO_HOST }}:~/ares/
 
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.DO_HOST }}
-          username: ${{ secrets.DO_USERNAME }}
-          key: ${{ secrets.DO_SSH_KEY }}
-          script: |
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.DO_USERNAME }}@${{ secrets.DO_HOST }} << 'EOF'
             cd ~/ares
             
             # Create .env file from secret and append IMAGE_REPO
@@ -184,3 +182,4 @@ jobs:
             
             # Cleanup unused images
             docker image prune -f
+          EOF
