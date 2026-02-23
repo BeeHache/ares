@@ -160,6 +160,7 @@ jobs:
 
       - name: Copy docker-compose to server
         run: |
+          mkdir -p ~/ares
           scp -i ~/.ssh/id_rsa prod-docker-compose.yml ${{ secrets.DO_USERNAME }}@${{ secrets.DO_HOST }}:~/ares/
 
       - name: Deploy via SSH
