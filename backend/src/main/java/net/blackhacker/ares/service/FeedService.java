@@ -102,9 +102,22 @@ public class FeedService {
     }
 
     public Feed saveFeed(Feed feed){
-        Feed savedFeed =  feedRepository.save(feed);
-        publisher.publishEvent(new FeedSavedEvent(savedFeed.getId()));
-        return savedFeed;
+        Optional<Feed> savedFeed = transactionTemplate.execute(status -> {
+            try {
+                return Optional.of(feedRepository.saveAndFlush(feed));
+            } catch (Exception e) {
+                status.setRollbackOnly();
+                log.error("Error updating feed: {}: {}", feed.getId(), e.getMessage());
+                return Optional.empty();
+            }
+        });
+
+        if (savedFeed.isEmpty()) {
+            return null;
+        }
+
+        publisher.publishEvent(new FeedSavedEvent(savedFeed.get().getId()));
+        return savedFeed.get();
     }
 
     public Collection<Feed> saveFeeds(Collection<Feed> feeds){
@@ -120,14 +133,11 @@ public class FeedService {
             ofeed.ifPresentOrElse(existingFeeds::add, () -> newFeeds.add(feed));
         }
 
-        //save the new feeds to the DB
-        Stream<Feed> savedFeeds = newFeeds.stream().map(this::saveFeed)
-                .map(feed -> {
-                    rssService.updateFeed(feed);
-                    return feed;
-                });
+        Stream<Feed> savedFeeds = newFeeds.stream()
+                .map(this::saveFeed) //save the new feeds to the DB
+                .peek(rssService::updateFeed); // update those feeds from the internet
 
-        //combind and return
+        //combine and return
         return Stream.concat(existingFeeds.stream(), savedFeeds).toList();
     }
 
@@ -163,18 +173,13 @@ public class FeedService {
     }
 
     public void updateFeed(UUID feedId){
-        transactionTemplate.executeWithoutResult(status -> {
+
             feedRepository.findById(feedId).ifPresent(feed -> {
                 if (rssService.updateFeed(feed)) {
-                    try {
-                        saveFeed(feed);
-                    } catch (Throwable e) {
-                        status.setRollbackOnly();
-                        log.error("Error updating feed: {}: {}", feedId, e.getMessage());
-                    }
+                    saveFeed(feed);
                 }
             });
-        });
+
     }
 
     public Collection<FeedItemProjection> searchItems(String query) {

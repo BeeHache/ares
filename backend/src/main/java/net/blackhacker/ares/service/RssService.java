@@ -17,9 +17,8 @@ import java.io.ByteArrayInputStream;
 import java.net.*;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Stream;
 
 
 @Slf4j
@@ -59,7 +58,21 @@ public class RssService {
             return false;
         }
 
-        List<Item> rssItems = parseRss(feed.getUrl().toString());
+        List<Item> rssItems = new ArrayList<>();
+        try {
+            Stream<Item> itemStream = parseRss(feed.getUrl().toString());
+            Iterator<Item> iterator = itemStream.iterator();
+            while (iterator.hasNext()) {
+                try {
+                    rssItems.add(iterator.next());
+                } catch (Exception e) {
+                    log.warn("Skipping malformed RSS item in feed {}: {}", feed.getUrl(), e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to parse RSS feed {}: {}", feed.getUrl(), e.getMessage());
+            return false;
+        }
 
         if (rssItems.isEmpty()) {
             return false;
@@ -98,13 +111,16 @@ public class RssService {
                 }
             }
 
-            if (rssItem.getTitle().isPresent()) {
-                feedItem.setTitle(rssItem.getTitle().get());
-                if (feedItem.getGuid() == null &&  feedItemRepository.findByFeedAndTitle(feedItem.getId(), rssItem.getTitle().get()).isPresent()) {
-                    //The item is already in the DB
-                    return null;
-                }
+            // feed items must have a title
+            if (rssItem.getTitle().isEmpty()) {
+                return null;
             }
+            if (feedItem.getGuid() == null &&  feedItemRepository.findByFeedAndTitle(feedItem.getId(), rssItem.getTitle().get()).isPresent()) {
+                //The item is already in the DB
+                return null;
+            }
+            feedItem.setTitle(rssItem.getTitle().get());
+
             if (rssItem.getDescription().isPresent()) {
                 feedItem.setDescription(rssItem.getDescription().get());
             }
@@ -167,22 +183,22 @@ public class RssService {
         return true;
     }
 
-    private List<Item> parseRss(String urlString) {
+    private Stream<Item> parseRss(String urlString) {
         return parseRss(urlString,null);
     }
 
-    private List<Item> parseRss(String urlString, Map<String, String> headers) {
+    private Stream<Item> parseRss(String urlString, Map<String, String> headers) {
         ResponseEntity<byte[]> response = urlFetchService.fetchBytes(urlString, headers);
         if (!response.getStatusCode().is2xxSuccessful()) {
             log.warn("Problem fetching {}: {}", urlString, response.getStatusCode());
-            return List.of();
+            return Stream.empty();
         }
         if (response.getBody() == null) {
             log.warn("Response Body of {} is empty",urlString);
-            return List.of();
+            return Stream.empty();
         }
 
-        return rssReader.read(new ByteArrayInputStream(response.getBody())).toList();
+        return rssReader.read(new ByteArrayInputStream(response.getBody()));
     }
 
     private URL resolveUrl(URL base, String relative) throws MalformedURLException, URISyntaxException {
