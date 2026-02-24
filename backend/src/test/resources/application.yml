@@ -1,6 +1,7 @@
 spring:
   application:
     name: Ares
+    allowedOrigins: https://ares.example.com
   main:
     allow-bean-definition-overriding: true
   jpa:
@@ -13,9 +14,6 @@ spring:
   sql:
     init:
       mode: never
-  activemq:
-    packages:
-      trusted: java.util,net.blackhacker.ares.dto
   session:
     store-type: none
   flyway:

@@ -133,14 +133,11 @@ public class FeedService {
             ofeed.ifPresentOrElse(existingFeeds::add, () -> newFeeds.add(feed));
         }
 
-        //save the new feeds to the DB
-        Stream<Feed> savedFeeds = newFeeds.stream().map(this::saveFeed)
-                .map(feed -> {
-                    rssService.updateFeed(feed);
-                    return feed;
-                });
+        Stream<Feed> savedFeeds = newFeeds.stream()
+                .map(this::saveFeed) //save the new feeds to the DB
+                .peek(rssService::updateFeed); // update those feeds from the internet
 
-        //combind and return
+        //combine and return
         return Stream.concat(existingFeeds.stream(), savedFeeds).toList();
     }
 
