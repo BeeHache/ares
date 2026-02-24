@@ -55,6 +55,7 @@ services:
       SPRING_MAIL_SMTP_STARTTLS_ENABLE: "false"
       JWT_SECRET: ${JWT_SECRET}
       JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
     depends_on:
       - postgres
       - redis

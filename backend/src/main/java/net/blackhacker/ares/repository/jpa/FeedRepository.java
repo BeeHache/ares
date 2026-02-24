@@ -1,5 +1,6 @@
 package net.blackhacker.ares.repository.jpa;
 
+import lombok.NonNull;
 import net.blackhacker.ares.projection.FeedItemProjection;
 import net.blackhacker.ares.projection.FeedSummaryProjection;
 import net.blackhacker.ares.projection.FeedTitleProjection;
@@ -41,10 +42,13 @@ public interface FeedRepository extends JpaRepository<Feed, UUID> {
             "FROM feed_items " +
             "WHERE search_vector @@ plainto_tsquery('english', :query)";
 
-    @EntityGraph(attributePaths = {"feedItems"})
     @Query(FIND_MODIFIED_BEFORE)
     Page<UUID> findFeedIdsModifiedBefore(@Param("dt") ZonedDateTime zonedDateTime, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"feedItems"})
+    @NonNull Optional<Feed> findById(@NonNull @Param("id") UUID id);
+
+    @EntityGraph(attributePaths = {"feedItems"})
     Optional<Feed> findByUrl(@Param("url") URL url);
 
     @Query(value = FIND_FEED_TITLES_BY_USERID, nativeQuery = true)

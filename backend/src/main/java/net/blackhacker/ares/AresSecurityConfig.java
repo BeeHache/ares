@@ -1,8 +1,10 @@
 package net.blackhacker.ares;
 
+import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.security.CustomAccessDeniedHandler;
 import net.blackhacker.ares.security.JwtAuthenticationEntryPoint;
 import net.blackhacker.ares.security.JwtAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,23 +22,44 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.net.URI;
+import java.net.URL;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-public class SecurityConfig {
+public class AresSecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint unauthorizedHandler;
     private final CustomAccessDeniedHandler forbiddenHandler;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
-            JwtAuthenticationEntryPoint unauthorizedHandler,
-            CustomAccessDeniedHandler forbiddenHandler) {
+    private final List<URL> allowedOrigins;
+
+    public AresSecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+                              JwtAuthenticationEntryPoint unauthorizedHandler,
+                              CustomAccessDeniedHandler forbiddenHandler,
+                              @Value("${spring.application.allowedOrigins}") String allowedOrigins) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.unauthorizedHandler = unauthorizedHandler;
         this.forbiddenHandler = forbiddenHandler;
+        this.allowedOrigins = Arrays.stream(allowedOrigins.split(",")).map(url -> {
+            try {
+                if (url.isEmpty()) {
+                    return null;
+                }
+                return new URI(url).toURL();
+            } catch (Exception e) {
+                log.error("'{}' is not a valid URL", url);
+                return null; // null get filtered out
+            }
+        }).filter(Objects::nonNull).toList();
+
     }
 
     @Bean
@@ -70,13 +93,13 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:4200", 
-            "https://myfrontend.com",
-            "http://localhost",
-            "http://localhost:80",
-            "https://localhost"
-        ));
+        List<String> localhostOrigins = Arrays.asList(
+                "http://localhost:4200",
+                "http://localhost",
+                "https://localhost"
+        );
+
+        configuration.setAllowedOrigins(Stream.concat(localhostOrigins.stream(), allowedOrigins.stream().map(URL::toString)).toList());
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);

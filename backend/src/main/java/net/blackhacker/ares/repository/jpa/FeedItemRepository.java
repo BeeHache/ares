@@ -16,15 +16,14 @@ import java.util.UUID;
 @Repository
 public interface FeedItemRepository extends JpaRepository<FeedItem, UUID> {
 
-    @Query(value = "SELECT * from feed_items where feed_id=:feedId",
-            countQuery = "SELECT count(*) from feed_items where feed_id=:feedId",
-            nativeQuery = true)
+    @Query(value = "SELECT f from FeedItem f where f.feedId=:feedId",
+            countQuery = "SELECT count(*) from f.FeedItem where f.feedId=:feedId")
     Slice<FeedItem> findByFeedId(@Param("feedId")UUID feedId, Pageable pageable);
 
     Optional<FeedItem> findByLink(URL link);
 
     Optional<FeedItem> findByGuid(String guid);
 
-    @Query(value="SELECT * from feed_items f where f.feed_id=:feed_id and f.title=:title", nativeQuery = true)
+    @Query(value="SELECT f from FeedItem f where f.feedId=:feed_id and f.title=:title")
     Optional<FeedItem> findByFeedAndTitle(@Param("feed_id")UUID feedId, @Param("title")String title);
 }

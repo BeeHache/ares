@@ -1,6 +1,7 @@
 spring:
   application:
     name: Ares
+    allowedOrigins: ${ALLOWED_ORIGINS}
   profiles:
     active: ${ACTIVE_PROFILE}
   datasource:
@@ -12,7 +13,6 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: validate
-    # defer-datasource-initialization: true  <-- REMOVED THIS
   sql:
     init:
       mode: never
@@ -20,9 +20,6 @@ spring:
     redis:
       host: redis
       port: 6379
-  activemq:
-    packages:
-      trusted: java.util,net.blackhacker.ares.dto
   mail:
     host: ${SPRING_MAIL_HOST:localhost}
     port: ${SPRING_MAIL_PORT:1025}
