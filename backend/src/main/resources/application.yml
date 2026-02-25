@@ -36,8 +36,14 @@ spring:
     baseline-on-migrate: false # Set to false since DB is empty
     locations: classpath:db/migration
     placeholders:
-      ADMIN_EMAIL: ${ARES_ADMIN_EMAIL:admin@ares.com}
-      ADMIN_PASSWORD: ${ARES_ADMIN_PASSWORD:password}
+      ADMIN_EMAIL: ${ARES_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ARES_ADMIN_PASSWORD}
+      TEST_USER1_EMAIL: ${ARES_TEST_USER1}
+      TEST_USER1_PW: ${ARES_TEST_USER_PW1}
+      TEST_USER2_EMAIL: ${ARES_TEST_USER2}
+      TEST_USER2_PW:  ${ARES_TEST_USER_PW2}
+      TEST_USER3_EMAIL: ${ARES_TEST_USER3}
+      TEST_USER3_PW:  ${ARES_TEST_USER_PW3}
 
 app:
   copyright:

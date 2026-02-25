@@ -20,10 +20,15 @@ spring:
     enabled: true
     locations:
       - classpath:db/migration
-      - classpath:db/testdata
     placeholders:
-      ADMIN_EMAIL: admin@example.com
+      ADMIN_EMAIL: admin@ares.com
       ADMIN_PASSWORD: password
+      TEST_USER1_EMAIL: user1@ares.com
+      TEST_USER1_PW: password
+      TEST_USER2_EMAIL: user2@ares.com
+      TEST_USER2_PW: password
+      TEST_USER3_EMAIL: user3@ares.com
+      TEST_USER3_PW: password
 
 app:
   copyright:
@@ -34,6 +39,10 @@ user:
 feed:
   interval_ms: 300000 # 5 min
   query_limit: 1000
+togglz:
+  features:
+    SITE_MAINTENANCE:
+      enabled: false
 
 security:
   jwt:
