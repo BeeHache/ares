@@ -20,9 +20,8 @@ Ares is a robust RSS feed aggregator and podcast manager built with a modern tec
 
 ### Infrastructure
 *   **Docker & Docker Compose**: Containerization and orchestration
-*   **Nginx**: Reverse proxy and SSL termination (Production)
+*   **Nginx**: Reverse proxy and SSL termination
 *   **Mailhog**: Email testing (Development)
-*   **pgAdmin**: Database management UI
 
 ## 🛠️ Prerequisites
 
@@ -43,11 +42,14 @@ cd ares
 Create a `.env` file in the root directory based on `.env.example` (if available) or set the following environment variables:
 
 ```properties
+#postgres
 POSTGRES_DB=ares
 POSTGRES_USER=ares
 POSTGRES_PASSWORD=password
-PGADMIN_EMAIL=admin@ares.com
-PGADMIN_PASSWORD=password
+
+#backend
+ACTIVE_PROFILE=(prod|dev)
+ALLOWED_ORIGINS=https://your.web.address.com
 JWT_SECRET=your_very_long_secret_key_here
 SPRING_MAIL_HOST=smtp.example.com
 SPRING_MAIL_PORT=587
@@ -67,7 +69,7 @@ For the production setup, you must provide SSL certificates for Nginx.
 ### 4. Run with Docker Compose
 
 **Development Environment:**
-Starts Backend (8080), Frontend (4200), Postgres, Redis, Mailhog (8025), and pgAdmin (5050).
+Starts Backend (8080), Frontend (4200), Postgres, Redis, and Mailhog (8025).
 ```bash
 docker-compose -f dev-docker-compose.yml up --build -d
 ```
@@ -84,7 +86,6 @@ docker-compose -f prod-docker-compose.yml up --build -d
 *   **Frontend**: [http://localhost:4200](http://localhost:4200)
 *   **Backend API**: [http://localhost:8080](http://localhost:8080)
 *   **Mailhog**: [http://localhost:8025](http://localhost:8025)
-*   **pgAdmin**: [http://localhost:5050](http://localhost:5050)
 
 **Production:**
 *   **Application**: [https://localhost](https://localhost) (or your domain)
@@ -95,6 +96,7 @@ docker-compose -f prod-docker-compose.yml up --build -d
 Run unit and integration tests using Maven:
 
 ```bash
+cd backend
 mvn test
 ```
 *Note: Integration tests use Testcontainers and require Docker to be running.*
@@ -103,15 +105,16 @@ mvn test
 
 ```
 ares/
-├── src/main/java       # Spring Boot Backend Source
-├── src/main/resources  # Config, SQL scripts, Templates
-├── src/test            # Unit & Integration Tests
-├── frontend/           # Angular Frontend Source
-├── nginx/              # Nginx config & Dockerfile
-├── pgadmin/            # Custom pgAdmin build config
+├── backend/                # Spring Boot Backend
+│   ├── src/main/java       # Source
+│   ├── src/main/resources  # Config, SQL scripts, Templates
+|   ├── src/test            # Unit & Integration Tests
+│   └── pom.xml             # Maven Build Configuration
+├── frontend/               # Angular Frontend Source
+├── nginx/                  # Nginx config & Dockerfile
 ├── dev-docker-compose.yml  # Dev orchestration
 ├── prod-docker-compose.yml # Prod orchestration
-└── pom.xml             # Maven Build Configuration
+└── README.md
 ```
 
 ## ✨ Key Features

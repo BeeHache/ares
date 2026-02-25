@@ -12,6 +12,9 @@ public enum AresFeatures implements Feature {
     PUBLIC_LAUNCH,
 
 
+    @Label("Maintenance Mode")
+    MAINTENANCE_MODE,
+
     @Label("Full Search")
     FULL_SEARCH;
 

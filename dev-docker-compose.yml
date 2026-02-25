@@ -56,6 +56,16 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      ARES_ADMIN_EMAIL: ${ARES_ADMIN_EMAIL}
+      ARES_ADMIN_PASSWORD: ${ARES_ADMIN_PASSWORD}
+      ARES_TEST_USER1: ${ARES_TEST_USER1}
+      ARES_TEST_USER_PW1: ${ARES_TEST_USER_PW1}
+      ARES_TEST_USER2: ${ARES_TEST_USER2}
+      ARES_TEST_USER_PW2: ${ARES_TEST_USER_PW2}
+      ARES_TEST_USER3: ${ARES_TEST_USER3}
+      ARES_TEST_USER_PW3: ${ARES_TEST_USER_PW3}
+
+
     depends_on:
       - postgres
       - redis
