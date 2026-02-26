@@ -40,6 +40,8 @@ services:
   backend:
     build: ./backend
     container_name: ares-backend
+    volumes:
+      - ./logs:/app/logs
     ports:
       - "8080:8080"
       - "5005:5005"

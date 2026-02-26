@@ -37,6 +37,8 @@ services:
     image: ${IMAGE_REPO}/backend:latest
     build: ./backend
     container_name: ares-backend
+    volumes:
+      - ./logs:/app/logs
     restart: always
     environment:
       ACTIVE_PROFILE: prod
@@ -49,14 +51,16 @@ services:
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
-      ADMIN_EMAIL: ${ARES_ADMIN_EMAIL}
-      ADMIN_PASSWORD: ${ARES_ADMIN_PASSWORD}
-      TEST_USER1_EMAIL: ${ARES_TEST_USER1}
-      TEST_USER1_PW: ${ARES_TEST_USER_PW1}
-      TEST_USER2_EMAIL: ${ARES_TEST_USER2}
-      TEST_USER2_PW: ${ARES_TEST_USER_PW2}
-      TEST_USER3_EMAIL: ${ARES_TEST_USER3}
-      TEST_USER3_PW: ${ARES_TEST_USER_PW3}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      ARES_ADMIN_EMAIL: ${ARES_ADMIN_EMAIL}
+      ARES_ADMIN_PASSWORD: ${ARES_ADMIN_PASSWORD}
+      ARES_TEST_USER1: ${ARES_TEST_USER1}
+      ARES_TEST_USER_PW1: ${ARES_TEST_USER_PW1}
+      ARES_TEST_USER2: ${ARES_TEST_USER2}
+      ARES_TEST_USER_PW2: ${ARES_TEST_USER_PW2}
+      ARES_TEST_USER3: ${ARES_TEST_USER3}
+      ARES_TEST_USER_PW3: ${ARES_TEST_USER_PW3}
+
     depends_on:
       - postgres
       - redis
