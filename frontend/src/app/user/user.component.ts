@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { FeedService, FeedSummary } from '../feed.service';
 import { filter, take } from 'rxjs/operators';
@@ -23,12 +24,15 @@ export class UserComponent implements OnInit {
   feedSummaries: FeedSummary[] = [];
   error: string | null = null;
   showImportModal = false;
+  showDeleteConfirm = false;
+  showDeleteSuccess = false;
 
   constructor(
       private http: HttpClient,
       private authService: AuthService,
       private feedService: FeedService,
-      private cdr: ChangeDetectorRef
+      private cdr: ChangeDetectorRef,
+      private router: Router
   ) {
     console.log('UserComponent: Constructor called');
   }
@@ -108,5 +112,52 @@ export class UserComponent implements OnInit {
       alert('OPML Import started successfully.');
       this.closeImportModal();
       this.loadFeedSummaries(); // Refresh list
+  }
+
+  exportFeeds() {
+    this.http.get(`${environment.apiUrl}/user/export`, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ares-feeds.opml';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        console.error('Export failed', err);
+        alert('Failed to export feeds.');
+      }
+    });
+  }
+
+  confirmDelete() {
+    this.showDeleteConfirm = true;
+  }
+
+  cancelDelete() {
+    this.showDeleteConfirm = false;
+  }
+
+  deleteAccount() {
+    this.http.delete(`${environment.apiUrl}/user/`).subscribe({
+      next: () => {
+        this.showDeleteConfirm = false;
+        this.showDeleteSuccess = true;
+      },
+      error: (err) => {
+        console.error('Delete account failed', err);
+        alert('Failed to delete account. Please try again.');
+        this.showDeleteConfirm = false;
+      }
+    });
+  }
+
+  onDeleteSuccess() {
+    this.showDeleteSuccess = false;
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

@@ -1,12 +1,14 @@
 package net.blackhacker.ares.model;
 
 
+import be.ceau.opml.entity.Outline;
 import jakarta.persistence.*;
 
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.utils.BooleanConverter;
 import net.blackhacker.ares.utils.URLConverter;
+import org.thymeleaf.expression.Lists;
 
 import java.io.Serializable;
 import java.net.MalformedURLException;
@@ -106,5 +108,13 @@ public class Feed implements Serializable {
         if (id != null) return id.hashCode();
         if (url != null) return url.toString().hashCode();
         return super.hashCode();
+    }
+
+    public Outline toOutline() {
+        Map<String, String> attr = new HashMap<>();
+        attr.put("type", "rss");
+        attr.put("text", getTitle());
+        attr.put("xmlUrl", getUrl().toString());
+        return new Outline(attr, Collections.emptyList());
     }
 }

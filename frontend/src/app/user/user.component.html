@@ -7,6 +7,7 @@
       <h3>Manage Feeds</h3>
       <button class="btn" (click)="addFeed()">Add Feed</button>
       <button class="btn" (click)="openImportModal()">Import OPML</button>
+      <button class="btn btn-secondary" (click)="exportFeeds()">Export OPML</button>
     </div>
   </div>
 
@@ -32,6 +33,10 @@
           <p>You haven't subscribed to any feeds yet.</p>
       </div>
   </div>
+
+  <div class="account-actions">
+    <button class="btn btn-danger" (click)="confirmDelete()">Delete Account</button>
+  </div>
 </div>
 
 <ng-template #loading>
@@ -47,3 +52,26 @@
   (close)="closeImportModal()"
   (importSuccess)="onImportSuccess()">
 </app-opml-import>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm">
+  <div class="modal-content">
+    <h3>Delete Account</h3>
+    <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" (click)="cancelDelete()">Cancel</button>
+      <button class="btn btn-danger" (click)="deleteAccount()">Delete Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Success Modal -->
+<div class="modal-overlay" *ngIf="showDeleteSuccess">
+  <div class="modal-content">
+    <h3>Account Deleted</h3>
+    <p>Your account has been successfully deleted. You will now be logged out.</p>
+    <div class="modal-actions">
+      <button class="btn" (click)="onDeleteSuccess()">OK</button>
+    </div>
+  </div>
+</div>

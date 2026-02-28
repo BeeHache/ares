@@ -16,6 +16,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.*;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -141,6 +142,7 @@ public class FeedService {
         return Stream.concat(existingFeeds.stream(), savedFeeds).toList();
     }
 
+    @Scheduled(fixedRateString = "${feed.interval_ms}")
     @Async
     public void updateFeeds() {
         log.info("Starting feed update cycle");

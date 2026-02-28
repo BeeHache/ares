@@ -165,4 +165,8 @@ public class UserService {
             saveUser(user);
         });
     }
+
+    public void cancelUser(User user) {
+        userRepository.cancelUser(user.getId());
+    }
 }

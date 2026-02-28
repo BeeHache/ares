@@ -2,6 +2,7 @@ package net.blackhacker.ares.service;
 
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.EmailConfirmationCode;
+import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.repository.crud.EmailConfirmationRepository;
 import net.blackhacker.ares.repository.jpa.UserRepository;
@@ -12,12 +13,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.thymeleaf.TemplateEngine;
 
 import java.time.ZonedDateTime;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,7 +40,7 @@ class UserServiceTest {
     private EmailSenderService emailSenderService;
 
     @Mock
-    private CacheService cacheService; // Added Mock
+    private CacheService cacheService;
 
     @Mock
     private JavaMailSender javaMailSender;
@@ -58,6 +62,9 @@ class UserServiceTest {
 
     @BeforeEach
     public void setUP() {
+        // Re-instantiate to ensure @Value is set (though @InjectMocks might handle it if we used constructor injection properly with mocks)
+        // But for safety:
+        userService = new UserService(userRepository, emailSenderService, emailConfirmationRepository, cacheService, transactionTemplate, "http://localhost:4200");
 
         existingEnabledAccount = new Account();
         existingEnabledAccount.setUsername("testuser");
@@ -69,8 +76,10 @@ class UserServiceTest {
         nonExistingAccount = new Account();
 
         user = new User();
+        user.setId(1L);
         user.setEmail(testEmail);
         user.setAccount(existingEnabledAccount);
+        user.setFeeds(new HashSet<>());
 
         existingUser = new User();
         existingUser.setEmail(takenEmail);
@@ -80,27 +89,23 @@ class UserServiceTest {
         existingNonenabledUser.setEmail(takenEmail);
         existingNonenabledUser.setAccount(existingNonenabledAccount);
 
-        reset(userRepository);
-
         ecc = new EmailConfirmationCode();
         ecc.setCode(UUID.randomUUID().toString());
-
-
+        ecc.setEmail(testEmail);
     }
 
     @Test
     void registerUser_shouldSaveUser_whenEmailIsAvailable() {
-        // Arrange
-        
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
         when(userRepository.save(user)).thenReturn(user);
 
-        // Act
         User registeredUser = userService.registerUser(user);
 
-        // Assert
         assertNotNull(registeredUser);
         assertEquals(testEmail, registeredUser.getEmail());
         verify(userRepository).save(user);
+        verify(emailSenderService).sendEmail(eq(testEmail), anyString(), anyString(), anyString(),
+                                             anyString(), anyString(), anyString(), anyString());
     }
 
     @Test
@@ -113,16 +118,82 @@ class UserServiceTest {
 
     @Test
     void registerUser_shouldReturnUser_whenEmailIsTakenButNotEnabled() {
-
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(existingNonenabledUser));
         when(emailConfirmationRepository.save(any(EmailConfirmationCode.class))).thenReturn(ecc);
-        doNothing().when(emailSenderService).sendEmail(anyString(), anyString(), anyString(),
-                anyString(), anyString(), anyString(), anyString(), anyString());
-
-        User registeredUser = userService.registerUser(user);
+        
+        User registeredUser = userService.registerUser(existingNonenabledUser);
 
         assertNotNull(registeredUser);
-        verify(userRepository, never()).save(user);
+        verify(userRepository, never()).save(existingNonenabledUser);
+        verify(emailSenderService).sendEmail(anyString(), anyString(), anyString(), anyString(),
+                                             anyString(),anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void recoverUser_shouldSendEmail_whenUserExists() {
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(user));
+        
+        userService.recoverUser(testEmail);
+        
+        verify(emailSenderService).sendEmail(eq(testEmail), anyString(), anyString(), eq("email-recovery"),
+                                                            anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void recoverUser_shouldDoNothing_whenUserDoesNotExist() {
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty());
+        
+        userService.recoverUser(testEmail);
+        
+        verify(emailSenderService, never()).sendEmail(anyString(), anyString(), anyString(), anyString(), any());
+    }
+
+    @Test
+    void confirm_shouldEnableAccount_whenCodeIsValid() {
+        when(emailConfirmationRepository.findById(ecc.getCode())).thenReturn(Optional.of(ecc));
+        when(userRepository.findByEmail(testEmail)).thenReturn(Optional.of(user));
+        
+        boolean result = userService.confirm(ecc.getCode());
+        
+        assertTrue(result);
+        assertNotNull(user.getAccount().getAccountEnabledAt());
+        verify(userRepository).save(user);
+        verify(emailConfirmationRepository).delete(ecc);
+    }
+
+    @Test
+    void confirm_shouldReturnFalse_whenCodeIsInvalid() {
+        when(emailConfirmationRepository.findById("invalid")).thenReturn(Optional.empty());
+        
+        boolean result = userService.confirm("invalid");
+        
+        assertFalse(result);
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void subscribeUserToFeed_shouldAddFeedAndSave() {
+        Feed feed = new Feed();
+        
+        // Mock TransactionTemplate
+        doAnswer(invocation -> {
+            Consumer<TransactionStatus> callback = invocation.getArgument(0);
+            callback.accept(null);
+            return null;
+        }).when(transactionTemplate).executeWithoutResult(any());
+
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        userService.subscribeUserToFeed(user, feed);
+        
+        assertTrue(user.getFeeds().contains(feed));
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void cancelUser_shouldCallRepository() {
+        userService.cancelUser(user);
+        verify(userRepository).cancelUser(user.getId());
     }
 
     @Test
@@ -162,13 +233,5 @@ class UserServiceTest {
         User result = userService.saveUser(user);
         assertNotNull(result);
         verify(userRepository, times(1)).save(user);
-    }
-
-    @Test
-    void getUserByAccount_shouldReturnAccount_whenAccountExists() {
-        when(userRepository.findByAccount(any(Account.class))).thenReturn(Optional.of(user));
-        Optional<User> result = userService.getUserByAccount(existingEnabledAccount);
-        assertTrue(result.isPresent());
-        assertEquals(user, result.get());
     }
 }

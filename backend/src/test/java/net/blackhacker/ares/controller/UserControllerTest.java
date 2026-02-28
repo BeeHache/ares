@@ -29,16 +29,14 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Optional;
+import java.util.*;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -47,6 +45,9 @@ class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private AccountService accountService;
 
     @MockitoBean
     private UserService userService;
@@ -119,9 +120,13 @@ class UserControllerTest {
         userDTO.setEmail("test@example.com");
 
         feed = new Feed();
+        feed.setId(UUID.randomUUID());
         feed.setUrlFromString(validUrl);
+        feed.setTitle("Test Feed");
 
         feedDTO = new FeedDTO();
+        feedDTO.setId(feed.getId());
+        feedDTO.setTitle("Test Feed");
     }
 
     @Test
@@ -139,7 +144,20 @@ class UserControllerTest {
 
     @Test
     @WithMockUser(username = "test@example.com")
-    void subscribeUserToFeedsFromUrl_shouldReturnAccepted_whenFileIsValid() throws Exception {
+    void cancelAccount_shouldDisableAccount() throws Exception {
+        when(userService.getUserByAccount(any(Account.class))).thenReturn(Optional.of(user));
+
+        mockMvc.perform(delete("/api/user/")
+                        .with(user(account)))
+                .andExpect(status().isOk());
+
+        verify(userService).cancelUser(user);
+        verify(accountService).saveAccount(any(Account.class));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void importOpmlFromFile_shouldReturnOk_whenFileIsValid() throws Exception {
         MockMultipartFile multipartFile = new MockMultipartFile(
                 "file",
                 "feeds.opml",
@@ -157,18 +175,47 @@ class UserControllerTest {
 
     @Test
     @WithMockUser(username = "test@example.com")
+    void importOpmlFromUrl_shouldReturnOk_whenUrlIsValid() throws Exception {
+        when(userService.getUserByAccount(any(Account.class))).thenReturn(Optional.of(user));
+        when(opmlService.importFeed(anyString())).thenReturn(new ArrayList<>());
+
+        mockMvc.perform(put("/api/user/import")
+                        .param("url", validUrl)
+                        .with(user(account)))
+                .andExpect(status().isOk());
+
+        verify(urlValidator).validateURL(validUrl);
+        verify(opmlService).importFeed(validUrl);
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void exportFeeds_shouldReturnXml() throws Exception {
+        user.getFeeds().add(feed);
+        when(userService.getUserByAccount(any(Account.class))).thenReturn(Optional.of(user));
+
+        mockMvc.perform(get("/api/user/export")
+                        .with(user(account)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_XML))
+                .andExpect(content().string(containsString("<opml version=\"2.0\">")));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
     void addFeed_shouldReturnOk_whenUserIsLoggedInAndUrlIsValid() throws Exception {
 
         doNothing().when(urlValidator).validateURL(validUrl);
         when(userService.getUserByAccount(any(Account.class))).thenReturn(Optional.of(user));
         when(feedService.addFeed(anyString())).thenReturn(feed);
+        when(feedMapper.toDTO(any(Feed.class))).thenReturn(feedDTO);
 
         mockMvc.perform(put("/api/user/addfeed")
                         .param("link", validUrl)
                         .with(user("test@example.com").roles("USER")))
                 .andExpect(status().isOk());
 
-        //verify(userService).saveUser(user);
+        verify(userService).saveUser(user);
     }
 
     @Test
@@ -182,5 +229,45 @@ class UserControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(feedService, never()).addFeed(anyString());
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void getFeed_shouldReturnFeedList() throws Exception {
+        user.getFeeds().add(feed);
+        when(userService.getUserByAccount(any(Account.class))).thenReturn(Optional.of(user));
+        when(feedMapper.toDTO(any(Feed.class))).thenReturn(feedDTO);
+
+        mockMvc.perform(get("/api/user/feeds")
+                        .with(user(account)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title").value("Test Feed"));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void unsubscribeFeed_shouldRemoveFeed() throws Exception {
+        user.getFeeds().add(feed);
+        when(userService.getUserByAccount(any(Account.class))).thenReturn(Optional.of(user));
+        when(feedService.getFeedById(feed.getId())).thenReturn(Optional.of(feed));
+
+        mockMvc.perform(delete("/api/user/feeds/" + feed.getId())
+                        .with(user(account)))
+                .andExpect(status().isOk());
+
+        verify(userService).saveUser(user);
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com")
+    void unsubscribeFeed_shouldReturnNotFound_whenFeedDoesNotExist() throws Exception {
+        when(userService.getUserByAccount(any(Account.class))).thenReturn(Optional.of(user));
+        when(feedService.getFeedById(any(UUID.class))).thenReturn(Optional.empty());
+
+        mockMvc.perform(delete("/api/user/feeds/" + UUID.randomUUID())
+                        .with(user(account)))
+                .andExpect(status().isNotFound());
+
+        verify(userService, never()).saveUser(any());
     }
 }
