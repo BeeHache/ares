@@ -1,13 +1,14 @@
 import { Component, signal, OnInit } from '@angular/core';
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { HeaderComponent } from './header/header.component';
+import { CookieBannerComponent } from './shared/cookie-banner/cookie-banner.component';
 import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, HeaderComponent, CommonModule],
+  imports: [RouterOutlet, HeaderComponent, CookieBannerComponent, CommonModule],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

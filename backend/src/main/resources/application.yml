@@ -69,8 +69,8 @@ security:
 
 logging:
   file:
-    name: ${spring.application.name}.log
     path: ./logs
+    name: ${logging.file.path}/${spring.application.name}.log
   logback:
     rollingpolicy:
       max-file-size: 10MB

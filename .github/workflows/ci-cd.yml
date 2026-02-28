@@ -164,18 +164,20 @@ jobs:
           #!/bin/bash
           cd ~/ares
           
-          # Create .env file
-          cat <<ENV_EOF > .env
+          # Create .env file safely (quoted heredoc prevents variable expansion)
+          cat <<'ENV_EOF' > .env
           ${{ secrets.ENV_FILE }}
-          IMAGE_REPO=ghcr.io/${{ env.IMAGE_NAME }}
           ENV_EOF
+          
+          # Append IMAGE_REPO separately
+          echo "IMAGE_REPO=ghcr.io/${{ env.IMAGE_NAME }}" >> .env
           
           # Login to GHCR
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           
           # Pull and Restart
-          docker compose -f prod-docker-compose.yml pull
-          docker compose -f prod-docker-compose.yml up -d --remove-orphans
+          docker-compose -f prod-docker-compose.yml pull
+          docker-compose -f prod-docker-compose.yml up -d --remove-orphans
           docker image prune -f
           EOF
           chmod +x deploy.sh

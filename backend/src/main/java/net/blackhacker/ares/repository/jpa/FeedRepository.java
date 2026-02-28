@@ -59,4 +59,6 @@ public interface FeedRepository extends JpaRepository<Feed, UUID> {
 
     @Query(value = SEARCH_ITEMS, nativeQuery = true)
     Collection<FeedItemProjection> searchItems(@Param("query") String query);
+
+
 }

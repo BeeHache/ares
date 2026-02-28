@@ -1,5 +1,10 @@
 package net.blackhacker.ares.controller;
 
+import be.ceau.opml.OpmlWriteException;
+import be.ceau.opml.OpmlWriter;
+import be.ceau.opml.entity.Body;
+import be.ceau.opml.entity.Head;
+import be.ceau.opml.entity.Opml;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.mapper.FeedMapper;
@@ -7,18 +12,25 @@ import net.blackhacker.ares.mapper.UserMapper;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
+import net.blackhacker.ares.service.AccountService;
 import net.blackhacker.ares.service.FeedService;
 import net.blackhacker.ares.service.OpmlService;
 import net.blackhacker.ares.service.UserService;
 import net.blackhacker.ares.validation.MultipartFileValidator;
 import net.blackhacker.ares.validation.URLValidator;
 import org.jspecify.annotations.NonNull;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.charset.StandardCharsets;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,6 +39,7 @@ import java.util.UUID;
 @RequestMapping("/api/user")
 public class UserController {
     private final UserService userService;
+    private final AccountService accountService;
     private final FeedService feedService;
     private final OpmlService opmlService;
     private final UserMapper userMapper;
@@ -34,12 +47,13 @@ public class UserController {
     private final MultipartFileValidator multipartFileValidator;
     private final URLValidator urlValidator;
 
-
-    public UserController(UserService userService, FeedService feedService, OpmlService opmlService,
+    public UserController(UserService userService, AccountService accountService,
+                          FeedService feedService, OpmlService opmlService,
                           UserMapper userMapper, FeedMapper feedMapper,
                           MultipartFileValidator multipartFileValidator,
                           URLValidator urlValidator) {
         this.userService = userService;
+        this.accountService = accountService;
         this.feedService = feedService;
         this.opmlService = opmlService;
         this.userMapper = userMapper;
@@ -52,6 +66,16 @@ public class UserController {
     UserDTO getUser(@AuthenticationPrincipal Account account) {
         User user = userService.getUserByAccount(account).get();
         return userMapper.toDTO(user);
+    }
+
+    @DeleteMapping("/")
+    public void cancelAccount(@AuthenticationPrincipal Account account) {
+        //add user to canceled_users table.
+        userService.getUserByAccount(account).ifPresent(userService::cancelUser);
+
+        //set the cancledAt property  in the Account which will disable logins
+        account.setCanceledAt(ZonedDateTime.now());
+        accountService.saveAccount(account);
     }
 
     @PostMapping("/import")
@@ -79,6 +103,29 @@ public class UserController {
     }
 
 
+    @GetMapping(value="/export")
+    public ResponseEntity<Resource> exportFeeds(@AuthenticationPrincipal Account account)  {
+        try {
+            final User user = userService.getUserByAccount(account).get();
+
+            Head head = new Head("Ares Feeds", null, null, null,
+                    null, null, null, null, null, null,
+                    null, null, null
+            );
+
+            Body body = new Body(user.getFeeds().stream().map(Feed::toOutline).toList());
+            String xml = new OpmlWriter().write(new Opml("2.0", head, body));
+            ByteArrayResource resource = new ByteArrayResource(xml.getBytes(StandardCharsets.UTF_8));
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_XML)
+                    .contentLength(xml.getBytes(StandardCharsets.UTF_8).length)
+                    .body(resource);
+        } catch (OpmlWriteException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     @PutMapping("/addfeed")
     FeedDTO addFeed(@RequestParam("link") String link, @AuthenticationPrincipal @NonNull Account account){
@@ -96,13 +143,13 @@ public class UserController {
         return user.getFeeds().stream().map(feedMapper::toDTO).toList();
     }
 
-    @DeleteMapping("/feeds/{id}")
-    public void deleteFeed(@PathVariable("id") UUID id, @AuthenticationPrincipal Account principal) {
+    @DeleteMapping("/feeds/{feedId}")
+    public void unsubscribeFeed(@PathVariable("feedId") UUID feedId, @AuthenticationPrincipal Account principal) {
         User user = userService.getUserByAccount(principal).get();
-        Optional<Feed> feed = feedService.getFeedById(id);
+        Optional<Feed> feed = feedService.getFeedById(feedId);
 
         if (feed.isEmpty()){
-            throw new ControllerException(HttpStatus.NOT_FOUND,  String.format("Feed with id %s not found", id));
+            throw new ControllerException(HttpStatus.NOT_FOUND,  String.format("Feed with id %s not found", feedId));
         }
 
         Feed foundFeed = feed.get();

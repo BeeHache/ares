@@ -5,6 +5,7 @@ import { RegisterComponent } from './register/register.component';
 import { UserComponent } from './user/user.component';
 import { VerifyEmailComponent } from './verify-email/verify-email.component';
 import { LicensesComponent } from './about/licenses/licenses.component';
+import { PrivacyPolicyComponent } from './about/privacy-policy/privacy-policy.component';
 import { FeedsPageComponent } from './feeds-page/feeds-page.component';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
 import { FeedItemsComponent } from './feed-items/feed-items.component';
@@ -18,6 +19,7 @@ export const routes: Routes = [
   { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: 'verify/:code', component: VerifyEmailComponent },
   { path: 'about/licenses', component: LicensesComponent },
+  { path: 'about/privacy', component: PrivacyPolicyComponent },
   { path: 'user', component: UserComponent, canActivate: [authGuard] },
   { path: 'feeds', component: FeedsPageComponent, canActivate: [authGuard] },
   { path: 'feed-items/:id', component: FeedItemsComponent, canActivate: [authGuard] },
