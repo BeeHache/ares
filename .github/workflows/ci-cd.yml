@@ -159,21 +159,20 @@ jobs:
           ssh-keyscan -H ${{ secrets.DO_HOST }} >> ~/.ssh/known_hosts
 
       - name: Create Deployment Script
+        env:
+          SECRET_ENV_FILE: ${{ secrets.ENV_FILE }}
+          SECRET_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cat <<EOF > deploy.sh
           #!/bin/bash
           cd ~/ares
           
-          # Create .env file safely (quoted heredoc prevents variable expansion)
-          cat <<'ENV_EOF' > .env
-          ${{ secrets.ENV_FILE }}
-          ENV_EOF
-          
-          # Append IMAGE_REPO separately
+          # Create .env file from environment variable
+          echo "$SECRET_ENV_FILE" > .env
           echo "IMAGE_REPO=ghcr.io/${{ env.IMAGE_NAME }}" >> .env
           
           # Login to GHCR
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          echo "$SECRET_GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           
           # Pull and Restart
           docker compose -f prod-docker-compose.yml pull
