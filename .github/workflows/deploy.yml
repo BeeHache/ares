@@ -42,8 +42,8 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           
           # Pull and Restart
-          docker-compose -f prod-docker-compose.yml pull
-          docker-compose -f prod-docker-compose.yml up -d --remove-orphans
+          docker compose -f prod-docker-compose.yml pull
+          docker compose -f prod-docker-compose.yml up -d --remove-orphans
           docker image prune -f
           EOF
           chmod +x deploy.sh
