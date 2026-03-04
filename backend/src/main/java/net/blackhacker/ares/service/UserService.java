@@ -175,11 +175,10 @@ public class UserService {
                         ZonedDateTime now = ZonedDateTime.now();
                         user.getAccount().setAccountExpiresAt(now);
                         user.getAccount().setPasswordExpiresAt(now);
-                        saveUser(user);
-                        userRepository.cancelUser(user.getId());
-                        cacheService.evictSingleCacheValue(CacheService.FEED_DTOS_CACHE, user.getId());
-                        userRepository.cancelUser(user.getId());
-                        log.info("User cancelled successfully: {}", user.getEmail());
+                        User savedUser = saveUser(user);
+                        userRepository.cancelUser(savedUser.getId());
+                        cacheService.evictSingleCacheValue(CacheService.FEED_DTOS_CACHE, savedUser.getId());
+                        log.info("User cancelled successfully: {}", savedUser.getEmail());
                     } catch (Exception e) {
                         status.setRollbackOnly();
                         log.error("Error while trying to cancel user: {}", user.getEmail(), e);

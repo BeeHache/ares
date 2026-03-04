@@ -6,9 +6,6 @@ import jakarta.servlet.http.Cookie;
 import net.blackhacker.ares.TestConfig;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.RefreshToken;
-import net.blackhacker.ares.security.CustomAccessDeniedHandler;
-import net.blackhacker.ares.security.JwtAuthenticationEntryPoint;
-import net.blackhacker.ares.security.JwtAuthenticationFilter;
 import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.mapper.UserMapper;
 import net.blackhacker.ares.model.User;
@@ -21,13 +18,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -74,14 +75,19 @@ class LoginControllerTest {
     @MockitoBean
     private AccountService accountService;
 
+    // Mock OAuth2 beans to satisfy auto-configuration
     @MockitoBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    private ClientRegistrationRepository clientRegistrationRepository;
 
     @MockitoBean
-    private JwtAuthenticationEntryPoint unauthorizedHandler;
+    private OAuth2AuthorizedClientRepository authorizedClientRepository;
 
     @MockitoBean
-    private CustomAccessDeniedHandler forbiddenHandler;
+    private HttpSecurity httpSecurity;
+
+    @MockitoBean
+    private CacheManager cacheManager;
+
 
     private ObjectMapper objectMapper;
     private UserDTO loginDTO;

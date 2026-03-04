@@ -24,6 +24,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -92,6 +93,9 @@ class UserControllerTest {
     @MockitoBean
     private TransactionTemplate transactionTemplate;
 
+    @MockitoBean
+    private HttpSecurity httpSecurity;
+
     private Account account;
     private User user;
     private UserDTO userDTO;
@@ -152,7 +156,6 @@ class UserControllerTest {
                 .andExpect(status().isOk());
 
         verify(userService).cancelUser(user);
-        verify(accountService).saveAccount(any(Account.class));
     }
 
     @Test

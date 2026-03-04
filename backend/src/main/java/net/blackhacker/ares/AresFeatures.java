@@ -7,7 +7,7 @@ import org.togglz.core.context.FeatureContext;
 
 public enum AresFeatures implements Feature {
 
-    @Label("Public Launch") @EnabledByDefault PUBLIC_LAUNCH,
+    @Label("Public Launch") PUBLIC_LAUNCH,
     @Label("Maintenance Mode") MAINTENANCE_MODE,
     @Label("Full Search") FULL_SEARCH,
     @Label("Facebook Login") FACEBOOK_LOGIN,
