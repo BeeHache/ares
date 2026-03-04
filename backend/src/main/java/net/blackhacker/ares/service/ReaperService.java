@@ -18,7 +18,7 @@ public class ReaperService {
 
     @Scheduled(cron = "0 0 2 * * *")
     public void reap() {
-        userRepository.findCanceledUserIds().forEach(userId -> {
+        userRepository.getCanceledUserIds().forEach(userId -> {
             userRepository.deleteById(userId);
             userRepository.flush();
         });

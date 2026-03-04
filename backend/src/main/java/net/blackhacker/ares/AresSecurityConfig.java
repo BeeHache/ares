@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.security.CustomAccessDeniedHandler;
 import net.blackhacker.ares.security.JwtAuthenticationEntryPoint;
 import net.blackhacker.ares.security.JwtAuthenticationFilter;
+import net.blackhacker.ares.security.OAuth2LoginSuccessHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,16 +39,19 @@ public class AresSecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint unauthorizedHandler;
     private final CustomAccessDeniedHandler forbiddenHandler;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
     private final List<URL> allowedOrigins;
 
     public AresSecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
                               JwtAuthenticationEntryPoint unauthorizedHandler,
                               CustomAccessDeniedHandler forbiddenHandler,
+                              OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
                               @Value("${spring.application.allowedOrigins}") String allowedOrigins) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.unauthorizedHandler = unauthorizedHandler;
         this.forbiddenHandler = forbiddenHandler;
+        this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
         this.allowedOrigins = Arrays.stream(allowedOrigins.split(",")).map(url -> {
             try {
                 if (url.isEmpty()) {
@@ -83,8 +87,11 @@ public class AresSecurityConfig {
                         auth -> auth
                                 .requestMatchers("/features/**").hasRole("ADMIN")
                                 .requestMatchers(
-                                        "/api/login/**", "/api/register/**", "/").permitAll()
+                                        "/api/login/**", "/api/register/**", "/api/features", "/").permitAll()
                                 .anyRequest().authenticated())
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(oAuth2LoginSuccessHandler)
+                )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

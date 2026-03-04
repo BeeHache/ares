@@ -46,9 +46,6 @@ public class Account implements UserDetails {
     @Column
     private ZonedDateTime accountEnabledAt;
 
-    @Column
-    private ZonedDateTime canceledAt;
-
 
     @Override
     public boolean isAccountNonExpired() {
@@ -80,19 +77,7 @@ public class Account implements UserDetails {
             return false;
         }
 
-        if (isCanceled()) {
-            return false;
-        }
-
         return accountEnabledAt.isBefore(ZonedDateTime.now());
-    }
-
-    public boolean isCanceled() {
-        if (canceledAt == null) {
-            return false;
-        }
-
-        return canceledAt.isBefore(ZonedDateTime.now());
     }
 
     @ManyToMany(fetch = FetchType.EAGER)

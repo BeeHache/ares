@@ -15,3 +15,96 @@ button:hover { background-color: #218838; }
   font-size: 0.9em;
   margin-bottom: 15px;
 }
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #ccc;
+}
+
+.divider span {
+  padding: 0 10px;
+  color: #777;
+  font-size: 0.9em;
+}
+
+.social-login {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  font-weight: bold;
+  box-sizing: border-box;
+  transition: background-color 0.2s;
+  border: 1px solid transparent;
+}
+
+.btn-social svg {
+  margin-right: 10px;
+}
+
+.btn-github {
+  background-color: #24292e;
+}
+
+.btn-github:hover {
+  background-color: #1b1f23;
+}
+
+.btn-google {
+  background-color: #ffffff;
+  color: #1f1f1f;
+  border: 1px solid #dadce0;
+}
+
+.btn-google:hover {
+  background-color: #f8f9fa;
+  border-color: #dadce0;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+}
+
+.btn-apple {
+  background-color: #000000;
+  color: white;
+}
+
+.btn-apple:hover {
+  background-color: #333333;
+}
+
+.btn-microsoft {
+  background-color: #ffffff;
+  color: #5e5e5e;
+  border: 1px solid #8c8c8c;
+}
+
+.btn-microsoft:hover {
+  background-color: #f3f3f3;
+}
+
+.btn-facebook {
+  background-color: #1877f2;
+}
+
+.btn-facebook:hover {
+  background-color: #166fe5;
+}

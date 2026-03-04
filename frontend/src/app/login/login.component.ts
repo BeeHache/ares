@@ -19,6 +19,13 @@ export class LoginComponent implements OnInit {
   password = '';
   errorMessage = '';
   returnUrl: string;
+  githubLoginUrl = `${environment.apiUrl.replace('/api', '')}/oauth2/authorization/github`;
+  googleLoginUrl = `${environment.apiUrl.replace('/api', '')}/oauth2/authorization/google`;
+  facebookLoginUrl = `${environment.apiUrl.replace('/api', '')}/oauth2/authorization/facebook`;
+  appleLoginUrl = `${environment.apiUrl.replace('/api', '')}/oauth2/authorization/apple`;
+  microsoftLoginUrl = `${environment.apiUrl.replace('/api', '')}/oauth2/authorization/microsoft`;
+
+  features: { [key: string]: boolean } = {};
 
   constructor(
     private http: HttpClient,
@@ -33,7 +40,20 @@ export class LoginComponent implements OnInit {
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/feeds';
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadFeatures();
+    }
+  }
+
+  loadFeatures() {
+    this.http.get<{ [key: string]: boolean }>(`${environment.apiUrl}/features`).subscribe({
+      next: (data) => {
+        this.features = data;
+      },
+      error: (err) => console.error('Failed to load features', err)
+    });
+  }
 
   onSubmit() {
     this.errorMessage = ''; // Clear previous error

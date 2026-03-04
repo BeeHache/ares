@@ -3,6 +3,7 @@ package net.blackhacker.ares.repository.jpa;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -21,10 +22,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByAccount(Account account);
 
-    @Query(value = "insert into canceled_users (user_id) values (:userId)", nativeQuery = true)
+    @Modifying
+    @Query(value = "insert into canceled_users (user_id) values (:userId) on conflict do nothing", nativeQuery = true)
     void cancelUser(@Param("userId") Long userId);
 
 
     @Query(value = "select user_id from canceled_users", nativeQuery = true)
-    List<Long> findCanceledUserIds();
+    List<Long> getCanceledUserIds();
 }

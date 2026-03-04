@@ -2,6 +2,25 @@ spring:
   application:
     name: Ares
     allowedOrigins: ${ALLOWED_ORIGINS}
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            clientId: ${GH_CLIENT_ID}
+            clientSecret: ${GH_SECRET}
+          google:
+            clientId: ${GOOGLE_CLIENT_ID}
+            clientSecret: ${GOOGLE_SECRET}
+            scope:
+              - email
+              - profile
+          facebook:
+            clientId: ${FACEBOOK_CLIENT_ID}
+            clientSecret: ${FACEBOOK_SECRET}
+            scope:
+              - email
+              - public_profile
   profiles:
     active: ${ACTIVE_PROFILE}
   datasource:
@@ -45,7 +64,12 @@ spring:
       TEST_USER3_EMAIL: ${ARES_TEST_USER3}
       TEST_USER3_PW:  ${ARES_TEST_USER_PW3}
 
+server:
+  forward-headers-strategy: native
+
 app:
+  frontend:
+    url: ${FRONTEND_URL}
   copyright:
     start-year: 2024
 

@@ -33,9 +33,6 @@ services:
       - "443:443"
     volumes:
       - ./nginx/certs:/etc/nginx/certs:ro
-    depends_on:
-      - backend
-      - frontend
 
   backend:
     build: ./backend
@@ -66,6 +63,13 @@ services:
       ARES_TEST_USER_PW2: ${ARES_TEST_USER_PW2}
       ARES_TEST_USER3: ${ARES_TEST_USER3}
       ARES_TEST_USER_PW3: ${ARES_TEST_USER_PW3}
+      FRONTEND_URL: ${FRONTEND_URL}
+      GH_CLIENT_ID: ${GH_CLIENT_ID}
+      GH_SECRET: ${GH_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_SECRET: ${GOOGLE_SECRET}
+      FACEBOOK_CLIENT_ID: ${FACEBOOK_CLIENT_ID}
+      FACEBOOK_SECRET: ${FACEBOOK_SECRET}
 
 
     depends_on:
@@ -81,8 +85,6 @@ services:
     environment:
       PORT: 4000
       BACKEND_URL: http://backend:8080
-    depends_on:
-      - backend
 
 volumes:
   postgres_data:
