@@ -7,18 +7,10 @@ import org.togglz.core.context.FeatureContext;
 
 public enum AresFeatures implements Feature {
 
-    @Label("Public Launch")
-    @EnabledByDefault
-    PUBLIC_LAUNCH,
-
-
-    @Label("Maintenance Mode")
-    MAINTENANCE_MODE,
-
-    @Label("Full Search")
-    FULL_SEARCH;
-
-    public boolean isActive() {
-        return FeatureContext.getFeatureManager().isActive(this);
-    }
+    @Label("Public Launch") PUBLIC_LAUNCH,
+    @Label("Maintenance Mode") MAINTENANCE_MODE,
+    @Label("Full Search") FULL_SEARCH,
+    @Label("Facebook Login") FACEBOOK_LOGIN,
+    @Label("Apple Login") APPLE_LOGIN,
+    @Label("Microsoft Login") MICROSOFT_LOGIN;
 }

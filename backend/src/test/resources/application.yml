@@ -29,8 +29,17 @@ spring:
       TEST_USER2_PW: password
       TEST_USER3_EMAIL: user3@ares.com
       TEST_USER3_PW: password
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: test-client-id
+            client-secret: test-client-secret
 
 app:
+  frontend:
+    url: http://localhost:8080
   copyright:
     start-year: 2024
 user:
@@ -42,6 +51,12 @@ feed:
 togglz:
   features:
     SITE_MAINTENANCE:
+      enabled: false
+    FACEBOOK_LOGIN:
+      enabled: false
+    APPLE_LOGIN:
+      enabled: false
+    MICROSOFT_LOGIN:
       enabled: false
 
 security:

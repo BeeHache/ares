@@ -28,6 +28,15 @@ create table if not exists users (
     FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
 );
 
+--
+--List of user ids that tha have canceled their accounts.
+--The ReaperService will periodically remove these accounts from the DB
+--
+create table if not exists canceled_users (
+  user_id BIGINT NOT NULL PRIMARY KEY,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 create table if not exists roles (
     id BIGINT NOT NULL PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name VARCHAR(255) NOT NULL UNIQUE,

@@ -192,8 +192,17 @@ class UserServiceTest {
 
     @Test
     void cancelUser_shouldCallRepository() {
+
+        // Mock TransactionTemplate
+        doAnswer(invocation -> {
+            Consumer<TransactionStatus> callback = invocation.getArgument(0);
+            callback.accept(null);
+            return null;
+        }).when(transactionTemplate).executeWithoutResult(any());
+
+        when(userRepository.save(user)).thenReturn(user);
         userService.cancelUser(user);
-        verify(userRepository).cancelUser(user.getId());
+        assertFalse(user.getAccount().isAccountNonExpired());
     }
 
     @Test

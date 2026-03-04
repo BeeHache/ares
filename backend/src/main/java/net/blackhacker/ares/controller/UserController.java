@@ -12,7 +12,6 @@ import net.blackhacker.ares.mapper.UserMapper;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
-import net.blackhacker.ares.service.AccountService;
 import net.blackhacker.ares.service.FeedService;
 import net.blackhacker.ares.service.OpmlService;
 import net.blackhacker.ares.service.UserService;
@@ -30,7 +29,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.charset.StandardCharsets;
-import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,7 +37,6 @@ import java.util.UUID;
 @RequestMapping("/api/user")
 public class UserController {
     private final UserService userService;
-    private final AccountService accountService;
     private final FeedService feedService;
     private final OpmlService opmlService;
     private final UserMapper userMapper;
@@ -47,13 +44,12 @@ public class UserController {
     private final MultipartFileValidator multipartFileValidator;
     private final URLValidator urlValidator;
 
-    public UserController(UserService userService, AccountService accountService,
+    public UserController(UserService userService,
                           FeedService feedService, OpmlService opmlService,
                           UserMapper userMapper, FeedMapper feedMapper,
                           MultipartFileValidator multipartFileValidator,
                           URLValidator urlValidator) {
         this.userService = userService;
-        this.accountService = accountService;
         this.feedService = feedService;
         this.opmlService = opmlService;
         this.userMapper = userMapper;
@@ -64,18 +60,13 @@ public class UserController {
 
     @GetMapping("/")
     UserDTO getUser(@AuthenticationPrincipal Account account) {
-        User user = userService.getUserByAccount(account).get();
-        return userMapper.toDTO(user);
+        return userService.getUserByAccount(account).map(userMapper::toDTO).orElse(null);
     }
 
     @DeleteMapping("/")
     public void cancelAccount(@AuthenticationPrincipal Account account) {
         //add user to canceled_users table.
         userService.getUserByAccount(account).ifPresent(userService::cancelUser);
-
-        //set the cancledAt property  in the Account which will disable logins
-        account.setCanceledAt(ZonedDateTime.now());
-        accountService.saveAccount(account);
     }
 
     @PostMapping("/import")

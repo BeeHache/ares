@@ -146,11 +146,13 @@ export class UserComponent implements OnInit {
       next: () => {
         this.showDeleteConfirm = false;
         this.showDeleteSuccess = true;
+        this.cdr.detectChanges(); // Force UI update
       },
       error: (err) => {
         console.error('Delete account failed', err);
         alert('Failed to delete account. Please try again.');
         this.showDeleteConfirm = false;
+        this.cdr.detectChanges(); // Force UI update
       }
     });
   }

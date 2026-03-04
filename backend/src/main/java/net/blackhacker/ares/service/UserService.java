@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -32,7 +33,7 @@ public class UserService {
                        EmailConfirmationRepository emailConfirmationRepository,
                        CacheService cacheService,
                        TransactionTemplate transactionTemplate,
-                       @Value("${app.frontend.url:http://localhost:4200}") String frontendUrl) {
+                       @Value("${app.frontend.url}") String frontendUrl) {
         this.userRepository = userRepository;
         this.emailSenderService = emailSenderService;
         this.cacheService = cacheService;
@@ -167,6 +168,22 @@ public class UserService {
     }
 
     public void cancelUser(User user) {
-        userRepository.cancelUser(user.getId());
+
+        transactionTemplate.executeWithoutResult(
+                status -> {
+                    try {
+                        ZonedDateTime now = ZonedDateTime.now();
+                        user.getAccount().setAccountExpiresAt(now);
+                        user.getAccount().setPasswordExpiresAt(now);
+                        User savedUser = saveUser(user);
+                        userRepository.cancelUser(savedUser.getId());
+                        cacheService.evictSingleCacheValue(CacheService.FEED_DTOS_CACHE, savedUser.getId());
+                        log.info("User cancelled successfully: {}", savedUser.getEmail());
+                    } catch (Exception e) {
+                        status.setRollbackOnly();
+                        log.error("Error while trying to cancel user: {}", user.getEmail(), e);
+                    }
+                }
+        );
     }
 }

@@ -11,6 +11,7 @@ import { ForgotPasswordComponent } from './forgot-password/forgot-password.compo
 import { FeedItemsComponent } from './feed-items/feed-items.component';
 import { SearchComponent } from './search/search.component';
 import { authGuard } from './auth.guard';
+import { LoginSuccessComponent } from './login/login-success/login-success.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -20,6 +21,7 @@ export const routes: Routes = [
   { path: 'verify/:code', component: VerifyEmailComponent },
   { path: 'about/licenses', component: LicensesComponent },
   { path: 'about/privacy', component: PrivacyPolicyComponent },
+  { path: 'login-success', component: LoginSuccessComponent }, // New route for OAuth2 redirect
   { path: 'user', component: UserComponent, canActivate: [authGuard] },
   { path: 'feeds', component: FeedsPageComponent, canActivate: [authGuard] },
   { path: 'feed-items/:id', component: FeedItemsComponent, canActivate: [authGuard] },
