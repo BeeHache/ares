@@ -2,6 +2,7 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: ares-postgres
+    restart: always
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -14,6 +15,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: ares-redis
+    restart: always
     ports:
       - "6379:6379"
     volumes:
@@ -28,6 +30,7 @@ services:
   nginx:
     build: ./nginx
     container_name: ares-nginx
+    restart: always
     ports:
       - "80:80"
       - "443:443"
@@ -39,6 +42,7 @@ services:
     container_name: ares-backend
     volumes:
       - ./logs:/app/logs
+    restart: always
     ports:
       - "8080:8080"
       - "5005:5005"
@@ -57,12 +61,6 @@ services:
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
       ARES_ADMIN_EMAIL: ${ARES_ADMIN_EMAIL}
       ARES_ADMIN_PASSWORD: ${ARES_ADMIN_PASSWORD}
-      ARES_TEST_USER1: ${ARES_TEST_USER1}
-      ARES_TEST_USER_PW1: ${ARES_TEST_USER_PW1}
-      ARES_TEST_USER2: ${ARES_TEST_USER2}
-      ARES_TEST_USER_PW2: ${ARES_TEST_USER_PW2}
-      ARES_TEST_USER3: ${ARES_TEST_USER3}
-      ARES_TEST_USER_PW3: ${ARES_TEST_USER_PW3}
       FRONTEND_URL: ${FRONTEND_URL}
       GH_CLIENT_ID: ${GH_CLIENT_ID}
       GH_SECRET: ${GH_SECRET}
@@ -80,6 +78,7 @@ services:
   frontend:
     build: ./frontend
     container_name: ares-frontend
+    restart: always
     ports:
       - "4200:4000"
     environment:
