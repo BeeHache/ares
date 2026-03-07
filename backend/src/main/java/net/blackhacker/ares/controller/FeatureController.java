@@ -1,9 +1,10 @@
 package net.blackhacker.ares.controller;
 
 import net.blackhacker.ares.AresFeatures;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.togglz.core.context.FeatureContext;
+import org.togglz.core.repository.FeatureState;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,5 +20,13 @@ public class FeatureController {
             features.put(feature.name(), feature.isActive());
         }
         return features;
+    }
+
+    @PostMapping("/{featureName}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public void setFeatureState(@PathVariable String featureName, @RequestParam boolean enabled) {
+        AresFeatures feature = AresFeatures.valueOf(featureName);
+        FeatureState state = new FeatureState(feature, enabled);
+        FeatureContext.getFeatureManager().setFeatureState(state);
     }
 }

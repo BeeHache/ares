@@ -22,6 +22,9 @@ public class FeedMapper implements ModelDTOMapper<Feed, FeedDTO> {
         feedDTO.setId(feed.getId());
         feedDTO.setTitle(feed.getTitle());
         feedDTO.setDescription(feed.getDescription());
+        if (feed.getUrl()!=null) {
+            feedDTO.setUrl(feed.getUrl().toString());
+        }
         if (feed.getLink()!=null) {
             feedDTO.setLink(feed.getLink().toString());
         }
@@ -29,6 +32,9 @@ public class FeedMapper implements ModelDTOMapper<Feed, FeedDTO> {
             feedDTO.setImageUrl(feed.getImageUrl().toString());
         }
         feedDTO.setIsPodcast(feed.isPodcast());
+        if (feed.getSubscriptionCount() != null){
+            feedDTO.setSubscribers(feed.getSubscriptionCount());
+        }
         return feedDTO;
     }
 
@@ -38,6 +44,7 @@ public class FeedMapper implements ModelDTOMapper<Feed, FeedDTO> {
         feed.setId(feedDTO.getId());
         feed.setTitle(feedDTO.getTitle());
         feed.setDescription(feedDTO.getDescription());
+        feed.setUrlFromString(feedDTO.getUrl());
         feed.setLinkFromString(feedDTO.getLink());
         feed.setImageUrlFromString(feedDTO.getImageUrl());
         feed.setPodcast(feedDTO.getIsPodcast());

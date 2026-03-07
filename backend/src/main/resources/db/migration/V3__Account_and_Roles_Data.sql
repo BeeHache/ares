@@ -1,7 +1,7 @@
 -- 1. Insert Accounts
 -- Passwords should be hashed in a real app
-INSERT INTO accounts (username, password, type)
-VALUES ('${ADMIN_EMAIL}', '${ADMIN_PASSWORD}', 'ADMIN')
+INSERT INTO accounts (username, password, type, account_enabled_at)
+VALUES ('${ADMIN_EMAIL}', '${ADMIN_PASSWORD}', 'ADMIN', now())
 ON CONFLICT (username, type) DO NOTHING;
 
 -- 2. Insert Admins (Linked to Account)
@@ -12,7 +12,15 @@ ON CONFLICT (email) DO NOTHING;
 -- 3. Insert Recursive Roles
 -- aAdmin roles
 INSERT INTO roles (name) VALUES ('SUPER_ADMIN') ON CONFLICT (name) DO NOTHING;
-INSERT INTO roles (name) VALUES ('EDITOR') ON CONFLICT (name) DO NOTHING;
+INSERT INTO roles (name, parent_id)
+VALUES ('ADMIN',
+        (select id from roles where name='SUPER_ADMIN'))
+ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO roles (name, parent_id)
+VALUES ('EDITOR',
+        (select id from roles where name='SUPER_ADMIN'))
+ON CONFLICT (name) DO NOTHING;
 
 INSERT INTO roles (name, parent_id)
 VALUES ('USER_MANAGER',

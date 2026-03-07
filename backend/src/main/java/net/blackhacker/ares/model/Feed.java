@@ -59,6 +59,9 @@ public class Feed implements Serializable {
     @Column(nullable = false)
     private ZonedDateTime lastModified = ZonedDateTime.now();
 
+    @Transient
+    private Long subscriptionCount=null;
+
     @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL)
     private Set<FeedItem> feedItems = new HashSet<>();
 

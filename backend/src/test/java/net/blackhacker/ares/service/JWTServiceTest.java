@@ -3,6 +3,7 @@ package net.blackhacker.ares.service;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import net.blackhacker.ares.model.Account;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,31 +35,31 @@ class JWTServiceTest {
 
     @Test
     void generateToken_shouldReturnToken() {
-        UserDetails userDetails = new User("testuser", "password", Collections.emptyList());
-        String token = jwtService.generateToken(userDetails);
+        Account account = new Account("testuser", "password", Account.AccountType.USER, Collections.emptyList());
+        String token = jwtService.generateToken(account);
         assertNotNull(token);
         assertFalse(token.isEmpty());
     }
 
     @Test
     void extractUsername_shouldReturnUsername() {
-        UserDetails userDetails = new User("testuser", "password", Collections.emptyList());
-        String token = jwtService.generateToken(userDetails);
+        Account account = new Account("testuser", "password", Account.AccountType.USER, Collections.emptyList());
+        String token = jwtService.generateToken(account);
         String username = jwtService.extractUsername(token);
         assertEquals("testuser", username);
     }
 
     @Test
     void isTokenValid_shouldReturnTrue_whenTokenIsValid() {
-        UserDetails userDetails = new User("testuser", "password", Collections.emptyList());
-        String token = jwtService.generateToken(userDetails);
-        assertTrue(jwtService.isTokenValid(token, userDetails));
+        Account account = new Account("testuser", "password", Account.AccountType.USER, Collections.emptyList());
+        String token = jwtService.generateToken(account);
+        assertTrue(jwtService.isTokenValid(token, account));
     }
 
     @Test
     void isTokenValid_shouldReturnFalse_whenUsernameDoesNotMatch() {
-        UserDetails userDetails = new User("testuser", "password", Collections.emptyList());
-        String token = jwtService.generateToken(userDetails);
+        Account account = new Account("testuser", "password", Account.AccountType.USER, Collections.emptyList());
+        String token = jwtService.generateToken(account);
         
         UserDetails otherUser = new User("otheruser", "password", Collections.emptyList());
         assertFalse(jwtService.isTokenValid(token, otherUser));
@@ -67,11 +68,11 @@ class JWTServiceTest {
     @Test
     void isTokenValid_shouldReturnFalse_whenTokenIsExpired() {
         // Create an expired token manually
-        UserDetails userDetails = new User("testuser", "password", Collections.emptyList());
+        Account account = new Account("testuser", "password", Account.AccountType.USER, Collections.emptyList());
         
         byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
         String expiredToken = Jwts.builder()
-                .subject(userDetails.getUsername())
+                .subject(account.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis() - 20000)) // 20 seconds ago
                 .expiration(new Date(System.currentTimeMillis() - 10000)) // 10 seconds ago
                 .signWith(Keys.hmacShaKeyFor(keyBytes))
@@ -83,6 +84,6 @@ class JWTServiceTest {
         // The current implementation of isTokenValid does NOT catch this exception.
         // So we expect the exception to be thrown.
         
-        assertThrows(io.jsonwebtoken.ExpiredJwtException.class, () -> jwtService.isTokenValid(expiredToken, userDetails));
+        assertThrows(io.jsonwebtoken.ExpiredJwtException.class, () -> jwtService.isTokenValid(expiredToken, account));
     }
 }

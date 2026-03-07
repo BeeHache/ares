@@ -42,6 +42,9 @@ public interface FeedRepository extends JpaRepository<Feed, UUID> {
             "FROM feed_items " +
             "WHERE search_vector @@ plainto_tsquery('english', :query)";
 
+    String SUBSCRIPTION_COUNT =
+            "SELECT count(0) FROM subscriptions WHERE feed_id = :feedId";
+
     @Query(FIND_MODIFIED_BEFORE)
     Page<UUID> findFeedIdsModifiedBefore(@Param("dt") ZonedDateTime zonedDateTime, Pageable pageable);
 
@@ -60,5 +63,7 @@ public interface FeedRepository extends JpaRepository<Feed, UUID> {
     @Query(value = SEARCH_ITEMS, nativeQuery = true)
     Collection<FeedItemProjection> searchItems(@Param("query") String query);
 
+    @Query(value = SUBSCRIPTION_COUNT, nativeQuery = true)
+    Long findSubscriptionCountByFeedId(@Param("feedId") UUID feedId);
 
 }

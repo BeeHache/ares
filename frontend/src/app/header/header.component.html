@@ -24,8 +24,18 @@
       </div>
 
       <ng-container *ngIf="authService.currentUser$ | async as username; else loggedOut">
-        <a routerLink="/feeds" class="nav-link" (click)="closeMenu()">Feeds</a>
-        <span class="username"><a routerLink="/user" class="nav-link" (click)="closeMenu()">{{ username }}</a></span>
+        <a *ngIf="authService.hasRole('ROLE_USER')" routerLink="/feeds" class="nav-link" (click)="closeMenu()">Feeds</a>
+        <a *ngIf="authService.hasRole('ROLE_ADMIN')" routerLink="/admin" class="nav-link" (click)="closeMenu()">Admin</a>
+
+        <span class="username">
+          <ng-container *ngIf="authService.hasRole('ROLE_ADMIN'); else userLink">
+            {{ (authService.currentName$ | async) || username }}
+          </ng-container>
+          <ng-template #userLink>
+            <a routerLink="/user" class="nav-link" (click)="closeMenu()">{{ username }}</a>
+          </ng-template>
+        </span>
+
         <button (click)="authService.logout(); closeMenu()" class="logout-btn">Logout</button>
       </ng-container>
       <ng-template #loggedOut>

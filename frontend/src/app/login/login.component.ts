@@ -6,6 +6,12 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../auth.service';
 import { PasswordInputComponent } from '../shared/password-input/password-input.component';
 import { environment } from '../../environments/environment';
+import { jwtDecode } from 'jwt-decode';
+
+interface DecodedToken {
+  roles?: string[];
+  [key: string]: any;
+}
 
 @Component({
   selector: 'app-login',
@@ -18,7 +24,7 @@ export class LoginComponent implements OnInit {
   email = '';
   password = '';
   errorMessage = '';
-  returnUrl: string;
+  returnUrl: string | null = null;
   githubLoginUrl = `${environment.apiUrl.replace('/api', '')}/oauth2/authorization/github`;
   googleLoginUrl = `${environment.apiUrl.replace('/api', '')}/oauth2/authorization/google`;
   facebookLoginUrl = `${environment.apiUrl.replace('/api', '')}/oauth2/authorization/facebook`;
@@ -36,8 +42,8 @@ export class LoginComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
-    // If a returnUrl is provided, use it. Otherwise, default to the '/feeds' page.
-    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/feeds';
+    // Only set returnUrl if it's explicitly in the query params
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || null;
   }
 
   ngOnInit(): void {
@@ -59,13 +65,13 @@ export class LoginComponent implements OnInit {
     this.errorMessage = ''; // Clear previous error
 
     if (isPlatformBrowser(this.platformId)) {
-      const loginData = { email: this.email, password: this.password };
+      const loginData = { username: this.email, password: this.password };
       this.http.post<any>(`${environment.apiUrl}/login`, loginData).subscribe({
         next: (response) => {
           if (response.token) {
               this.authService.login(response.token);
               this.ngZone.run(() => {
-                this.router.navigateByUrl(this.returnUrl);
+                this.redirectUser(response.token);
               });
           }
         },
@@ -98,6 +104,27 @@ export class LoginComponent implements OnInit {
           });
         }
       });
+    }
+  }
+
+  redirectUser(token: string) {
+    if (this.returnUrl) {
+      this.router.navigateByUrl(this.returnUrl);
+      return;
+    }
+
+    try {
+      const decodedToken: DecodedToken = jwtDecode(token);
+      const roles = decodedToken.roles || [];
+
+      if (roles.includes('ROLE_ADMIN')) {
+        this.router.navigate(['/admin']);
+      } else if (roles.includes('ROLE_USER')) {
+        this.router.navigate(['/feeds']);
+      }
+    } catch (error) {
+      console.error('Error decoding token for redirect:', error);
+      this.router.navigate(['/']);
     }
   }
 

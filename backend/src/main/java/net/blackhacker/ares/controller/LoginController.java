@@ -1,6 +1,7 @@
 package net.blackhacker.ares.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import net.blackhacker.ares.dto.LoginDTO;
 import net.blackhacker.ares.dto.TokenDTO;
 import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.model.Account;
@@ -45,15 +46,15 @@ public class LoginController {
     }
 
     @PostMapping
-    ResponseEntity<TokenDTO> login(@RequestBody UserDTO userDTO) {
-        log.info("Login attempt for user: {}", userDTO.getEmail());
+    ResponseEntity<TokenDTO> login(@RequestBody LoginDTO loginDTO) {
+        log.info("Login attempt for user: {}", loginDTO.getUsername());
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(userDTO.getEmail(), userDTO.getPassword())
+                new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword())
         );
 
         Account principal = (Account) authentication.getPrincipal();
         if (principal == null){
-            log.warn("Login failed: Principal is null for user: {}", userDTO.getEmail());
+            log.warn("Login failed: Principal is null for user: {}", loginDTO.getUsername());
             throw new ControllerException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
 
@@ -67,12 +68,13 @@ public class LoginController {
         Account account = optionalAccount.get();
         RefreshToken refreshToken = refreshTokenService.generateToken(account);
 
+
         ResponseCookie cookie = createRefreshCookie(refreshToken.getToken());
         TokenDTO accessTokenDTO = TokenDTO.token(accessToken);
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, cookie.toString());
         
-        log.info("Login successful for user: {}", userDTO.getEmail());
+        log.info("Login successful for user: {}", loginDTO.getUsername());
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .headers(headers)

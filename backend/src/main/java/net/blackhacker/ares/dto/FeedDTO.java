@@ -13,9 +13,11 @@ public class FeedDTO implements Serializable {
     private UUID id;
     private String title;
     private String description;
+    private String url;
     private String link;
     private Boolean isPodcast = Boolean.FALSE;
     private String imageUrl;
+    private Long subscribers = null;
 
     private Set<FeedItemDTO> items = new TreeSet<>();
 
