@@ -42,7 +42,7 @@ jobs:
 
       - name: Install Dependencies
         working-directory: ./frontend
-        run: npm install # Changed from ci to install to handle package.json updates if lockfile is stale
+        run: npm install
 
       - name: Install Playwright Browsers
         working-directory: ./frontend
@@ -50,4 +50,4 @@ jobs:
 
       - name: Run Tests
         working-directory: ./frontend
-        run: npm run test -- --no-watch --browser=chromium
+        run: npm run test -- --no-watch --browsers=chromium
