@@ -42,8 +42,12 @@ jobs:
 
       - name: Install Dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: npm install # Changed from ci to install to handle package.json updates if lockfile is stale
+
+      - name: Install Playwright Browsers
+        working-directory: ./frontend
+        run: npx playwright install chromium
 
       - name: Run Tests
         working-directory: ./frontend
-        run: npm run test -- --no-watch --no-progress --browsers=ChromeHeadless
+        run: npm run test -- --no-watch --browser=chromium
