@@ -67,6 +67,9 @@ public class Feed implements Serializable {
 
     public void setUrlFromString(String urlString) {
         try {
+            if (urlString==null) {
+                return;
+            }
             this.url = new URI(urlString).toURL();
         } catch (MalformedURLException | URISyntaxException e) {
             log.error("Could not create URL from {}", urlString,e);
@@ -75,6 +78,9 @@ public class Feed implements Serializable {
 
     public void setLinkFromString(String urlString) {
         try {
+            if (urlString==null) {
+                return;
+            }
             this.link = new URI(urlString).toURL();
         } catch (MalformedURLException | URISyntaxException e) {
             log.error(" {}", urlString,e);
