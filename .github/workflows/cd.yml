@@ -1,0 +1,96 @@
+name: CD - Build & Publish
+
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  # ------------------------------------------------------------------
+  # 1. BUILD & PUBLISH IMAGES
+  # ------------------------------------------------------------------
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        service: [backend, frontend, nginx]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17 (for Backend build)
+        if: matrix.service == 'backend'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build Backend JAR
+        if: matrix.service == 'backend'
+        run: mvn -B package --file backend/pom.xml -DskipTests
+
+      - name: Set up Node.js (for Frontend build)
+        if: matrix.service == 'frontend'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build Frontend
+        if: matrix.service == 'frontend'
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm run build -- --configuration production
+
+      - name: Lowercase Image Name
+        run: |
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ matrix.service }}
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}:${{ github.sha }}
+
+  # ------------------------------------------------------------------
+  # 2. TRIGGER DEPLOYMENT (GitOps)
+  # ------------------------------------------------------------------
+  trigger-deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Config Repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/ares-deploy # Replace with your 2nd repo name
+          token: ${{ secrets.DEPLOY_REPO_TOKEN }} # PAT with repo access
+          path: deploy-repo
+
+      - name: Update Image Tag
+        run: |
+          cd deploy-repo
+          # Example: Update tag in values.yaml or docker-compose.yml
+          # sed -i "s/tag: .*/tag: ${{ github.sha }}/" values.yaml
+          # git config user.name "GitHub Actions"
+          # git config user.email "actions@github.com"
+          # git commit -am "Update image tag to ${{ github.sha }}"
+          # git push
+        continue-on-error: true # Placeholder, don't fail if repo doesn't exist yet

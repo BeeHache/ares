@@ -42,6 +42,10 @@ public class UserService {
         this.frontendUrl = frontendUrl;
     }
 
+    public UserRepository getUserRepository() {
+        return userRepository;
+    }
+
     public User registerUser(User user) {
         log.info("Registering user: {}", user.getEmail());
 

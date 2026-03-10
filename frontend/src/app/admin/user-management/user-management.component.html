@@ -1,0 +1,51 @@
+<div class="user-management-container">
+  <h2>User Management</h2>
+
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users">
+          <td>{{ user.id }}</td>
+          <td>{{ user.username }}</td>
+          <td>
+            <span class="badge" [class.admin]="user.type === 'ADMIN'">{{ user.type }}</span>
+          </td>
+          <td>
+            <span class="status" [class.locked]="isLocked(user)" [class.active]="!isLocked(user)">
+              {{ isLocked(user) ? 'Locked' : 'Active' }}
+            </span>
+          </td>
+          <td>
+            <button *ngIf="!isLocked(user)" (click)="lockUser(user.id)" class="btn-action btn-lock" title="Lock User">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </button>
+            <button *ngIf="isLocked(user)" (click)="unlockUser(user.id)" class="btn-action btn-unlock" title="Unlock User">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+              </svg>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <button [disabled]="currentPage === 0" (click)="loadUsers(currentPage - 1)">Previous</button>
+    <span>Page {{ currentPage + 1 }} of {{ totalPages }}</span>
+    <button [disabled]="currentPage === totalPages - 1" (click)="loadUsers(currentPage + 1)">Next</button>
+  </div>
+</div>

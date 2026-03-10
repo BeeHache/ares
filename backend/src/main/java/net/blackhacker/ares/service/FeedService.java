@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.dto.*;
 import net.blackhacker.ares.events.FeedSavedEvent;
 import net.blackhacker.ares.mapper.FeedItemMapper;
+import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.FeedItem;
 import net.blackhacker.ares.projection.FeedItemProjection;
@@ -38,22 +39,22 @@ public class FeedService {
 
     private final Long feedIntervalMs;
     private final Integer queryLimit;
+    private final FeedMapper feedMapper;
     private final FeedItemMapper feedItemMapper;
     private final ApplicationEventPublisher publisher;
 
     public FeedService(
             FeedRepository feedRepository,
             FeedItemRepository feedItemRepository,
-            URLFetchService urlFetchService,
             RssService rssService,
-            FeedPageService feedPageService,
             TransactionTemplate transactionTemplate,
-            CacheService cacheService,
+            FeedMapper feedMapper,
             FeedItemMapper feedItemMapper,
             ApplicationEventPublisher publisher,
             @Value("${feed.interval_ms}") Long feedIntervalMs,
             @Value("${feed.query_limit}") Integer queryLimit) {
         this.feedRepository = feedRepository;
+        this.feedMapper = feedMapper;
         this.feedItemRepository = feedItemRepository;
         this.rssService = rssService;
         this.transactionTemplate = transactionTemplate;
@@ -66,6 +67,18 @@ public class FeedService {
     @EventListener(ApplicationReadyEvent.class)
     public void startup() {
         updateFeeds();
+    }
+
+    public FeedRepository getFeedRepository() {
+        return feedRepository;
+    }
+
+    public FeedItemRepository getFeedItemRepository() {
+        return feedItemRepository;
+    }
+
+    public Page<Feed> findAllFeeds(Pageable pageable) {
+        return feedRepository.findAll(pageable);
     }
 
     public Feed addFeed(String link) {

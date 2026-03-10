@@ -5,9 +5,12 @@ import net.blackhacker.ares.security.CustomAccessDeniedHandler;
 import net.blackhacker.ares.security.JwtAuthenticationEntryPoint;
 import net.blackhacker.ares.security.JwtAuthenticationFilter;
 import net.blackhacker.ares.security.OAuth2LoginSuccessHandler;
+import net.blackhacker.ares.service.RoleHierarchyService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -15,7 +18,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -40,6 +43,7 @@ public class AresSecurityConfig {
     private final JwtAuthenticationEntryPoint unauthorizedHandler;
     private final CustomAccessDeniedHandler forbiddenHandler;
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+    private final RoleHierarchyService roleHierarchyService;
 
     private final List<URL> allowedOrigins;
 
@@ -47,11 +51,13 @@ public class AresSecurityConfig {
                               JwtAuthenticationEntryPoint unauthorizedHandler,
                               CustomAccessDeniedHandler forbiddenHandler,
                               OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
+                              RoleHierarchyService roleHierarchyService,
                               @Value("${spring.application.allowedOrigins}") String allowedOrigins) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.unauthorizedHandler = unauthorizedHandler;
         this.forbiddenHandler = forbiddenHandler;
         this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
+        this.roleHierarchyService = roleHierarchyService;
         this.allowedOrigins = Arrays.stream(allowedOrigins.split(",")).map(url -> {
             try {
                 if (url.isEmpty()) {
@@ -68,11 +74,19 @@ public class AresSecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    }
+
+    @Bean
+    public RoleHierarchy roleHierarchy() {
+        String hierarchy = roleHierarchyService.getRoleHierarchyString();
+        return RoleHierarchyImpl.fromHierarchy(hierarchy);
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+        MaintenanceModeFilter maintenanceModeFilter = new MaintenanceModeFilter();
+
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -92,7 +106,8 @@ public class AresSecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(oAuth2LoginSuccessHandler)
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(maintenanceModeFilter, JwtAuthenticationFilter.class); // Run AFTER auth
         return http.build();
     }
 

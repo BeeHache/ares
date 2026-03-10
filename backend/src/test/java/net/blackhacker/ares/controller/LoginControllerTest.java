@@ -6,6 +6,10 @@ import jakarta.servlet.http.Cookie;
 import net.blackhacker.ares.TestConfig;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.RefreshToken;
+import net.blackhacker.ares.security.CustomAccessDeniedHandler;
+import net.blackhacker.ares.security.JwtAuthenticationEntryPoint;
+import net.blackhacker.ares.security.JwtAuthenticationFilter;
+import net.blackhacker.ares.security.OAuth2LoginSuccessHandler;
 import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.mapper.UserMapper;
 import net.blackhacker.ares.model.User;
@@ -18,7 +22,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -75,6 +78,22 @@ class LoginControllerTest {
     @MockitoBean
     private AccountService accountService;
 
+    // Security Beans needed by AresSecurityConfig
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockitoBean
+    private JwtAuthenticationEntryPoint unauthorizedHandler;
+
+    @MockitoBean
+    private CustomAccessDeniedHandler forbiddenHandler;
+
+    @MockitoBean
+    private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+
+    @MockitoBean
+    private RoleHierarchyService roleHierarchyService;
+
     // Mock OAuth2 beans to satisfy auto-configuration
     @MockitoBean
     private ClientRegistrationRepository clientRegistrationRepository;
@@ -84,10 +103,6 @@ class LoginControllerTest {
 
     @MockitoBean
     private HttpSecurity httpSecurity;
-
-    @MockitoBean
-    private CacheManager cacheManager;
-
 
     private ObjectMapper objectMapper;
     private UserDTO loginDTO;
@@ -119,6 +134,9 @@ class LoginControllerTest {
         refreshToken = new RefreshToken();
         refreshToken.setToken(refreshTokenString);
         refreshToken.setUsername(loginDTO.getEmail());
+
+        // Mock role hierarchy to prevent DB access
+        when(roleHierarchyService.getRoleHierarchyString()).thenReturn("ROLE_ADMIN > ROLE_USER");
     }
 
     @Test

@@ -3,6 +3,7 @@ package net.blackhacker.ares.service;
 import net.blackhacker.ares.dto.FeedItemDTO;
 import net.blackhacker.ares.events.FeedSavedEvent;
 import net.blackhacker.ares.mapper.FeedItemMapper;
+import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.FeedItem;
 import net.blackhacker.ares.repository.jpa.FeedItemRepository;
@@ -39,16 +40,13 @@ FeedServiceTest {
     private FeedItemRepository feedItemRepository;
 
     @Mock
-    private URLFetchService  urlFetchService;
-
-    @Mock
     private RssService rssService;
 
     @Mock
-    private CacheService cacheService;
+    private TransactionTemplate transactionTemplate;
 
     @Mock
-    private TransactionTemplate transactionTemplate;
+    private FeedMapper feedMapper;
 
     @Mock
     private FeedItemMapper feedItemMapper;
@@ -70,11 +68,9 @@ FeedServiceTest {
         feedService = new FeedService(
                 feedRepository,
                 feedItemRepository,
-                urlFetchService,
                 rssService,
-                null, // FeedPageService not used in methods tested
                 transactionTemplate,
-                cacheService,
+                feedMapper,
                 feedItemMapper,
                 publisher,
                 300000L, // 5 min

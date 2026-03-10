@@ -2,6 +2,12 @@ import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { AuthService } from '../../auth.service';
+import { jwtDecode } from 'jwt-decode';
+
+interface DecodedToken {
+  roles?: string[];
+  [key: string]: any;
+}
 
 @Component({
   selector: 'app-login-success',
@@ -28,8 +34,9 @@ export class LoginSuccessComponent implements OnInit {
         if (token) {
           console.log('LoginSuccessComponent: Token found, logging in...');
           this.authService.login(token);
-          // Small delay to ensure localStorage is set before guard checks
-          setTimeout(() => this.router.navigate(['/feeds']), 50);
+
+          // Determine redirect based on role
+          setTimeout(() => this.redirectUser(token), 50);
         } else {
           console.error('LoginSuccessComponent: No token found in login-success redirect');
           console.log('LoginSuccessComponent: Full URL:', this.router.url);
@@ -38,6 +45,22 @@ export class LoginSuccessComponent implements OnInit {
       });
     } else {
         console.log('LoginSuccessComponent: Running on Server (SSR), skipping logic.');
+    }
+  }
+
+  redirectUser(token: string) {
+    try {
+      const decodedToken: DecodedToken = jwtDecode(token);
+      const roles = decodedToken.roles || [];
+
+      if (roles.includes('ROLE_ADMIN')) {
+        this.router.navigate(['/admin']);
+      } else {
+        this.router.navigate(['/feeds']);
+      }
+    } catch (error) {
+      console.error('Error decoding token for redirect:', error);
+      this.router.navigate(['/feeds']);
     }
   }
 }

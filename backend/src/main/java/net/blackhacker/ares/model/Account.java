@@ -46,6 +46,15 @@ public class Account implements UserDetails {
     @Column
     private ZonedDateTime accountEnabledAt;
 
+    public Account() {
+    }
+
+    public Account(String username, String password, AccountType type, Collection<Role> rolls) {
+        this.username = username;
+        this.password = password;
+        this.type = type;
+        this.roles = rolls;
+    }
 
     @Override
     public boolean isAccountNonExpired() {
