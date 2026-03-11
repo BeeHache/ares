@@ -23,7 +23,7 @@ jobs:
         service: [backend, frontend, nginx]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up JDK 17 (for Backend build)
         if: matrix.service == 'backend'
@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Config Repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ github.repository_owner }}/ares-deploy # Replace with your 2nd repo name
           token: ${{ secrets.DEPLOY_REPO_TOKEN }} # PAT with repo access
