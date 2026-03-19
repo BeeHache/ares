@@ -29,7 +29,6 @@ class AccountMapperTest {
 
     @BeforeEach
     void setUp() {
-        when(objectProvider.getObject()).thenReturn(passwordEncoder);
         accountMapper = new AccountMapper(objectProvider);
     }
 
@@ -60,6 +59,7 @@ class AccountMapperTest {
         dto.setPassword("plainPassword");
         dto.setType("ADMIN");
 
+        when(objectProvider.getObject()).thenReturn(passwordEncoder);
         when(passwordEncoder.encode("plainPassword")).thenReturn("encodedPassword");
 
         // Act
@@ -80,6 +80,7 @@ class AccountMapperTest {
         dto.setPassword("pass");
         dto.setType("INVALID_TYPE");
 
+        when(objectProvider.getObject()).thenReturn(passwordEncoder);
         when(passwordEncoder.encode("pass")).thenReturn("encodedPass");
 
         // Act & Assert
