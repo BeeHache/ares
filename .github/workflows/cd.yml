@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        service: [backend, frontend, nginx]
+        service: [nginx, frontend, backend]
 
     steps:
       - uses: actions/checkout@v6
