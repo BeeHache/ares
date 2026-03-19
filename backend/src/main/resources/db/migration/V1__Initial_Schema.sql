@@ -9,6 +9,9 @@ create table if not exists accounts (
     password_expires_at timestamp with time zone,
     account_locked_until timestamp with time zone,
     account_enabled_at timestamp with time zone,
+    last_login timestamp with time zone,
+    failed_login_attempts integer default 0,
+    last_modified timestamp with time zone,
     CHECK (type IN ('ADMIN', 'USER')),
     UNIQUE (username, type)
 );
@@ -138,6 +141,12 @@ EXECUTE PROCEDURE update_last_modified_column();
 DROP TRIGGER IF EXISTS update_feed_items_last_modified ON feed_items;
 CREATE TRIGGER update_feed_items_last_modified
     BEFORE INSERT OR UPDATE ON feed_items
+    FOR EACH ROW
+EXECUTE PROCEDURE update_last_modified_column();
+
+DROP TRIGGER IF EXISTS accounts_last_modified ON accounts;
+CREATE TRIGGER accounts_last_modified
+    BEFORE INSERT OR UPDATE ON accounts
     FOR EACH ROW
 EXECUTE PROCEDURE update_last_modified_column();
 

@@ -31,7 +31,7 @@ class EmailSenderServiceTest {
 
     @BeforeEach
     void setUP() {
-        emailSenderService = new EmailSenderService(javaMailSender, templateEngine, 2024);
+        emailSenderService = new EmailSenderService(javaMailSender, templateEngine, 2024, "noreply@example.com");
     }
 
     @Test

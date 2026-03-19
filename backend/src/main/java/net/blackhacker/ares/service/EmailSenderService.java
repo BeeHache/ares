@@ -20,13 +20,16 @@ public class EmailSenderService {
 
 
     private final int copyrightStartYear;
+    private final String fromAddress;
 
     EmailSenderService(JavaMailSender javaMailSender,
                        TemplateEngine templateEngine,
-                       @Value("${app.copyright.start-year}") int copyrightStartYear){
+                       @Value("${app.copyright.start-year}") int copyrightStartYear,
+                       @Value("${spring.mail.username:noreply@ares.com}") String fromAddress){
         this.javaMailSender = javaMailSender;
         this.templateEngine = templateEngine;
         this.copyrightStartYear = copyrightStartYear;
+        this.fromAddress = fromAddress;
     }
 
     /**
@@ -66,5 +69,9 @@ public class EmailSenderService {
         } catch (Exception e){
             log.error("Error sending email", e);
         }
+    }
+
+    public void sendAccountLockedEmail(String to) {
+        sendEmail(to, fromAddress, "Account Locked Alert", "account-locked");
     }
 }

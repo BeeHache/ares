@@ -8,6 +8,8 @@ import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.repository.crud.EmailConfirmationRepository;
 import net.blackhacker.ares.repository.jpa.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -42,8 +44,16 @@ public class UserService {
         this.frontendUrl = frontendUrl;
     }
 
-    public UserRepository getUserRepository() {
-        return userRepository;
+    public Optional<User> getUser(Long id) {
+        return userRepository.findById(id);
+    }
+
+    public Page<User> getUsers(Pageable pageable) {
+        return userRepository.findAll(pageable);
+    }
+
+    public Long userCount() {
+        return userRepository.count();
     }
 
     public User registerUser(User user) {

@@ -7,7 +7,10 @@ public interface FeedProjection {
     UUID getId();
     String getTitle();
     String getDescription();
+    String getUrl();
     String getLink();
-    boolean isPodcast();
+    Boolean getIsPodcast();
     String getImageUrl();
+    Long getSubscribers();
+    String getPubdate();
 }

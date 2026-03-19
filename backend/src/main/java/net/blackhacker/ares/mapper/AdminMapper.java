@@ -3,6 +3,7 @@ package net.blackhacker.ares.mapper;
 import net.blackhacker.ares.dto.AdminDTO;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Admins;
+import net.blackhacker.ares.projection.AccountProjection;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -36,7 +37,7 @@ public class AdminMapper implements ModelDTOMapper<Admins, AdminDTO>{
         Account account = new Account();
         account.setUsername(dto.getEmail());
         account.setPassword(passwordEncoder.encode(dto.getPassword())); //encode password;
-        account.setType(Account.AccountType.ADMIN);
+        account.setType(AccountProjection.AccountType.ADMIN);
         admin.setAccount(account);
         return admin;
     }

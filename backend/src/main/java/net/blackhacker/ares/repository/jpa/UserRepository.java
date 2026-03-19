@@ -2,6 +2,8 @@ package net.blackhacker.ares.repository.jpa;
 
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,6 +15,9 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
+
+    @Query("SELECT u.id, u.email, u.account.type FROM User u")
+    Page<User> findAll(Pageable pageable);
 
     // Custom query method: Find a user by their username
     Optional<User> findByEmail(String email);

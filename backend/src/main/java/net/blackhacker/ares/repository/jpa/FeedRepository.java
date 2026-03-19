@@ -2,9 +2,10 @@ package net.blackhacker.ares.repository.jpa;
 
 import lombok.NonNull;
 import net.blackhacker.ares.projection.FeedItemProjection;
-import net.blackhacker.ares.projection.FeedSummaryProjection;
-import net.blackhacker.ares.projection.FeedTitleProjection;
+import net.blackhacker.ares.projection.FeedProjection;
 import net.blackhacker.ares.model.Feed;
+import net.blackhacker.ares.service.CacheService;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,15 +24,9 @@ import java.util.UUID;
 public interface FeedRepository extends JpaRepository<Feed, UUID> {
 
     String FIND_MODIFIED_BEFORE = "SELECT f.id FROM Feed f WHERE f.lastModified < :dt OR f.lastModified IS NULL";
-    String  FIND_FEED_TITLES_BY_USERID =
-            "SELECT f.id, f.title, f.podcast, " +
-                    "(select img.image_url from feed_image img where img.feed_id=f.id) as imageUrl, " +
-                    "(select max(i.date) from feed_items i where i.feed_id = f.id) as pubdate " +
-                    "FROM subscriptions s INNER JOIN feeds f ON s.feed_id = f.id " +
-                    "WHERE s.user_id = :userid";
 
-    String  FIND_FEED_SUMMARIES_BY_USERID =
-            "SELECT f.id, f.title, f.podcast, f.description, f.link, " +
+    String  FIND_FEED_USERID =
+            "SELECT f.id, f.title, f.description, f.url, f.link, f.podcast, f.subscribers" +
                     "(select img.image_url from feed_image img where img.feed_id=f.id) as imageUrl, " +
                     "(select max(i.date) from feed_items i where i.feed_id = f.id) as pubdate " +
                     "FROM subscriptions s INNER JOIN feeds f ON s.feed_id = f.id " +
@@ -54,15 +49,13 @@ public interface FeedRepository extends JpaRepository<Feed, UUID> {
     @EntityGraph(attributePaths = {"feedItems"})
     Optional<Feed> findByUrl(@Param("url") URL url);
 
-    @Query(value = FIND_FEED_TITLES_BY_USERID, nativeQuery = true)
-    Collection<FeedTitleProjection> findFeedTitlesByUserId(@Param("userid") Long userId);
-
-    @Query(value = FIND_FEED_SUMMARIES_BY_USERID, nativeQuery = true)
-    Collection<FeedSummaryProjection> findFeedSummariesByUserId(@Param("userid") Long userId);
+    @Query(value = FIND_FEED_USERID, nativeQuery = true)
+    Collection<FeedProjection> findFeedProjectionByUserId(@Param("userid") Long userId);
 
     @Query(value = SEARCH_ITEMS, nativeQuery = true)
     Collection<FeedItemProjection> searchItems(@Param("query") String query);
 
+    @Cacheable(value = CacheService.SUBSCRIPTION_COUNT_CACHE)
     @Query(value = SUBSCRIPTION_COUNT, nativeQuery = true)
     Long findSubscriptionCountByFeedId(@Param("feedId") UUID feedId);
 

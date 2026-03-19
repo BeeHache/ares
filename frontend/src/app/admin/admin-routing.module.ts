@@ -11,7 +11,7 @@ const routes: Routes = [
     component: AdminLayoutComponent,
     children: [
       { path: '', component: DashboardComponent },
-      { path: 'users', component: UserManagementComponent },
+      { path: 'accounts', component: UserManagementComponent },
       { path: 'feeds', component: FeedManagementComponent }
     ]
   }

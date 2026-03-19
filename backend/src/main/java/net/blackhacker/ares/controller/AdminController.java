@@ -1,21 +1,25 @@
 package net.blackhacker.ares.controller;
 
+import net.blackhacker.ares.dto.AccountDTO;
 import net.blackhacker.ares.dto.FeedDTO;
+import net.blackhacker.ares.mapper.AccountMapper;
 import net.blackhacker.ares.mapper.FeedMapper;
+import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.User;
-import net.blackhacker.ares.repository.jpa.FeedItemRepository;
 import net.blackhacker.ares.service.AccountService;
 import net.blackhacker.ares.service.FeedService;
 import net.blackhacker.ares.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -23,17 +27,23 @@ import java.util.UUID;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
+    private final AccountService accountService;
     private final UserService userService;
     private final FeedService feedService;
     private final FeedMapper feedMapper;
+    private final AccountMapper accountMapper;
 
-    public AdminController(UserService userService,
+
+    public AdminController(AccountService accountService,
+                           UserService userService,
                            FeedService feedService,
-                           FeedItemRepository feedItemRepository,
-                           AccountService accountService, FeedMapper feedMapper) {
+                           FeedMapper feedMapper,
+                           AccountMapper accountMapper) {
+        this.accountService = accountService;
         this.userService = userService;
         this.feedService = feedService;
         this.feedMapper = feedMapper;
+        this.accountMapper = accountMapper;
     }
 
     @GetMapping("/hello")
@@ -44,68 +54,69 @@ public class AdminController {
     @GetMapping("/stats")
     public Map<String, Long> getStats() {
         Map<String, Long> stats = new HashMap<>();
-        stats.put("totalUsers", userService.getUserRepository().count());
-        stats.put("totalFeeds", feedService.getFeedRepository().count());
-        stats.put("totalArticles", feedService.getFeedItemRepository().count());
+        stats.put("totalUsers", userService.userCount());
+        stats.put("totalFeeds", feedService.feedCount());
+        stats.put("totalArticles", feedService.feedItemsCount());
         return stats;
+    }
+
+    @GetMapping("/accounts")
+    public Page<AccountDTO> getAccounts(@PageableDefault(size = 20) Pageable pageable) {
+        return accountService.getAccounts(pageable).map(accountMapper::toDTO);
     }
 
     @GetMapping("/users")
     public Page<User> getUsers(@PageableDefault(size = 20) Pageable pageable) {
-        return userService.getUserRepository().findAll(pageable);
+        return userService.getUsers(pageable);
     }
 
     @PostMapping("/users/{id}/lock")
-    public ResponseEntity<Void> lockUser(@PathVariable Long id) {
-        return userService.getUserRepository().findById(id)
-                .map(user -> {
-                    user.getAccount().lockAccount();
-                    userService.saveUser(user);
-                    return ResponseEntity.ok().<Void>build();
-                })
-                .orElse(ResponseEntity.notFound().build());
+    public void lockUser(@PathVariable("id") Long id) {
+        Optional<Account> optionalAccount = accountService.getAccount(id);
+        if (optionalAccount.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found");
+        }
+        Account account = optionalAccount.get();
+        account.lockAccount();
+        accountService.saveAccount(account);
     }
 
     @PostMapping("/users/{id}/unlock")
-    public ResponseEntity<Void> unlockUser(@PathVariable Long id) {
-        return userService.getUserRepository().findById(id)
-                .map(user -> {
-                    user.getAccount().enableAccount(); // Re-enable / unlock
-                    userService.saveUser(user);
-                    return ResponseEntity.ok().<Void>build();
-                })
-                .orElse(ResponseEntity.notFound().build());
+    public void unlockUser(@PathVariable("id") Long id) {
+        Optional<Account> optionalAccount = accountService.getAccount(id);
+        if (optionalAccount.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found");
+        }
+        Account account = optionalAccount.get();
+        account.enableAccount();
+        accountService.saveAccount(account);
     }
 
     @GetMapping("/feeds")
     public Page<FeedDTO> getFeeds(@PageableDefault(size = 20) Pageable pageable) {
         return feedService.findAllFeeds(pageable).map(feed -> {
             //set the subscription count for each feed
-            feed.setSubscriptionCount(
-                feedService.getFeedRepository().findSubscriptionCountByFeedId(feed.getId())
-            );
-            if (feed.getSubscriptionCount() == null) {
-                feed.setSubscriptionCount(0L);
+            feed.setSubscribers(feedService.feedSubscriberCount(feed.getId()));
+            if (feed.getSubscribers() == null) {
+                feed.setSubscribers(0L);
             }
             return feed;
         }).map(feedMapper::toDTO);
     }
 
     @DeleteMapping("/feeds/{id}")
-    public ResponseEntity<Void> deleteFeed(@PathVariable UUID id) {
-        if (feedService.getFeedRepository().existsById(id)) {
-            feedService.getFeedRepository().deleteById(id);
-            return ResponseEntity.ok().build();
+    public void deleteFeed(@PathVariable("id") UUID id) {
+        if (!feedService.feedExists(id)) {
+            throw  new ResponseStatusException(HttpStatus.NOT_FOUND, "Feed not found");
         }
-        return ResponseEntity.notFound().build();
+        feedService.deleteFeed(id);
     }
 
     @PostMapping("/feeds/{id}/refresh")
-    public ResponseEntity<Void> refreshFeed(@PathVariable UUID id) {
-        if (feedService.getFeedRepository().existsById(id)) {
-            feedService.updateFeed(id);
-            return ResponseEntity.ok().build();
+    public void refreshFeed(@PathVariable("id") UUID id) {
+        if (!feedService.feedExists(id)) {
+           throw  new ResponseStatusException(HttpStatus.NOT_FOUND, "Feed not found");
         }
-        return ResponseEntity.notFound().build();
+        feedService.updateFeed(id);
     }
 }

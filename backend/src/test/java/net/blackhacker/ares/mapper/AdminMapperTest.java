@@ -3,6 +3,7 @@ package net.blackhacker.ares.mapper;
 import net.blackhacker.ares.dto.AdminDTO;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Admins;
+import net.blackhacker.ares.projection.AccountProjection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,7 +35,7 @@ class AdminMapperTest {
         account = new Account();
         account.setUsername("admin@example.com");
         account.setPassword("encodedPassword");
-        account.setType(Account.AccountType.ADMIN);
+        account.setType(AccountProjection.AccountType.ADMIN);
 
         admin = new Admins();
         admin.setName("Admin Name");
@@ -99,6 +100,6 @@ class AdminMapperTest {
         assertEquals(adminDTO.getEmail(), result.getEmail());
         assertEquals(encodedPassword, result.getAccount().getPassword());
         assertNotNull(result.getAccount());
-        assertEquals(Account.AccountType.ADMIN, result.getAccount().getType());
+        assertEquals(AccountProjection.AccountType.ADMIN, result.getAccount().getType());
         }
 }

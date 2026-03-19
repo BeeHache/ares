@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,12 +21,15 @@ class AccountMapperTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private ObjectProvider<PasswordEncoder> objectProvider;
+
     @InjectMocks
     private AccountMapper accountMapper;
 
     @BeforeEach
     void setUp() {
-        accountMapper = new AccountMapper(passwordEncoder);
+        accountMapper = new AccountMapper(objectProvider);
     }
 
     @Test
@@ -55,6 +59,7 @@ class AccountMapperTest {
         dto.setPassword("plainPassword");
         dto.setType("ADMIN");
 
+        when(objectProvider.getObject()).thenReturn(passwordEncoder);
         when(passwordEncoder.encode("plainPassword")).thenReturn("encodedPassword");
 
         // Act
@@ -75,6 +80,7 @@ class AccountMapperTest {
         dto.setPassword("pass");
         dto.setType("INVALID_TYPE");
 
+        when(objectProvider.getObject()).thenReturn(passwordEncoder);
         when(passwordEncoder.encode("pass")).thenReturn("encodedPass");
 
         // Act & Assert

@@ -3,6 +3,7 @@ package net.blackhacker.ares.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NonNull;
+import net.blackhacker.ares.projection.AccountProjection;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,11 +15,7 @@ import java.util.stream.Collectors;
 @Entity
 @Table(name ="accounts")
 @Data
-public class Account implements UserDetails {
-
-    public enum AccountType {
-        ADMIN, USER
-    }
+public class Account implements AccountProjection, UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,17 +31,27 @@ public class Account implements UserDetails {
     @Enumerated(EnumType.STRING)
     private AccountType type;
 
-    @Column
+    @Column(name = "account_expires_at")
     private ZonedDateTime accountExpiresAt;
 
-    @Column
+    @Column(name = "password_expires_at")
     private ZonedDateTime passwordExpiresAt;
 
-    @Column
+    @Column(name = "account_locked_until")
     private ZonedDateTime accountLockedUntil;
 
-    @Column
+    @Column(name = "account_enabled_at")
     private ZonedDateTime accountEnabledAt;
+
+    @Column(name = "last_login")
+    private ZonedDateTime lastLogin;
+
+    @Column(name = "failed_login_attempts")
+    private Integer failedLoginAttempts;
+
+    @Column(name = "last_modified")
+    private ZonedDateTime lastModified;
+
 
     public Account() {
     }
@@ -111,6 +118,8 @@ public class Account implements UserDetails {
     }
 
     public void enableAccount(){
-        accountEnabledAt = ZonedDateTime.now();
+        ZonedDateTime now = ZonedDateTime.now();
+        accountEnabledAt = now;
+        accountLockedUntil = now;
     }
 }

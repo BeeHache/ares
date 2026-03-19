@@ -9,6 +9,8 @@ public class CacheService {
 
     final static public String FEED_DTOS_CACHE = "FEED_DTOS_CACHE";
     final static public String FEED_PAGE_CACHE = "FEED_PAGE_CACHE";
+    final static public String SUBSCRIPTION_COUNT_CACHE = "SUBSCRIPTION_COUNT_CACHE";
+
 
 
     private final CacheManager cacheManager;

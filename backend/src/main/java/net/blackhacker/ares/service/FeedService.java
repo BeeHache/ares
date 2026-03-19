@@ -69,16 +69,28 @@ public class FeedService {
         updateFeeds();
     }
 
-    public FeedRepository getFeedRepository() {
-        return feedRepository;
-    }
-
-    public FeedItemRepository getFeedItemRepository() {
-        return feedItemRepository;
-    }
-
     public Page<Feed> findAllFeeds(Pageable pageable) {
         return feedRepository.findAll(pageable);
+    }
+
+    public Long feedCount() {
+        return feedRepository.count();
+    }
+
+    public  Long feedItemsCount() {
+        return feedItemRepository.count();
+    }
+
+    public Long feedSubscriberCount(UUID feedId) {
+        return feedRepository.findSubscriptionCountByFeedId(feedId);
+    }
+
+    public Boolean feedExists(UUID feedId) {
+        return feedRepository.existsById(feedId);
+    }
+
+    public void deleteFeed(UUID feedId){
+        feedRepository.deleteById(feedId);
     }
 
     public Feed addFeed(String link) {
