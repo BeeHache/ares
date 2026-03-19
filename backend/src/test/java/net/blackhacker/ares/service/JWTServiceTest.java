@@ -4,6 +4,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import net.blackhacker.ares.model.Account;
+import net.blackhacker.ares.projection.AccountProjection;
 import net.blackhacker.ares.repository.jpa.AdminsRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -74,7 +75,7 @@ class JWTServiceTest {
         Account account = new Account();
         account.setUsername("testuser");
         account.setPassword("password");
-        account.setType(Account.AccountType.USER);
+        account.setType(AccountProjection.AccountType.USER);
         return account;
     }
 

@@ -3,15 +3,17 @@ package net.blackhacker.ares.controller;
 import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.dto.LoginDTO;
 import net.blackhacker.ares.dto.TokenDTO;
-import net.blackhacker.ares.dto.UserDTO;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.RefreshToken;
 import net.blackhacker.ares.service.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -48,9 +50,23 @@ public class LoginController {
     @PostMapping
     ResponseEntity<TokenDTO> login(@RequestBody LoginDTO loginDTO) {
         log.info("Login attempt for user: {}", loginDTO.getUsername());
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword())
-        );
+        
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword())
+            );
+        } catch (BadCredentialsException e) {
+            log.warn("Invalid credentials for user: {}", loginDTO.getUsername());
+            accountService.loginFailed(loginDTO.getUsername());
+            throw new ControllerException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+        } catch (LockedException e) {
+            log.warn("Account locked for user: {}", loginDTO.getUsername());
+            throw new ControllerException(HttpStatus.UNAUTHORIZED, "Account is locked. Please try again later.");
+        } catch (AuthenticationException e) {
+            log.error("Authentication failed for user: {}", loginDTO.getUsername(), e);
+            throw new ControllerException(HttpStatus.UNAUTHORIZED, "Authentication failed");
+        }
 
         Account principal = (Account) authentication.getPrincipal();
         if (principal == null){
@@ -58,16 +74,11 @@ public class LoginController {
             throw new ControllerException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
 
+        // Reset failed attempts on success
+        accountService.loginSucceeded(principal.getUsername());
+
         String accessToken = jwtService.generateToken(principal);
-        Optional<Account> optionalAccount = accountService.findAccountByUsername(principal.getUsername());
-        if (optionalAccount.isEmpty()){
-            log.error("Login failed: Account not found in DB for authenticated user: {}", principal.getUsername());
-            throw new ControllerException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
-        }
-
-        Account account = optionalAccount.get();
-        RefreshToken refreshToken = refreshTokenService.generateToken(account);
-
+        RefreshToken refreshToken = refreshTokenService.generateToken(principal);
 
         ResponseCookie cookie = createRefreshCookie(refreshToken.getToken());
         TokenDTO accessTokenDTO = TokenDTO.token(accessToken);

@@ -58,11 +58,17 @@ thead {
   justify-content: center;
 }
 
+.btn-action:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .btn-lock {
   background-color: #e67e22;
 }
 
-.btn-lock:hover {
+.btn-lock:hover:not(:disabled) {
   background-color: #d35400;
 }
 
@@ -70,7 +76,7 @@ thead {
   background-color: #2ecc71;
 }
 
-.btn-unlock:hover {
+.btn-unlock:hover:not(:disabled) {
   background-color: #27ae60;
 }
 

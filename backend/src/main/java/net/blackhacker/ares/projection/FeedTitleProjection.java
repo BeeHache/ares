@@ -8,17 +8,14 @@ import java.time.Instant;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public interface FeedTitleProjection extends Serializable {
-    String getId();
-    String getTitle();
+    default String getId() { return null; }
+    default String getTitle() { return null; }
 
     @Value("#target.podcast")
-    String getPodcastString();
+    default String getPodcastString() { return null; }
     default boolean getPodcast(){
         return getPodcastString() != null && getPodcastString().equalsIgnoreCase("Y");
     }
-
-    String getImageUrl();
-
-    Instant getPubdate();
-
+    default String getImageUrl() { return null; }
+    default Instant getPubdate() { return null; }
 }

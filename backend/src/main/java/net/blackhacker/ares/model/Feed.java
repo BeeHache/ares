@@ -6,9 +6,9 @@ import jakarta.persistence.*;
 
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+import net.blackhacker.ares.projection.FeedProjection;
 import net.blackhacker.ares.utils.BooleanConverter;
 import net.blackhacker.ares.utils.URLConverter;
-import org.thymeleaf.expression.Lists;
 
 import java.io.Serializable;
 import java.net.MalformedURLException;
@@ -60,7 +60,7 @@ public class Feed implements Serializable {
     private ZonedDateTime lastModified = ZonedDateTime.now();
 
     @Transient
-    private Long subscriptionCount=null;
+    private Long subscribers =null;
 
     @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL)
     private Set<FeedItem> feedItems = new HashSet<>();

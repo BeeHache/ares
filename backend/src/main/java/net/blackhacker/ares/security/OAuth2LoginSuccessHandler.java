@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.User;
+import net.blackhacker.ares.projection.AccountProjection;
 import net.blackhacker.ares.repository.jpa.UserRepository;
 import net.blackhacker.ares.service.JWTService;
 import org.jspecify.annotations.NonNull;
@@ -76,7 +77,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         Account account = new Account();
         account.setUsername(email);
         account.setPassword(UUID.randomUUID().toString()); // Random password, they won't use it
-        account.setType(Account.AccountType.USER);
+        account.setType(AccountProjection.AccountType.USER);
         account.setAccountEnabledAt(ZonedDateTime.now()); // Auto-enable
         account.setRoles(new HashSet<>());
 

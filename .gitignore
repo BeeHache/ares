@@ -52,3 +52,5 @@ nginx/certs/
 # pgAdmin credentials
 pgpass
 nginx/pgadmin/servers.json
+
+.gemini/

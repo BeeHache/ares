@@ -6,10 +6,10 @@ import java.io.Serializable;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public interface FeedSummaryProjection extends Serializable {
-    String getId();
-    String getTitle();
-    String getDescription();
-    String getLink();
-    String getImageUrl();
-    Boolean getIsPodcast();
+    default String getId() { return null; }
+    default String getTitle() { return null; }
+    default String getDescription() { return null; }
+    default String getLink() { return null; }
+    default String getImageUrl() { return null; }
+    default Boolean getIsPodcast() { return null; }
 }
