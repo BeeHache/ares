@@ -1,6 +1,9 @@
 FROM nginx:alpine
 
-COPY nginx.conf /etc/nginx/nginx.conf
+# The default entrypoint for nginx:alpine will look for templates in /etc/nginx/templates
+# and run envsubst on them, outputting to /etc/nginx/conf.d/ (usually)
+# To overwrite the main nginx.conf, we can use this location:
+COPY nginx.conf.template /etc/nginx/templates/nginx.conf.template
 
-# Create directory for certificates (they will be mounted)
-RUN mkdir -p /etc/nginx/certs
+# We also need to set the environment variable for where the output goes
+ENV NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx

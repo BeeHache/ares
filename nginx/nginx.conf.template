@@ -5,7 +5,7 @@ events {
 http {
     server {
         listen 80;
-        server_name localhost;
+        server_name ${HOST};
 
         location / {
             return 301 https://$host$request_uri;
@@ -14,10 +14,10 @@ http {
 
     server {
         listen 443 ssl;
-        server_name localhost;
+        server_name ${HOST};
 
-        ssl_certificate /etc/nginx/certs/server.crt;
-        ssl_certificate_key /etc/nginx/certs/server.key;
+        ssl_certificate ${SSL_CERT_PATH};
+        ssl_certificate_key ${SSL_KEY_PATH};
 
         location / {
             proxy_pass http://frontend:4000;

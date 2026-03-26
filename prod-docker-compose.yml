@@ -21,22 +21,29 @@ services:
 
   nginx:
     image: ${IMAGE_REPO}/nginx:latest
-    build: ./nginx
     container_name: ares-nginx
     restart: always
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/certs:/etc/nginx/certs:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    environment:
+      HOST: ${HOST}
+      SSL_CERT_PATH: ${SSL_CERT_PATH}
+      SSL_KEY_PATH: ${SSL_KEY_PATH}
+    depends_on:
+      - frontend
+      - backend
 
   backend:
     image: ${IMAGE_REPO}/backend:latest
-    build: ./backend
     container_name: ares-backend
     volumes:
       - ./logs:/app/logs
     restart: always
+    ports:
+      - "127.0.0.1:5005:5005" # Only accessible via SSH tunnel or localhost
     environment:
       ACTIVE_PROFILE: prod
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
@@ -47,7 +54,10 @@ services:
       SPRING_MAIL_PORT: ${SPRING_MAIL_PORT}
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+      #SPRING_MAIL_SMTP_AUTH: "false"
+      #SPRING_MAIL_SMTP_STARTTLS_ENABLE: "false"
       JWT_SECRET: ${JWT_SECRET}
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
       ARES_ADMIN_EMAIL: ${ARES_ADMIN_EMAIL}
       ARES_ADMIN_PASSWORD: ${ARES_ADMIN_PASSWORD}
@@ -58,15 +68,12 @@ services:
       GOOGLE_SECRET: ${GOOGLE_SECRET}
       FACEBOOK_CLIENT_ID: ${FACEBOOK_CLIENT_ID}
       FACEBOOK_SECRET: ${FACEBOOK_SECRET}
-
-
     depends_on:
       - postgres
       - redis
 
   frontend:
     image: ${IMAGE_REPO}/frontend:latest
-    build: ./frontend
     container_name: ares-frontend
     restart: always
     environment:
