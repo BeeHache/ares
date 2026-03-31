@@ -39,6 +39,10 @@ public class AccountService implements UserDetailsService {
         return accountRepository.findAllAccountProjection(pageable);
     }
 
+    public Page<Account> getAccountsFiltered(Account.AccountType type, Boolean locked, Pageable pageable) {
+        return accountRepository.findAllWithFilters(type, locked, pageable);
+    }
+
     public Optional<Account> findAccountByUsername(String username){
         return accountRepository.findByUsername(username);
     }

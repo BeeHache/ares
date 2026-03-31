@@ -1,7 +1,7 @@
 <div class="feed-management-container">
   <h2>Feed Management</h2>
 
-  @if (loading()) {
+  @if (loading() && feeds().length === 0) {
     <p>Loading feeds...</p>
   }
 
@@ -67,9 +67,15 @@
     </table>
   </div>
 
-  <div class="pagination">
-    <button [disabled]="currentPage() === 0" (click)="loadFeeds(currentPage() - 1)">Previous</button>
-    <span>Page {{ currentPage() + 1 }} of {{ totalPages() }}</span>
-    <button [disabled]="currentPage() === totalPages() - 1" (click)="loadFeeds(currentPage() + 1)">Next</button>
-  </div>
+  @if (loadingMore()) {
+    <div class="scroll-status">
+      <p>Loading more feeds...</p>
+    </div>
+  }
+
+  @if (!hasMore() && feeds().length > 0) {
+    <div class="scroll-status">
+      <p>All feeds loaded.</p>
+    </div>
+  }
 </div>

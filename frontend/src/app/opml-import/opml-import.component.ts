@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FeedService } from '../feed.service';
@@ -14,39 +14,42 @@ export class OpmlImportComponent {
   @Output() close = new EventEmitter<void>();
   @Output() importSuccess = new EventEmitter<void>();
 
-  mode: 'file' | 'url' = 'file';
-  url = '';
-  selectedFile: File | null = null;
-  isLoading = false;
-  errorMessage = '';
+  // Signals
+  mode = signal<'file' | 'url'>('file');
+  url = signal<string>('');
+  selectedFile = signal<File | null>(null);
+  isLoading = signal<boolean>(false);
+  errorMessage = signal<string>('');
 
   constructor(private feedService: FeedService) {}
 
   onFileSelected(event: any) {
-    this.selectedFile = event.target.files[0];
+    this.selectedFile.set(event.target.files[0]);
   }
 
   onSubmit() {
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set('');
 
-    if (this.mode === 'file') {
-      if (!this.selectedFile) {
-        this.errorMessage = 'Please select a file.';
-        this.isLoading = false;
+    if (this.mode() === 'file') {
+      const file = this.selectedFile();
+      if (!file) {
+        this.errorMessage.set('Please select a file.');
+        this.isLoading.set(false);
         return;
       }
-      this.feedService.importOpmlFile(this.selectedFile).subscribe({
+      this.feedService.importOpmlFile(file).subscribe({
         next: () => this.handleSuccess(),
         error: (err) => this.handleError(err)
       });
     } else {
-      if (!this.url) {
-        this.errorMessage = 'Please enter a URL.';
-        this.isLoading = false;
+      const urlVal = this.url();
+      if (!urlVal) {
+        this.errorMessage.set('Please enter a URL.');
+        this.isLoading.set(false);
         return;
       }
-      this.feedService.importOpmlUrl(this.url).subscribe({
+      this.feedService.importOpmlUrl(urlVal).subscribe({
         next: () => this.handleSuccess(),
         error: (err) => this.handleError(err)
       });
@@ -54,14 +57,14 @@ export class OpmlImportComponent {
   }
 
   private handleSuccess() {
-    this.isLoading = false;
+    this.isLoading.set(false);
     this.importSuccess.emit();
     this.close.emit();
   }
 
   private handleError(err: any) {
-    this.isLoading = false;
-    this.errorMessage = err.error?.message || 'Import failed. Please try again.';
+    this.isLoading.set(false);
+    this.errorMessage.set(err.error?.message || 'Import failed. Please try again.');
     console.error('OPML Import Error:', err);
   }
 }

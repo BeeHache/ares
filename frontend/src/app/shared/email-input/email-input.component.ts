@@ -1,4 +1,4 @@
-import { Component, Input, forwardRef } from '@angular/core';
+import { Component, input, signal, forwardRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
 
@@ -17,30 +17,25 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
   ]
 })
 export class EmailInputComponent implements ControlValueAccessor {
-  @Input() label: string = 'Email';
-  @Input() id: string = 'email';
-  @Input() name: string = 'email';
-  @Input() required: boolean = false;
-  @Input() initialEmail: string = ''; // New input for initial email
-  @Input() editable: boolean = true; // New input for editability, defaults to true
+  // Signal-based inputs
+  label = input<string>('Email');
+  id = input<string>('email');
+  name = input<string>('email');
+  required = input<boolean>(false);
+  initialEmail = input<string>('');
+  editable = input<boolean>(true);
 
-  value: string = '';
-  disabled = false;
+  // Internal state signals
+  value = signal<string>('');
+  isDisabled = signal<boolean>(false);
 
-  // These are required for ControlValueAccessor
+  // ControlValueAccessor callbacks
   onChange: any = () => {};
   onTouched: any = () => {};
 
-  constructor() {
-    // Initialize value with initialEmail if not editable
-    if (!this.editable && this.initialEmail) {
-      this.value = this.initialEmail;
-    }
-  }
-
   writeValue(value: string): void {
-    // If not editable, prioritize initialEmail, otherwise use the form value
-    this.value = !this.editable && this.initialEmail ? this.initialEmail : value;
+    const finalValue = !this.editable() && this.initialEmail() ? this.initialEmail() : value;
+    this.value.set(finalValue || '');
   }
 
   registerOnChange(fn: any): void {
@@ -52,16 +47,14 @@ export class EmailInputComponent implements ControlValueAccessor {
   }
 
   setDisabledState(isDisabled: boolean): void {
-    // Component is disabled if explicitly set or if not editable
-    this.disabled = isDisabled || !this.editable;
+    this.isDisabled.set(isDisabled || !this.editable());
   }
 
-  onInput(event: Event) {
-    // Only update value if editable
-    if (this.editable) {
-      const value = (event.target as HTMLInputElement).value;
-      this.value = value;
-      this.onChange(value);
+  onInputChange(event: Event) {
+    if (this.editable()) {
+      const val = (event.target as HTMLInputElement).value;
+      this.value.set(val);
+      this.onChange(val);
       this.onTouched();
     }
   }

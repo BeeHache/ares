@@ -1,6 +1,26 @@
 <div class="user-management-container">
   <h2>Account Management</h2>
 
+  <div class="filters">
+    <div class="filter-group">
+      <label for="typeFilter">Type:</label>
+      <select id="typeFilter" [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event)">
+        <option value="">All</option>
+        <option value="ADMIN">ADMIN</option>
+        <option value="USER">USER</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label for="statusFilter">Status:</label>
+      <select id="statusFilter" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)">
+        <option value="">All</option>
+        <option value="LOCKED">Locked</option>
+        <option value="ACTIVE">Active</option>
+      </select>
+    </div>
+  </div>
+
   @if (loading()) {
     <p>Loading accounts...</p>
   }

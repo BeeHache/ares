@@ -1,8 +1,9 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../auth.service';
+import { FormsModule } from '@angular/forms';
 
 interface Account {
   id: number;
@@ -24,7 +25,7 @@ interface Page<T> {
 @Component({
   selector: 'app-user-management',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './user-management.component.html',
   styleUrl: './user-management.component.css'
 })
@@ -36,18 +37,41 @@ export class UserManagementComponent implements OnInit {
   totalPages = signal<number>(0);
   pageSize = signal<number>(20);
 
+  // Filter Signals
+  typeFilter = signal<string>(''); // empty, ADMIN, USER
+  statusFilter = signal<string>(''); // empty, LOCKED, ACTIVE
+
   constructor(
     private http: HttpClient,
     public authService: AuthService
-  ) {}
+  ) {
+    // Reload users when filters change
+    effect(() => {
+      this.typeFilter();
+      this.statusFilter();
+      this.loadUsers(0);
+    });
+  }
 
   ngOnInit(): void {
-    this.loadUsers(0);
+    // Initial load happens via effect
   }
 
   loadUsers(page: number) {
     this.loading.set(true);
-    this.http.get<Page<Account>>(`${environment.apiUrl}/admin/accounts?page=${page}&size=${this.pageSize()}`)
+
+    let url = `${environment.apiUrl}/admin/accounts?page=${page}&size=${this.pageSize()}`;
+
+    if (this.typeFilter()) {
+      url += `&type=${this.typeFilter()}`;
+    }
+
+    if (this.statusFilter()) {
+      const isLocked = this.statusFilter() === 'LOCKED';
+      url += `&locked=${isLocked}`;
+    }
+
+    this.http.get<Page<Account>>(url)
       .subscribe({
         next: (data) => {
           this.users.set(data.content);

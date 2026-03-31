@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -9,17 +9,17 @@ import { CommonModule } from '@angular/common';
   styleUrl: './cookie-banner.component.css'
 })
 export class CookieBannerComponent implements OnInit {
-  isVisible = false;
+  isVisible = signal<boolean>(false);
 
   ngOnInit() {
     const consent = localStorage.getItem('cookieConsent');
     if (!consent) {
-      this.isVisible = true;
+      this.isVisible.set(true);
     }
   }
 
   dismiss() {
     localStorage.setItem('cookieConsent', 'true');
-    this.isVisible = false;
+    this.isVisible.set(false);
   }
 }
