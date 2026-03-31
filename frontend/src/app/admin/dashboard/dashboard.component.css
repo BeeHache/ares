@@ -70,6 +70,18 @@ h3 {
   justify-content: space-between;
   align-items: center;
   padding: 5px 0;
+  transition: opacity 0.3s ease;
+}
+
+.feature-item.child-feature {
+  margin-left: 30px;
+  border-left: 2px solid #eee;
+  padding-left: 15px;
+}
+
+.feature-item.disabled-feature {
+  opacity: 0.5;
+  pointer-events: none; /* Prevent clicking the item entirely */
 }
 
 .feature-name {
@@ -123,6 +135,11 @@ input:focus + .slider {
 
 input:checked + .slider:before {
   transform: translateX(26px);
+}
+
+input:disabled + .slider {
+  background-color: #e0e0e0;
+  cursor: not-allowed;
 }
 
 /* Rounded sliders */
