@@ -26,10 +26,16 @@
     <div class="card">
       <h3>Feature Flags</h3>
       <div class="feature-list">
-        <div *ngFor="let feature of features" class="feature-item">
+        <div *ngFor="let feature of features"
+             class="feature-item"
+             [class.child-feature]="feature.isChild"
+             [class.disabled-feature]="isParentDisabled(feature)">
           <span class="feature-name">{{ feature.name }}</span>
           <label class="switch">
-            <input type="checkbox" [checked]="feature.enabled" (change)="toggleFeature(feature)">
+            <input type="checkbox"
+                   [checked]="feature.enabled"
+                   (change)="toggleFeature(feature)"
+                   [disabled]="isParentDisabled(feature)">
             <span class="slider round"></span>
           </label>
         </div>
