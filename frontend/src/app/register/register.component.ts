@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -15,93 +15,81 @@ import { EmailInputComponent } from '../shared/email-input/email-input.component
   styleUrl: './register.component.css'
 })
 export class RegisterComponent implements OnInit {
-  private _email = '';
-  private _password = '';
-  private _confirmPassword = '';
-  errorMessages: string[] = [];
+  // Signals for form data
+  email = signal<string>('');
+  password = signal<string>('');
+  confirmPassword = signal<string>('');
 
-  constructor(private http: HttpClient, private router: Router) {}
+  // Signal for server errors
+  serverErrors = signal<string[]>([]);
 
-  ngOnInit(): void {
-    this.validateInputs(); // Initial validation to set button state
-  }
-
-  get email(): string { return this._email; }
-  set email(value: string) {
-    this._email = value;
-    this.validateInputs();
-  }
-
-  get password(): string { return this._password; }
-  set password(value: string) {
-    this._password = value;
-    this.validateInputs();
-  }
-
-  get confirmPassword(): string { return this._confirmPassword; }
-  set confirmPassword(value: string) {
-    this._confirmPassword = value;
-    this.validateInputs();
-  }
-
-  private validateInputs(): boolean {
-    this.errorMessages = [];
+  // Computed signal for client-side validation errors
+  clientErrors = computed(() => {
+    const errors: string[] = [];
+    const emailVal = this.email();
+    const passVal = this.password();
+    const confirmVal = this.confirmPassword();
 
     // Email validation
-    if (!this._email) {
-      this.errorMessages.push('Email is required.');
-    } else if (!/^[a-zA-Z0-9_+&*-]+(?:\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,7}$/.test(this._email)) {
-      this.errorMessages.push('Invalid email format.');
+    if (emailVal && !/^[a-zA-Z0-9_+&*-]+(?:\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,7}$/.test(emailVal)) {
+      errors.push('Invalid email format.');
     }
 
     // Password validation
-    if (!this._password) {
-      this.errorMessages.push('Password is required.');
-    } else {
-      if (this._password.length < 8) {
-        this.errorMessages.push('Password must be at least 8 characters long.');
+    if (passVal) {
+      if (passVal.length < 8) {
+        errors.push('Password must be at least 8 characters long.');
       }
-      if (!/[A-Z]/.test(this._password)) {
-        this.errorMessages.push('Password must contain at least one uppercase letter.');
+      if (!/[A-Z]/.test(passVal)) {
+        errors.push('Password must contain at least one uppercase letter.');
       }
-      if (!/[a-z]/.test(this._password)) {
-        this.errorMessages.push('Password must contain at least one lowercase letter.');
+      if (!/[a-z]/.test(passVal)) {
+        errors.push('Password must contain at least one lowercase letter.');
       }
-      if (!/\d/.test(this._password)) {
-        this.errorMessages.push('Password must contain at least one digit.');
+      if (!/\d/.test(passVal)) {
+        errors.push('Password must contain at least one digit.');
       }
-      if (!/[@$!%*?&]/.test(this._password)) {
-        this.errorMessages.push('Password must contain at least one special character.');
+      if (!/[@$!%*?&]/.test(passVal)) {
+        errors.push('Password must contain at least one special character.');
       }
     }
 
     // Confirm Password validation
-    if (this._password !== this._confirmPassword) {
-      this.errorMessages.push('Passwords do not match.');
+    if (passVal && confirmVal && passVal !== confirmVal) {
+      errors.push('Passwords do not match.');
     }
 
-    return this.errorMessages.length === 0;
-  }
+    return errors;
+  });
+
+  // Combined errors
+  allErrors = computed(() => [...this.clientErrors(), ...this.serverErrors()]);
+
+  constructor(private http: HttpClient, private router: Router) {}
+
+  ngOnInit(): void {}
 
   onSubmit() {
-    if (!this.validateInputs()) {
-      return; // Stop if client-side validation fails
+    this.serverErrors.set([]); // Clear previous server errors
+
+    if (this.clientErrors().length > 0 || !this.email() || !this.password()) {
+      return;
     }
 
-    const registerData = { email: this._email, password: this._password };
+    const registerData = { email: this.email(), password: this.password() };
     this.http.post(`${environment.apiUrl}/register`, registerData).subscribe({
       next: () => {
         this.router.navigate(['/login']);
       },
       error: (err) => {
         console.error('Registration error:', err);
+        let errorMsg = 'An unexpected error occurred during registration.';
         if (err.error && typeof err.error === 'object' && err.error.message) {
-          this.errorMessages.push(err.error.message);
+          errorMsg = err.error.message;
         } else if (typeof err.error === 'string') {
-          this.errorMessages.push(err.error);
-        } else {
-          this.errorMessages.push('An unexpected error occurred during registration.');
+          errorMsg = err.error;
         }
+        this.serverErrors.set([errorMsg]);
       }
     });
   }

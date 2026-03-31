@@ -61,8 +61,11 @@ public class AdminController {
     }
 
     @GetMapping("/accounts")
-    public Page<AccountDTO> getAccounts(@PageableDefault(size = 20) Pageable pageable) {
-        return accountService.getAccounts(pageable).map(accountMapper::toDTO);
+    public Page<AccountDTO> getAccounts(
+            @RequestParam(required = false) Account.AccountType type,
+            @RequestParam(required = false) Boolean locked,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return accountService.getAccountsFiltered(type, locked, pageable).map(accountMapper::toDTO);
     }
 
     @GetMapping("/users")

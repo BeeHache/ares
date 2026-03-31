@@ -1,9 +1,8 @@
 <div class="feed-list-container">
   <div class="header-row">
     <h2>My Feeds</h2>
-    <button class="view-toggle-btn" (click)="toggleViewMode()" [title]="viewMode === 'list' ? 'Switch to Grid View' : 'Switch to List View'">
-      <span *ngIf="viewMode === 'list'">⊞</span>
-      <span *ngIf="viewMode === 'grid'">☰</span>
+    <button class="view-toggle-btn" (click)="toggleViewMode()" [title]="viewMode() === 'list' ? 'Switch to Grid View' : 'Switch to List View'">
+      @if (viewMode() === 'list') { <span>⊞</span> } @else { <span>☰</span> }
     </button>
   </div>
 
@@ -12,37 +11,52 @@
       type="text"
       class="search-input"
       placeholder="Search feeds..."
-      [(ngModel)]="searchQuery"
-      (ngModelChange)="filterFeeds()">
+      [value]="searchQuery()"
+      (input)="onSearchChange($event)">
   </div>
 
   <div class="summary">
-    <a href="#" class="summary-link active">Feeds ({{ filteredFeeds.length }})</a>
+    <a href="#" class="summary-link active">Feeds ({{ filteredFeeds().length }})</a>
   </div>
 
-  <ul class="feed-items" [class.view-mode-grid]="viewMode === 'grid'">
-    <li *ngFor="let feed of filteredFeeds" class="feed-item">
-      <div class="feed-row" [class.selected]="feed.id === selectedFeedId">
-        <a href="javascript:void(0)" class="feed-link" (click)="selectFeed(feed)">
-          <div class="feed-icon-wrapper">
-            <img *ngIf="feed.imageUrl" [src]="feed.imageUrl" class="feed-icon" [title]="feed.title" alt="" onerror="this.style.display='none'">
-            <div *ngIf="!feed.imageUrl" class="feed-icon-placeholder" [title]="feed.title">{{ feed.title?.charAt(0) || '?' }}</div>
-            <span *ngIf="feed.isPodcast" class="podcast-indicator" title="Podcast">🎙</span>
-          </div>
-          <div class="feed-info" *ngIf="viewMode === 'list'">
-              <span class="feed-title">{{ feed.title || 'Untitled Feed' }}</span>
-              <span class="feed-date" *ngIf="feed.pubdate">{{ feed.pubdate | date:'shortDate' }}</span>
-          </div>
-        </a>
-      </div>
-    </li>
+  <ul class="feed-items" [class.view-mode-grid]="viewMode() === 'grid'">
+    @for (feed of filteredFeeds(); track feed.id) {
+      <li class="feed-item">
+        <div class="feed-row" [class.selected]="feed.id === feedService.selectedFeed()?.id">
+          <a href="javascript:void(0)" class="feed-link" (click)="selectFeed(feed)">
+            <div class="feed-icon-wrapper">
+              @if (feed.imageUrl) {
+                <img [src]="feed.imageUrl" class="feed-icon" [title]="feed.title" alt="" onerror="this.style.display='none'">
+              } @else {
+                <div class="feed-icon-placeholder" [title]="feed.title">{{ feed.title?.charAt(0) || '?' }}</div>
+              }
+              @if (feed.isPodcast) {
+                <span class="podcast-indicator" title="Podcast">🎙</span>
+              }
+            </div>
+            @if (viewMode() === 'list') {
+              <div class="feed-info">
+                  <span class="feed-title">{{ feed.title || 'Untitled Feed' }}</span>
+                  @if (feed.pubdate) {
+                    <span class="feed-date">{{ feed.pubdate | date:'shortDate' }}</span>
+                  }
+              </div>
+            }
+          </a>
+        </div>
+      </li>
+    }
   </ul>
 
-  <div *ngIf="filteredFeeds.length === 0 && feeds.length > 0" class="no-results">
-      <p>No feeds match your search.</p>
-  </div>
+  @if (filteredFeeds().length === 0 && feeds().length > 0) {
+    <div class="no-results">
+        <p>No feeds match your search.</p>
+    </div>
+  }
 
-  <div *ngIf="feeds.length === 0" class="no-feeds">
-      <p>No feeds found.</p>
-  </div>
+  @if (feeds().length === 0) {
+    <div class="no-feeds">
+        <p>No feeds found.</p>
+    </div>
+  }
 </div>

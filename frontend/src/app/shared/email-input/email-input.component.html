@@ -1,14 +1,14 @@
 <div class="form-group">
-  <label [for]="id">{{ label }}:</label>
+  <label [for]="id()">{{ label() }}:</label>
   <input
     type="email"
-    [id]="id"
-    [name]="name"
-    [value]="value"
-    [required]="required"
-    [readonly]="!editable"
-    [disabled]="disabled"
-    (input)="onInput($event)"
+    [id]="id()"
+    [name]="name()"
+    [value]="value()"
+    [required]="required()"
+    [readonly]="!editable()"
+    [disabled]="isDisabled()"
+    (input)="onInputChange($event)"
     (blur)="onTouched()"
   >
 </div>

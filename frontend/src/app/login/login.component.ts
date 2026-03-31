@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, PLATFORM_ID, NgZone, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID, NgZone, ChangeDetectorRef, signal } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
@@ -31,7 +31,8 @@ export class LoginComponent implements OnInit {
   appleLoginUrl = `${environment.apiUrl.replace('/api', '')}/oauth2/authorization/apple`;
   microsoftLoginUrl = `${environment.apiUrl.replace('/api', '')}/oauth2/authorization/microsoft`;
 
-  features: { [key: string]: boolean } = {};
+  // Signal for feature flags
+  features = signal<{ [key: string]: boolean }>({});
 
   constructor(
     private http: HttpClient,
@@ -42,7 +43,6 @@ export class LoginComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
-    // Only set returnUrl if it's explicitly in the query params
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || null;
   }
 
@@ -55,14 +55,14 @@ export class LoginComponent implements OnInit {
   loadFeatures() {
     this.http.get<{ [key: string]: boolean }>(`${environment.apiUrl}/features`).subscribe({
       next: (data) => {
-        this.features = data;
+        this.features.set(data);
       },
       error: (err) => console.error('Failed to load features', err)
     });
   }
 
   onSubmit() {
-    this.errorMessage = ''; // Clear previous error
+    this.errorMessage = '';
 
     if (isPlatformBrowser(this.platformId)) {
       const loginData = { username: this.email, password: this.password };
@@ -78,15 +78,9 @@ export class LoginComponent implements OnInit {
         error: (err) => {
           this.ngZone.run(() => {
             console.error('Login error full object:', err);
-            console.error('Login error body:', err.error);
-
             let errorBody = err.error;
             if (typeof errorBody === 'string') {
-                try {
-                    errorBody = JSON.parse(errorBody);
-                } catch (e) {
-                    // Not JSON
-                }
+                try { errorBody = JSON.parse(errorBody); } catch (e) {}
             }
 
             if (errorBody && typeof errorBody === 'object' && errorBody.message) {
@@ -98,9 +92,7 @@ export class LoginComponent implements OnInit {
             } else {
               this.errorMessage = 'An unexpected error occurred.';
             }
-
-            console.log('Setting errorMessage to:', this.errorMessage);
-            this.cdr.detectChanges(); // Force update
+            this.cdr.detectChanges(); // Still needed for non-signal errorMessage
           });
         }
       });
@@ -123,7 +115,6 @@ export class LoginComponent implements OnInit {
         this.router.navigate(['/feeds']);
       }
     } catch (error) {
-      console.error('Error decoding token for redirect:', error);
       this.router.navigate(['/']);
     }
   }

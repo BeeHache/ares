@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -24,9 +24,9 @@ interface FeatureFlag {
   styleUrl: './dashboard.component.css'
 })
 export class DashboardComponent implements OnInit {
-  message = '';
-  stats: AdminStats | null = null;
-  features: FeatureFlag[] = [];
+  message = signal<string>('');
+  stats = signal<AdminStats | null>(null);
+  features = signal<FeatureFlag[]>([]);
 
   constructor(
     private http: HttpClient,
@@ -42,11 +42,8 @@ export class DashboardComponent implements OnInit {
   loadMessage() {
     this.http.get<{message: string}>(`${environment.apiUrl}/admin/hello`)
       .subscribe({
-        next: (data) => {
-          this.message = data.message;
-          this.cdr.detectChanges();
-        },
-        error: (err) => this.message = 'Error loading admin data: ' + err.message
+        next: (data) => this.message.set(data.message),
+        error: (err) => this.message.set('Error loading admin data: ' + err.message)
       });
   }
 
@@ -54,8 +51,7 @@ export class DashboardComponent implements OnInit {
     this.http.get<AdminStats>(`${environment.apiUrl}/admin/stats`)
       .subscribe({
         next: (data) => {
-          this.stats = data;
-          this.cdr.detectChanges();
+          this.stats.set(data);
         },
         error: (err) => console.error('Error loading stats', err)
       });
@@ -67,32 +63,23 @@ export class DashboardComponent implements OnInit {
         next: (data) => {
           const socialChildren = ['GITHUB_LOGIN', 'GOOGLE_LOGIN', 'FACEBOOK_LOGIN', 'APPLE_LOGIN', 'MICROSOFT_LOGIN'];
 
-          this.features = Object.keys(data).map(key => ({
+          const processedFeatures = Object.keys(data).map(key => ({
             name: key,
             enabled: data[key],
             isChild: socialChildren.includes(key),
             parentName: socialChildren.includes(key) ? 'SOCIAL_LOGIN' : undefined
           }));
 
-          // Final Sort logic:
-          // 1. Group everything by "Family". The family name is either 'SOCIAL_LOGIN' or the flag's own name.
-          // 2. Within the family, put the parent first (no parentName).
-          // 3. Sort families alphabetically.
-          this.features.sort((a, b) => {
+          processedFeatures.sort((a, b) => {
             const familyA = a.parentName || a.name;
             const familyB = b.parentName || b.name;
-
-            if (familyA !== familyB) {
-              return familyA.localeCompare(familyB);
-            }
-
-            // Same family: parent (no parentName) comes before children
+            if (familyA !== familyB) return familyA.localeCompare(familyB);
             if (!a.parentName) return -1;
             if (!b.parentName) return 1;
             return a.name.localeCompare(b.name);
           });
 
-          this.cdr.detectChanges();
+          this.features.set(processedFeatures);
         },
         error: (err) => console.error('Error loading features', err)
       });
@@ -100,7 +87,7 @@ export class DashboardComponent implements OnInit {
 
   isParentDisabled(feature: FeatureFlag): boolean {
     if (!feature.isChild || !feature.parentName) return false;
-    const parent = this.features.find(f => f.name === feature.parentName);
+    const parent = this.features().find(f => f.name === feature.parentName);
     return parent ? !parent.enabled : false;
   }
 
@@ -111,14 +98,14 @@ export class DashboardComponent implements OnInit {
     this.http.post(`${environment.apiUrl}/features/${feature.name}?enabled=${newState}`, {})
       .subscribe({
         next: () => {
-          feature.enabled = newState;
-          this.cdr.detectChanges();
+          // Update the signal value immutably
+          this.features.update(fs => fs.map(f =>
+            f.name === feature.name ? { ...f, enabled: newState } : f
+          ));
         },
         error: (err) => {
           console.error('Error toggling feature', err);
           alert('Failed to update feature flag.');
-          feature.enabled = !newState;
-          this.cdr.detectChanges();
         }
       });
   }

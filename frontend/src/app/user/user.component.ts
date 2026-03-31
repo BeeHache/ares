@@ -1,10 +1,9 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, effect, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { FeedService, FeedSummary } from '../feed.service';
-import { filter, take } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { OpmlImportComponent } from '../opml-import/opml-import.component';
 
@@ -20,9 +19,9 @@ interface UserProfile {
   styleUrl: './user.component.css'
 })
 export class UserComponent implements OnInit {
-  user: UserProfile | null = null;
-  feedSummaries: FeedSummary[] = [];
-  error: string | null = null;
+  user = signal<UserProfile | null>(null);
+  feedSummaries = signal<FeedSummary[]>([]);
+  error = signal<string | null>(null);
   showImportModal = false;
   showDeleteConfirm = false;
   showDeleteSuccess = false;
@@ -35,32 +34,31 @@ export class UserComponent implements OnInit {
       private router: Router
   ) {
     console.log('UserComponent: Constructor called');
+
+    // React to auth state changes using effect
+    effect(() => {
+      const currentUser = this.authService.currentUser();
+      if (currentUser) {
+        console.log('UserComponent: Auth confirmed via Signal, loading user profile...');
+        this.loadUserProfile();
+        this.loadFeedSummaries();
+      }
+    });
   }
 
   ngOnInit(): void {
     console.log('UserComponent: ngOnInit called');
-
-    this.authService.currentUser$.pipe(
-      filter(user => user !== null),
-      take(1)
-    ).subscribe(() => {
-      console.log('UserComponent: Auth confirmed, loading user profile...');
-      this.loadUserProfile();
-      this.loadFeedSummaries();
-    });
   }
 
   loadUserProfile(): void {
     this.http.get<UserProfile>(`${environment.apiUrl}/user/`).subscribe({
       next: (data) => {
         console.log('UserComponent: User profile loaded');
-        this.user = data;
-        this.cdr.detectChanges();
+        this.user.set(data);
       },
       error: (err) => {
-        this.error = `Failed to load user data. Status: ${err.status}. Please try logging in again.`;
+        this.error.set(`Failed to load user data. Status: ${err.status}. Please try logging in again.`);
         console.error('User profile error:', err);
-        this.cdr.detectChanges();
       }
     });
   }
@@ -68,8 +66,7 @@ export class UserComponent implements OnInit {
   loadFeedSummaries(): void {
       this.feedService.getFeedSummaries().subscribe({
           next: (data) => {
-              this.feedSummaries = data.sort((a, b) => a.title.localeCompare(b.title));
-              this.cdr.detectChanges();
+              this.feedSummaries.set(data.sort((a, b) => a.title.localeCompare(b.title)));
           },
           error: (err) => console.error('Error loading feed summaries', err)
       });
@@ -92,8 +89,7 @@ export class UserComponent implements OnInit {
       if (confirm(`Are you sure you want to unsubscribe from ${title}?`)) {
           this.feedService.deleteFeed(id).subscribe({
               next: () => {
-                  this.feedSummaries = this.feedSummaries.filter(f => f.id !== id);
-                  this.cdr.detectChanges();
+                  this.feedSummaries.update(feeds => feeds.filter(f => f.id !== id));
               },
               error: (err) => alert('Failed to unsubscribe')
           });
@@ -146,13 +142,11 @@ export class UserComponent implements OnInit {
       next: () => {
         this.showDeleteConfirm = false;
         this.showDeleteSuccess = true;
-        this.cdr.detectChanges(); // Force UI update
       },
       error: (err) => {
         console.error('Delete account failed', err);
         alert('Failed to delete account. Please try again.');
         this.showDeleteConfirm = false;
-        this.cdr.detectChanges(); // Force UI update
       }
     });
   }

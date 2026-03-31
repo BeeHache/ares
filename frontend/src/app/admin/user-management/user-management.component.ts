@@ -1,8 +1,9 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../auth.service';
+import { FormsModule } from '@angular/forms';
 
 interface Account {
   id: number;
@@ -24,44 +25,63 @@ interface Page<T> {
 @Component({
   selector: 'app-user-management',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './user-management.component.html',
   styleUrl: './user-management.component.css'
 })
 export class UserManagementComponent implements OnInit {
-  users: Account[] = [];
-  currentPage = 0;
-  totalPages = 0;
-  pageSize = 20;
-  loading = false;
-  currentUsername: string | null = null;
+  // Signals
+  users = signal<Account[]>([]);
+  loading = signal<boolean>(false);
+  currentPage = signal<number>(0);
+  totalPages = signal<number>(0);
+  pageSize = signal<number>(20);
+
+  // Filter Signals
+  typeFilter = signal<string>(''); // empty, ADMIN, USER
+  statusFilter = signal<string>(''); // empty, LOCKED, ACTIVE
 
   constructor(
     private http: HttpClient,
-    private cdr: ChangeDetectorRef,
-    private authService: AuthService
-  ) {}
+    public authService: AuthService
+  ) {
+    // Reload users when filters change
+    effect(() => {
+      this.typeFilter();
+      this.statusFilter();
+      this.loadUsers(0);
+    });
+  }
 
   ngOnInit(): void {
-    this.currentUsername = this.authService.getUsername();
-    this.loadUsers(0);
+    // Initial load happens via effect
   }
 
   loadUsers(page: number) {
-    this.loading = true;
-    this.http.get<Page<Account>>(`${environment.apiUrl}/admin/accounts?page=${page}&size=${this.pageSize}`)
+    this.loading.set(true);
+
+    let url = `${environment.apiUrl}/admin/accounts?page=${page}&size=${this.pageSize()}`;
+
+    if (this.typeFilter()) {
+      url += `&type=${this.typeFilter()}`;
+    }
+
+    if (this.statusFilter()) {
+      const isLocked = this.statusFilter() === 'LOCKED';
+      url += `&locked=${isLocked}`;
+    }
+
+    this.http.get<Page<Account>>(url)
       .subscribe({
         next: (data) => {
-          this.users = data.content;
-          this.currentPage = data.number;
-          this.totalPages = data.totalPages;
-          this.loading = false;
-          this.cdr.detectChanges(); // Force update
+          this.users.set(data.content);
+          this.currentPage.set(data.number);
+          this.totalPages.set(data.totalPages);
+          this.loading.set(false);
         },
         error: (err) => {
           console.error('Error loading users', err);
-          this.loading = false;
-          this.cdr.detectChanges();
+          this.loading.set(false);
         }
       });
   }
@@ -70,7 +90,7 @@ export class UserManagementComponent implements OnInit {
     if (confirm('Are you sure you want to lock this user?')) {
       this.http.post(`${environment.apiUrl}/admin/users/${id}/lock`, {})
         .subscribe({
-          next: () => this.loadUsers(this.currentPage),
+          next: () => this.loadUsers(this.currentPage()),
           error: (err) => alert('Failed to lock user')
         });
     }
@@ -79,7 +99,7 @@ export class UserManagementComponent implements OnInit {
   unlockUser(id: number) {
     this.http.post(`${environment.apiUrl}/admin/users/${id}/unlock`, {})
       .subscribe({
-        next: () => this.loadUsers(this.currentPage),
+        next: () => this.loadUsers(this.currentPage()),
         error: (err) => alert('Failed to unlock user')
       });
   }
@@ -90,6 +110,6 @@ export class UserManagementComponent implements OnInit {
   }
 
   isCurrentUser(username: string): boolean {
-    return this.currentUsername === username;
+    return this.authService.currentUser() === username;
   }
 }

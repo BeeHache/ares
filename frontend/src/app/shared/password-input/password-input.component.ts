@@ -1,4 +1,4 @@
-import { Component, Input, forwardRef } from '@angular/core';
+import { Component, input, signal, forwardRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
 import { CapsLockDirective } from '../caps-lock.directive';
@@ -18,28 +18,30 @@ import { CapsLockDirective } from '../caps-lock.directive';
   ]
 })
 export class PasswordInputComponent implements ControlValueAccessor {
-  @Input() label: string = 'Password';
-  @Input() placeholder: string = '';
-  @Input() required: boolean = false;
-  @Input() minlength: number | null = null;
-  @Input() name: string = 'password';
-  @Input() id: string = 'password';
+  // Signal-based inputs
+  label = input<string>('Password');
+  placeholder = input<string>('');
+  required = input<boolean>(false);
+  minlength = input<number | null>(null);
+  name = input<string>('password');
+  id = input<string>('password');
 
-  value: string = '';
-  showPassword = false;
-  disabled = false;
-  capsLockOn = false;
+  // Internal state signals
+  value = signal<string>('');
+  showPassword = signal<boolean>(false);
+  isDisabled = signal<boolean>(false);
+  capsLockOn = signal<boolean>(false);
 
   onChange: any = () => {};
   onTouched: any = () => {};
 
   toggleVisibility() {
-    this.showPassword = !this.showPassword;
+    this.showPassword.update(show => !show);
   }
 
   // ControlValueAccessor implementation
   writeValue(value: string): void {
-    this.value = value;
+    this.value.set(value || '');
   }
 
   registerOnChange(fn: any): void {
@@ -51,13 +53,13 @@ export class PasswordInputComponent implements ControlValueAccessor {
   }
 
   setDisabledState(isDisabled: boolean): void {
-    this.disabled = isDisabled;
+    this.isDisabled.set(isDisabled);
   }
 
-  onInput(event: Event) {
-    const value = (event.target as HTMLInputElement).value;
-    this.value = value;
-    this.onChange(value);
+  onInputChange(event: Event) {
+    const val = (event.target as HTMLInputElement).value;
+    this.value.set(val);
+    this.onChange(val);
     this.onTouched();
   }
 }

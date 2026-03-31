@@ -7,25 +7,34 @@
 
     <div class="modal-body">
       <div class="tabs">
-        <button [class.active]="mode === 'file'" (click)="mode = 'file'">Upload File</button>
-        <button [class.active]="mode === 'url'" (click)="mode = 'url'">From URL</button>
+        <button [class.active]="mode() === 'file'" (click)="mode.set('file')">Upload File</button>
+        <button [class.active]="mode() === 'url'" (click)="mode.set('url')">From URL</button>
       </div>
 
-      <div *ngIf="mode === 'file'" class="tab-content">
-        <input type="file" (change)="onFileSelected($event)" accept=".opml,.xml">
-      </div>
+      @if (mode() === 'file') {
+        <div class="tab-content">
+          <input type="file" (change)="onFileSelected($event)" accept=".opml,.xml">
+        </div>
+      }
 
-      <div *ngIf="mode === 'url'" class="tab-content">
-        <input type="text" [(ngModel)]="url" placeholder="Enter OPML URL">
-      </div>
+      @if (mode() === 'url') {
+        <div class="tab-content">
+          <input type="text"
+                 [ngModel]="url()"
+                 (ngModelChange)="url.set($event)"
+                 placeholder="Enter OPML URL">
+        </div>
+      }
 
-      <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+      @if (errorMessage()) {
+        <div class="error">{{ errorMessage() }}</div>
+      }
     </div>
 
     <div class="modal-footer">
       <button class="btn secondary" (click)="close.emit()">Cancel</button>
-      <button class="btn primary" (click)="onSubmit()" [disabled]="isLoading">
-        {{ isLoading ? 'Importing...' : 'Import' }}
+      <button class="btn primary" (click)="onSubmit()" [disabled]="isLoading()">
+        {{ isLoading() ? 'Importing...' : 'Import' }}
       </button>
     </div>
   </div>
