@@ -1,7 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { environment } from '../environments/environment';
 
 export interface Enclosure {
@@ -55,17 +54,13 @@ export interface Feed {
 export class FeedService {
   private apiUrl = `${environment.apiUrl}/feed`;
 
-  private selectedFeedSubject = new BehaviorSubject<FeedTitle | null>(null);
-  selectedFeed$ = this.selectedFeedSubject.asObservable();
+  // Signal for the selected feed
+  public selectedFeed = signal<FeedTitle | null>(null);
 
-  constructor(private http: HttpClient) {
-      this.selectedFeed$.subscribe(feed => {
-          // Keep subscription active
-      });
-  }
+  constructor(private http: HttpClient) {}
 
   selectFeed(feed: FeedTitle | null) {
-      this.selectedFeedSubject.next(feed);
+      this.selectedFeed.set(feed);
   }
 
   getFeedTitles(): Observable<FeedTitle[]> {

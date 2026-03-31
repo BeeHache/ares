@@ -1,77 +1,94 @@
-<div class="container" *ngIf="user; else loading">
-  <div class="profile-header">
-    <h2>User Profile</h2>
-    <p><strong>Email:</strong> {{ user.email }}</p>
+@if (user()) {
+  <div class="container">
+    <div class="profile-header">
+      <h2>User Profile</h2>
+      <p><strong>Email:</strong> {{ user()?.email }}</p>
 
-    <div class="actions">
-      <h3>Manage Feeds</h3>
-      <button class="btn" (click)="addFeed()">Add Feed</button>
-      <button class="btn" (click)="openImportModal()">Import OPML</button>
-      <button class="btn btn-secondary" (click)="exportFeeds()">Export OPML</button>
+      <div class="actions">
+        <h3>Manage Feeds</h3>
+        <button class="btn" (click)="addFeed()">Add Feed</button>
+        <button class="btn" (click)="openImportModal()">Import OPML</button>
+        <button class="btn btn-secondary" (click)="exportFeeds()">Export OPML</button>
+      </div>
+    </div>
+
+    <div class="feed-list-section">
+        <h3>Subscribed Feeds ({{ feedSummaries().length }})</h3>
+        <div class="feed-grid">
+            @for (feed of feedSummaries(); track feed.id) {
+              <div class="feed-card">
+                  <div class="feed-icon-wrapper">
+                      @if (feed.imageUrl) {
+                        <img [src]="feed.imageUrl" class="feed-icon" alt="" onerror="this.style.display='none'">
+                      } @else {
+                        <div class="feed-icon-placeholder">{{ feed.title.charAt(0) }}</div>
+                      }
+                      @if (feed.isPodcast) {
+                        <span class="podcast-indicator" title="Podcast">🎙</span>
+                      }
+                  </div>
+                  <div class="feed-info">
+                      <h4><a [href]="feed.link" target="_blank">{{ feed.title }}</a></h4>
+                      @if (feed.description) {
+                        <p class="feed-desc" [innerHTML]="feed.description"></p>
+                      }
+                  </div>
+                  <div class="feed-actions">
+                      <button class="delete-btn" (click)="deleteFeed(feed.id, feed.title)" title="Unsubscribe">×</button>
+                  </div>
+              </div>
+            } @empty {
+              <div class="no-feeds">
+                  <p>You haven't subscribed to any feeds yet.</p>
+              </div>
+            }
+        </div>
+    </div>
+
+    <div class="account-actions">
+      <button class="btn btn-danger" (click)="confirmDelete()">Delete Account</button>
     </div>
   </div>
-
-  <div class="feed-list-section">
-      <h3>Subscribed Feeds ({{ feedSummaries.length }})</h3>
-      <div class="feed-grid">
-          <div *ngFor="let feed of feedSummaries" class="feed-card">
-              <div class="feed-icon-wrapper">
-                  <img *ngIf="feed.imageUrl" [src]="feed.imageUrl" class="feed-icon" alt="" onerror="this.style.display='none'">
-                  <div *ngIf="!feed.imageUrl" class="feed-icon-placeholder">{{ feed.title.charAt(0) }}</div>
-                  <span *ngIf="feed.isPodcast" class="podcast-indicator" title="Podcast">🎙</span>
-              </div>
-              <div class="feed-info">
-                  <h4><a [href]="feed.link" target="_blank">{{ feed.title }}</a></h4>
-                  <p class="feed-desc" *ngIf="feed.description" [innerHTML]="feed.description"></p>
-              </div>
-              <div class="feed-actions">
-                  <button class="delete-btn" (click)="deleteFeed(feed.id, feed.title)" title="Unsubscribe">×</button>
-              </div>
-          </div>
-      </div>
-      <div *ngIf="feedSummaries.length === 0" class="no-feeds">
-          <p>You haven't subscribed to any feeds yet.</p>
-      </div>
-  </div>
-
-  <div class="account-actions">
-    <button class="btn btn-danger" (click)="confirmDelete()">Delete Account</button>
-  </div>
-</div>
-
-<ng-template #loading>
+} @else {
   <p>Loading user data...</p>
-</ng-template>
+}
 
-<div *ngIf="error" class="error">
-  <p>{{ error }}</p>
-</div>
+@if (error()) {
+  <div class="error">
+    <p>{{ error() }}</p>
+  </div>
+}
 
-<app-opml-import
-  *ngIf="showImportModal"
-  (close)="closeImportModal()"
-  (importSuccess)="onImportSuccess()">
-</app-opml-import>
+@if (showImportModal) {
+  <app-opml-import
+    (close)="closeImportModal()"
+    (importSuccess)="onImportSuccess()">
+  </app-opml-import>
+}
 
 <!-- Delete Confirmation Modal -->
-<div class="modal-overlay" *ngIf="showDeleteConfirm">
-  <div class="modal-content">
-    <h3>Delete Account</h3>
-    <p>Are you sure you want to delete your account? This action cannot be undone.</p>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" (click)="cancelDelete()">Cancel</button>
-      <button class="btn btn-danger" (click)="deleteAccount()">Delete Account</button>
+@if (showDeleteConfirm) {
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <h3>Delete Account</h3>
+      <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" (click)="cancelDelete()">Cancel</button>
+        <button class="btn btn-danger" (click)="deleteAccount()">Delete Account</button>
+      </div>
     </div>
   </div>
-</div>
+}
 
 <!-- Delete Success Modal -->
-<div class="modal-overlay" *ngIf="showDeleteSuccess">
-  <div class="modal-content">
-    <h3>Account Deleted</h3>
-    <p>Your account has been successfully deleted. You will now be logged out.</p>
-    <div class="modal-actions">
-      <button class="btn" (click)="onDeleteSuccess()">OK</button>
+@if (showDeleteSuccess) {
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <h3>Account Deleted</h3>
+      <p>Your account has been successfully deleted. You will now be logged out.</p>
+      <div class="modal-actions">
+        <button class="btn" (click)="onDeleteSuccess()">OK</button>
+      </div>
     </div>
   </div>
-</div>
+}

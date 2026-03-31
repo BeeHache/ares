@@ -1,4 +1,4 @@
-import { Component, OnInit, NgZone, ChangeDetectorRef, Inject, PLATFORM_ID, HostListener } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID, HostListener, signal, effect } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FeedListComponent } from '../feed-list/feed-list.component';
 import { FeedTitle, FeedService } from '../feed.service';
@@ -12,40 +12,34 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
   styleUrl: './feeds-page.component.css'
 })
 export class FeedsPageComponent implements OnInit {
-  selectedFeed: FeedTitle | null = null;
-  isMobile = false;
-  showSidebar = true;
-  iframeSrc: SafeResourceUrl | null = null;
+  selectedFeed = signal<FeedTitle | null>(null);
+  isMobile = signal<boolean>(false);
+  showSidebar = signal<boolean>(true);
+  iframeSrc = signal<SafeResourceUrl | null>(null);
 
   constructor(
       private feedService: FeedService,
-      private zone: NgZone,
-      private cdr: ChangeDetectorRef,
       @Inject(PLATFORM_ID) private platformId: Object,
       private sanitizer: DomSanitizer
   ) {
+    effect(() => {
+      const feed = this.feedService.selectedFeed(); // React to the signal from FeedService
+      this.selectedFeed.set(feed);
+
+      if (feed && feed.id) {
+          this.iframeSrc.set(this.sanitizer.bypassSecurityTrustResourceUrl(`/feed-items/${feed.id}`));
+      } else {
+          this.iframeSrc.set(null);
+      }
+
+      if (this.isMobile() && feed) {
+          this.showSidebar.set(false);
+      }
+    });
   }
 
   ngOnInit(): void {
     this.checkScreenSize();
-
-    this.zone.run(() => {
-        this.feedService.selectedFeed$.subscribe(feed => {
-            this.selectedFeed = feed;
-
-            if (feed && feed.id) {
-                this.iframeSrc = this.sanitizer.bypassSecurityTrustResourceUrl(`/feed-items/${feed.id}`);
-            } else {
-                this.iframeSrc = null;
-            }
-
-            if (this.isMobile && feed) {
-                this.showSidebar = false;
-            }
-
-            this.cdr.detectChanges();
-        });
-    });
   }
 
   @HostListener('window:resize', ['$event'])
@@ -55,21 +49,21 @@ export class FeedsPageComponent implements OnInit {
 
   checkScreenSize() {
       if (isPlatformBrowser(this.platformId)) {
-          this.isMobile = window.innerWidth < 768;
-          if (!this.isMobile) {
-              this.showSidebar = true;
-          } else if (this.selectedFeed) {
-              this.showSidebar = false;
+          this.isMobile.set(window.innerWidth < 768);
+          if (!this.isMobile()) {
+              this.showSidebar.set(true);
+          } else if (this.selectedFeed()) {
+              this.showSidebar.set(false);
           } else {
-              this.showSidebar = true;
+              this.showSidebar.set(true);
           }
       }
   }
 
   backToFeedList() {
-      this.selectedFeed = null;
-      this.iframeSrc = null;
-      this.feedService.selectFeed(null);
-      this.showSidebar = true;
+      this.selectedFeed.set(null);
+      this.iframeSrc.set(null);
+      this.feedService.selectFeed(null); // Update the service's signal
+      this.showSidebar.set(true);
   }
 }

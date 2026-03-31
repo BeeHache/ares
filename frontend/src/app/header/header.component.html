@@ -10,7 +10,7 @@
 
     <div class="nav-links" [class.active]="isMenuOpen">
 
-      <form class="search-form" (submit)="onSearch()" *ngIf="authService.currentUser$ | async">
+      <form class="search-form" (submit)="onSearch()" *ngIf="authService.currentUser()">
         <input type="text" placeholder="Search articles..." [(ngModel)]="searchQuery" name="q">
         <button type="submit">🔍</button>
       </form>
@@ -23,13 +23,13 @@
         </div>
       </div>
 
-      <ng-container *ngIf="authService.currentUser$ | async as username; else loggedOut">
+      <ng-container *ngIf="authService.currentUser() as username; else loggedOut">
         <a *ngIf="authService.hasRole('ROLE_USER')" routerLink="/feeds" class="nav-link" (click)="closeMenu()">Feeds</a>
         <a *ngIf="authService.hasRole('ROLE_ADMIN')" routerLink="/admin" class="nav-link" (click)="closeMenu()">Admin</a>
 
         <span class="username">
           <ng-container *ngIf="authService.hasRole('ROLE_ADMIN'); else userLink">
-            {{ (authService.currentName$ | async) || username }}
+            {{ authService.currentName() || username }}
           </ng-container>
           <ng-template #userLink>
             <a routerLink="/user" class="nav-link" (click)="closeMenu()">{{ username }}</a>

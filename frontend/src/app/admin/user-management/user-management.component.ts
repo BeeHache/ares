@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -29,39 +29,35 @@ interface Page<T> {
   styleUrl: './user-management.component.css'
 })
 export class UserManagementComponent implements OnInit {
-  users: Account[] = [];
-  currentPage = 0;
-  totalPages = 0;
-  pageSize = 20;
-  loading = false;
-  currentUsername: string | null = null;
+  // Signals
+  users = signal<Account[]>([]);
+  loading = signal<boolean>(false);
+  currentPage = signal<number>(0);
+  totalPages = signal<number>(0);
+  pageSize = signal<number>(20);
 
   constructor(
     private http: HttpClient,
-    private cdr: ChangeDetectorRef,
-    private authService: AuthService
+    public authService: AuthService
   ) {}
 
   ngOnInit(): void {
-    this.currentUsername = this.authService.getUsername();
     this.loadUsers(0);
   }
 
   loadUsers(page: number) {
-    this.loading = true;
-    this.http.get<Page<Account>>(`${environment.apiUrl}/admin/accounts?page=${page}&size=${this.pageSize}`)
+    this.loading.set(true);
+    this.http.get<Page<Account>>(`${environment.apiUrl}/admin/accounts?page=${page}&size=${this.pageSize()}`)
       .subscribe({
         next: (data) => {
-          this.users = data.content;
-          this.currentPage = data.number;
-          this.totalPages = data.totalPages;
-          this.loading = false;
-          this.cdr.detectChanges(); // Force update
+          this.users.set(data.content);
+          this.currentPage.set(data.number);
+          this.totalPages.set(data.totalPages);
+          this.loading.set(false);
         },
         error: (err) => {
           console.error('Error loading users', err);
-          this.loading = false;
-          this.cdr.detectChanges();
+          this.loading.set(false);
         }
       });
   }
@@ -70,7 +66,7 @@ export class UserManagementComponent implements OnInit {
     if (confirm('Are you sure you want to lock this user?')) {
       this.http.post(`${environment.apiUrl}/admin/users/${id}/lock`, {})
         .subscribe({
-          next: () => this.loadUsers(this.currentPage),
+          next: () => this.loadUsers(this.currentPage()),
           error: (err) => alert('Failed to lock user')
         });
     }
@@ -79,7 +75,7 @@ export class UserManagementComponent implements OnInit {
   unlockUser(id: number) {
     this.http.post(`${environment.apiUrl}/admin/users/${id}/unlock`, {})
       .subscribe({
-        next: () => this.loadUsers(this.currentPage),
+        next: () => this.loadUsers(this.currentPage()),
         error: (err) => alert('Failed to unlock user')
       });
   }
@@ -90,6 +86,6 @@ export class UserManagementComponent implements OnInit {
   }
 
   isCurrentUser(username: string): boolean {
-    return this.currentUsername === username;
+    return this.authService.currentUser() === username;
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -28,36 +28,32 @@ interface Page<T> {
   styleUrl: './feed-management.component.css'
 })
 export class FeedManagementComponent implements OnInit {
-  feeds: Feed[] = [];
-  currentPage = 0;
-  totalPages = 0;
-  pageSize = 20;
-  loading = false;
+  // Signals
+  feeds = signal<Feed[]>([]);
+  currentPage = signal<number>(0);
+  totalPages = signal<number>(0);
+  pageSize = signal<number>(20);
+  loading = signal<boolean>(false);
 
-  constructor(
-    private http: HttpClient,
-    private cdr: ChangeDetectorRef
-  ) {}
+  constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     this.loadFeeds(0);
   }
 
   loadFeeds(page: number) {
-    this.loading = true;
-    this.http.get<Page<Feed>>(`${environment.apiUrl}/admin/feeds?page=${page}&size=${this.pageSize}`)
+    this.loading.set(true);
+    this.http.get<Page<Feed>>(`${environment.apiUrl}/admin/feeds?page=${page}&size=${this.pageSize()}`)
       .subscribe({
         next: (data) => {
-          this.feeds = data.content;
-          this.currentPage = data.number;
-          this.totalPages = data.totalPages;
-          this.loading = false;
-          this.cdr.detectChanges(); // Force update
+          this.feeds.set(data.content);
+          this.currentPage.set(data.number);
+          this.totalPages.set(data.totalPages);
+          this.loading.set(false);
         },
         error: (err) => {
           console.error('Error loading feeds', err);
-          this.loading = false;
-          this.cdr.detectChanges();
+          this.loading.set(false);
         }
       });
   }
@@ -66,7 +62,7 @@ export class FeedManagementComponent implements OnInit {
     if (confirm(`Are you sure you want to delete feed "${title}"? This will remove it for ALL users.`)) {
       this.http.delete(`${environment.apiUrl}/admin/feeds/${id}`)
         .subscribe({
-          next: () => this.loadFeeds(this.currentPage),
+          next: () => this.loadFeeds(this.currentPage()),
           error: (err) => alert('Failed to delete feed')
         });
     }
@@ -77,7 +73,7 @@ export class FeedManagementComponent implements OnInit {
       .subscribe({
         next: () => {
           alert('Feed refresh triggered.');
-          this.loadFeeds(this.currentPage);
+          this.loadFeeds(this.currentPage());
         },
         error: (err) => alert('Failed to refresh feed')
       });

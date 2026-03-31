@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { FeedService, FeedItem } from '../feed.service';
@@ -11,9 +11,9 @@ import { FeedService, FeedItem } from '../feed.service';
   styleUrl: './search.component.css'
 })
 export class SearchComponent implements OnInit {
-  query = '';
-  results: FeedItem[] = [];
-  loading = false;
+  query = signal<string>('');
+  results = signal<FeedItem[]>([]);
+  loading = signal<boolean>(false);
 
   constructor(
     private route: ActivatedRoute,
@@ -22,23 +22,23 @@ export class SearchComponent implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
-      this.query = params['q'];
-      if (this.query) {
+      this.query.set(params['q']);
+      if (this.query()) {
         this.performSearch();
       }
     });
   }
 
   performSearch() {
-    this.loading = true;
-    this.feedService.search(this.query).subscribe({
+    this.loading.set(true);
+    this.feedService.search(this.query()).subscribe({
       next: (data) => {
-        this.results = data;
-        this.loading = false;
+        this.results.set(data);
+        this.loading.set(false);
       },
       error: (err) => {
         console.error('Search error', err);
-        this.loading = false;
+        this.loading.set(false);
       }
     });
   }

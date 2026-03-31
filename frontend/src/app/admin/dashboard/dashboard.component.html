@@ -2,43 +2,48 @@
   <h1>Admin Dashboard</h1>
   <p>Welcome to the secure admin area.</p>
 
-  <div class="stats-grid" *ngIf="stats">
-    <div class="stat-card">
-      <div class="stat-value">{{ stats.totalUsers }}</div>
-      <div class="stat-label">Total Users</div>
+  @if (stats()) {
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">{{ stats()?.totalUsers }}</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats()?.totalFeeds }}</div>
+        <div class="stat-label">Total Feeds</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats()?.totalArticles }}</div>
+        <div class="stat-label">Total Articles</div>
+      </div>
     </div>
-    <div class="stat-card">
-      <div class="stat-value">{{ stats.totalFeeds }}</div>
-      <div class="stat-label">Total Feeds</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">{{ stats.totalArticles }}</div>
-      <div class="stat-label">Total Articles</div>
-    </div>
-  </div>
+  }
 
   <div class="dashboard-grid">
     <div class="card">
       <h3>Backend Status</h3>
-      <p>{{ message }}</p>
+      <p>{{ message() }}</p>
     </div>
 
     <div class="card">
       <h3>Feature Flags</h3>
       <div class="feature-list">
-        <div *ngFor="let feature of features"
-             class="feature-item"
-             [class.child-feature]="feature.isChild"
-             [class.disabled-feature]="isParentDisabled(feature)">
-          <span class="feature-name">{{ feature.name }}</span>
-          <label class="switch">
-            <input type="checkbox"
-                   [checked]="feature.enabled"
-                   (change)="toggleFeature(feature)"
-                   [disabled]="isParentDisabled(feature)">
-            <span class="slider round"></span>
-          </label>
-        </div>
+        @for (feature of features(); track feature.name) {
+          <div class="feature-item"
+               [class.child-feature]="feature.isChild"
+               [class.disabled-feature]="isParentDisabled(feature)">
+            <span class="feature-name">{{ feature.name }}</span>
+            <label class="switch">
+              <input type="checkbox"
+                     [checked]="feature.enabled"
+                     (change)="toggleFeature(feature)"
+                     [disabled]="isParentDisabled(feature)">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        } @empty {
+          <p>No feature flags found.</p>
+        }
       </div>
     </div>
   </div>

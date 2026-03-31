@@ -1,8 +1,7 @@
-import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
-import { BehaviorSubject, Observable } from 'rxjs';
 
 interface DecodedToken {
   sub: string;
@@ -17,13 +16,11 @@ interface DecodedToken {
 export class AuthService {
   private platformId = inject(PLATFORM_ID);
   private router = inject(Router);
-  private currentUserSubject = new BehaviorSubject<string | null>(null);
-  public currentUser$ = this.currentUserSubject.asObservable();
 
-  private currentNameSubject = new BehaviorSubject<string | null>(null);
-  public currentName$ = this.currentNameSubject.asObservable();
-
-  private currentRoles: string[] = [];
+  // Signals for state management
+  public currentUser = signal<string | null>(null);
+  public currentName = signal<string | null>(null);
+  public currentRoles = signal<string[]>([]);
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
@@ -37,36 +34,40 @@ export class AuthService {
   private updateUserFromToken(token: string) {
     try {
       const decodedToken: DecodedToken = jwtDecode(token);
-      this.currentUserSubject.next(decodedToken.sub);
-      this.currentNameSubject.next(decodedToken.name || null);
-      this.currentRoles = decodedToken.roles || [];
+      this.currentUser.set(decodedToken.sub);
+      this.currentName.set(decodedToken.name || null);
+      this.currentRoles.set(decodedToken.roles || []);
 
-      console.log('User Logged In:', decodedToken.sub);
-      console.log('User Name:', decodedToken.name);
-      console.log('User Roles:', this.currentRoles);
+      console.log('User Logged In (Signal):', this.currentUser());
+      console.log('User Name (Signal):', this.currentName());
+      console.log('User Roles (Signal):', this.currentRoles());
 
     } catch (error) {
       console.error('Error decoding token:', error);
-      this.currentUserSubject.next(null);
-      this.currentNameSubject.next(null);
-      this.currentRoles = [];
+      this.clearState();
     }
   }
 
+  private clearState() {
+    this.currentUser.set(null);
+    this.currentName.set(null);
+    this.currentRoles.set([]);
+  }
+
   isLoggedIn(): boolean {
-    return !!this.currentUserSubject.value;
+    return !!this.currentUser();
   }
 
   getUsername(): string | null {
-    return this.currentUserSubject.value;
+    return this.currentUser();
   }
 
   getName(): string | null {
-    return this.currentNameSubject.value;
+    return this.currentName();
   }
 
   hasRole(role: string): boolean {
-    return this.currentRoles.includes(role);
+    return this.currentRoles().includes(role);
   }
 
   getToken(): string | null {
@@ -86,9 +87,7 @@ export class AuthService {
   logout(): void {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem('token');
-      this.currentUserSubject.next(null);
-      this.currentNameSubject.next(null);
-      this.currentRoles = [];
+      this.clearState();
       this.router.navigate(['/login']);
     }
   }
