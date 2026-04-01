@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.projection.AccountProjection;
+import net.blackhacker.ares.repository.jpa.RoleRepository;
 import net.blackhacker.ares.repository.jpa.UserRepository;
 import net.blackhacker.ares.service.JWTService;
 import org.jspecify.annotations.NonNull;
@@ -29,13 +30,16 @@ import java.util.UUID;
 public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final JWTService jwtService;
     private final String frontendUrl;
 
     public OAuth2LoginSuccessHandler(UserRepository userRepository,
+                                     RoleRepository roleRepository,
                                      JWTService jwtService,
                                      @Value("${app.frontend.url:https://localhost}") String frontendUrl) {
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
         this.jwtService = jwtService;
         this.frontendUrl = frontendUrl;
     }
@@ -79,7 +83,10 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         account.setPassword(UUID.randomUUID().toString()); // Random password, they won't use it
         account.setType(AccountProjection.AccountType.USER);
         account.setAccountEnabledAt(ZonedDateTime.now()); // Auto-enable
+        
+        // Assign default USER role
         account.setRoles(new HashSet<>());
+        roleRepository.findByName("USER").ifPresent(role -> account.getRoles().add(role));
 
         User newUser = new User();
         newUser.setEmail(email);
