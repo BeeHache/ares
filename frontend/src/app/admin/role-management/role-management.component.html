@@ -1,0 +1,68 @@
+<div class="role-management-container">
+  <h2>Role Management</h2>
+
+  <div class="management-grid">
+    <!-- Role Tree -->
+    <div class="role-tree-card card">
+      <h3>Hierarchy</h3>
+      @if (loading()) {
+        <p>Loading roles...</p>
+      } @else {
+        <div class="tree-list">
+          <ng-template #roleTemplate let-roles>
+            <ul>
+              @for (role of roles; track role.id) {
+                <li>
+                  <div class="role-node" [class.selected]="selectedRole()?.id === role.id">
+                    <span class="role-name" (click)="selectRole(role)">{{ role.name }}</span>
+                    <div class="node-actions">
+                      <button class="btn-icon" (click)="deleteRole(role.id)" title="Delete">🗑️</button>
+                    </div>
+                  </div>
+                  @if (role.subRoles && role.subRoles.length > 0) {
+                    <ng-container *ngTemplateOutlet="roleTemplate; context:{ $implicit: role.subRoles }"></ng-container>
+                  }
+                </li>
+              }
+            </ul>
+          </ng-template>
+          <ng-container *ngTemplateOutlet="roleTemplate; context:{ $implicit: roles() }"></ng-container>
+        </div>
+      }
+    </div>
+
+    <!-- Edit/Add Form -->
+    <div class="role-form-card card">
+      <h3>{{ isEditing() ? 'Edit Role' : 'Add New Role' }}</h3>
+      <form (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="roleName">Role Name:</label>
+          <input type="text" id="roleName" [(ngModel)]="formData.name" name="name" required placeholder="e.g. MODERATOR">
+          <small>Internal name (will be prefixed with ROLE_ in security checks)</small>
+        </div>
+
+        <div class="form-group">
+          <label for="parentRole">Parent Role (Inherits from):</label>
+          <select id="parentRole" [(ngModel)]="formData.parentId" name="parentId">
+            <option [ngValue]="null">-- None (Root) --</option>
+            @for (role of flatRoles(); track role.id) {
+              @if (role.id !== selectedRole()?.id) {
+                <option [ngValue]="role.id">{{ role.name }}</option>
+              }
+            }
+          </select>
+          <small>The parent role will automatically include all permissions of this role.</small>
+        </div>
+
+        <div class="button-group">
+          <button type="submit" class="btn primary" [disabled]="!formData.name">
+            {{ isEditing() ? 'Update Role' : 'Create Role' }}
+          </button>
+          @if (isEditing()) {
+            <button type="button" class="btn secondary" (click)="resetForm()">Cancel</button>
+          }
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

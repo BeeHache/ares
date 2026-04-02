@@ -73,7 +73,6 @@ public class AccountService implements UserDetailsService {
         accountRepository.findByUsername(username).ifPresent(account -> {
             if (account.getFailedLoginAttempts() != null && account.getFailedLoginAttempts() > 0) {
                 account.setFailedLoginAttempts(0);
-                accountRepository.save(account);
             }
             
             account.setLastLogin(ZonedDateTime.now());

@@ -32,6 +32,7 @@
           <th>ID</th>
           <th>Username</th>
           <th>Type</th>
+          <th>Roles</th>
           <th>Status</th>
           <th>Actions</th>
         </tr>
@@ -45,11 +46,29 @@
               <span class="badge" [class.admin]="user.type === 'ADMIN'">{{ user.type }}</span>
             </td>
             <td>
+              <div class="role-badges">
+                @for (role of user.roles; track role.id) {
+                  <span class="role-badge">{{ role.name }}</span>
+                } @empty {
+                  <span class="no-roles">None</span>
+                }
+              </div>
+            </td>
+            <td>
               <span class="status" [class.locked]="isLocked(user)" [class.active]="!isLocked(user)">
                 {{ isLocked(user) ? 'Locked' : 'Active' }}
               </span>
             </td>
             <td>
+              <button (click)="openRoleEditor(user)" class="btn-action btn-roles" title="Manage Roles">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </button>
+
               @if (!isLocked(user)) {
                 <button (click)="lockUser(user.id)"
                         class="btn-action btn-lock"
@@ -75,7 +94,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="5" style="text-align: center;">No accounts found.</td>
+            <td colspan="6" style="text-align: center;">No accounts found.</td>
           </tr>
         }
       </tbody>
@@ -88,3 +107,26 @@
     <button [disabled]="currentPage() === totalPages() - 1" (click)="loadUsers(currentPage() + 1)">Next</button>
   </div>
 </div>
+
+<!-- Role Editor Modal -->
+@if (editingRolesFor(); as account) {
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <h3>Manage Roles for {{ account.username }}</h3>
+      <div class="role-selection-list">
+        @for (role of allRoles(); track role.id) {
+          <label class="role-checkbox">
+            <input type="checkbox"
+                   [checked]="selectedRoleIds.has(role.id)"
+                   (change)="toggleRole(role.id)">
+            {{ role.name }}
+          </label>
+        }
+      </div>
+      <div class="modal-actions">
+        <button class="btn secondary" (click)="closeRoleEditor()">Cancel</button>
+        <button class="btn primary" (click)="saveRoles()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+}

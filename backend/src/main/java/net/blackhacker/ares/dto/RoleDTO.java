@@ -7,6 +7,9 @@ import java.util.List;
 
 @Data
 public class RoleDTO implements Serializable {
+    private Long id;
     private String name;
-    private List<RoleDTO> children;
+    private Long parentId;
+    private String parentName;
+    private List<RoleDTO> subRoles;
 }

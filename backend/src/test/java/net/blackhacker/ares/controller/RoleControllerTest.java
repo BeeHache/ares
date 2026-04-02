@@ -3,14 +3,14 @@ package net.blackhacker.ares.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.blackhacker.ares.TestConfig;
 import net.blackhacker.ares.dto.RoleDTO;
-import net.blackhacker.ares.mapper.RoleMapper;
-import net.blackhacker.ares.model.Role;
-import net.blackhacker.ares.repository.jpa.RoleRepository;
 import net.blackhacker.ares.security.CustomAccessDeniedHandler;
 import net.blackhacker.ares.security.JwtAuthenticationEntryPoint;
 import net.blackhacker.ares.security.JwtAuthenticationFilter;
+import net.blackhacker.ares.security.OAuth2LoginSuccessHandler;
 import net.blackhacker.ares.service.AccountService;
 import net.blackhacker.ares.service.JWTService;
+import net.blackhacker.ares.service.RoleHierarchyService;
+import net.blackhacker.ares.service.RoleService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -22,28 +22,25 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Collections;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(RoleController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@Import(TestConfig.class)
+@Import({TestConfig.class, GlobalExceptionHandler.class})
 class RoleControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
-    private RoleRepository roleRepository;
-
-    @MockitoBean
-    private RoleMapper roleMapper;
+    private RoleService roleService;
 
     @MockitoBean
     private JWTService jwtService;
@@ -61,56 +58,88 @@ class RoleControllerTest {
     private CustomAccessDeniedHandler forbiddenHandler;
 
     @MockitoBean
+    private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+
+    @MockitoBean
+    private RoleHierarchyService roleHierarchyService;
+
+    @MockitoBean
     private HttpSecurity httpSecurity;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
-    void getRoleTree_shouldReturnListOfRoles() throws Exception {
-        // Arrange
-        Role role = new Role();
-        role.setName("ADMIN");
+    void getAllRoles_shouldReturnList() throws Exception {
         RoleDTO roleDTO = new RoleDTO();
+        roleDTO.setId(1L);
+        roleDTO.setName("USER");
+
+        when(roleService.getAllRoles()).thenReturn(Collections.singletonList(roleDTO));
+
+        mockMvc.perform(get("/api/admin/roles")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("USER"));
+    }
+
+    @Test
+    void getRoleHierarchy_shouldReturnTree() throws Exception {
+        RoleDTO roleDTO = new RoleDTO();
+        roleDTO.setId(1L);
         roleDTO.setName("ADMIN");
+        roleDTO.setSubRoles(Collections.emptyList());
 
-        when(roleRepository.findByParentRoleIsNull()).thenReturn(Collections.singletonList(role));
-        when(roleMapper.toDTO(role)).thenReturn(roleDTO);
+        when(roleService.getRoleHierarchy()).thenReturn(Collections.singletonList(roleDTO));
 
-        // Act & Assert
-        mockMvc.perform(get("/api/roles/tree")
+        mockMvc.perform(get("/api/admin/roles/hierarchy")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name").value("ADMIN"));
     }
 
     @Test
-    void createSubRole_shouldReturnCreatedRole_whenParentExists() throws Exception {
-        // Arrange
+    void createRole_shouldReturnCreatedRole() throws Exception {
+        RoleDTO inputDTO = new RoleDTO();
+        inputDTO.setName("NEW_ROLE");
 
-        Role parentRole = new Role();
-        parentRole.setId(1L);
-        parentRole.setName("PARENT");
+        RoleDTO outputDTO = new RoleDTO();
+        outputDTO.setId(1L);
+        outputDTO.setName("NEW_ROLE");
 
-        RoleDTO newRole = new RoleDTO();
-        newRole.setName("CHILD");
+        when(roleService.createRole(any(RoleDTO.class))).thenReturn(outputDTO);
 
-        Role savedRole = new Role();
-        savedRole.setId(2L);
-        savedRole.setName("CHILD");
-        savedRole.setParentRole(parentRole);
-
-
-        when(roleRepository.findById(any())).thenReturn(Optional.of(parentRole));
-        when(roleMapper.toRole(any(), any())).thenReturn(savedRole);
-        when(roleRepository.save(any(Role.class))).thenReturn(savedRole);
-        when(roleMapper.toDTO(any(Role.class))).thenReturn(newRole);
-
-
-        // Act & Assert
-        mockMvc.perform(post("/api/roles/{parentId}/subrole", 1)
+        mockMvc.perform(post("/api/admin/roles")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(newRole)))
+                        .content(objectMapper.writeValueAsString(inputDTO)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("CHILD"));
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.name").value("NEW_ROLE"));
+    }
+
+    @Test
+    void updateRole_shouldReturnUpdatedRole() throws Exception {
+        RoleDTO inputDTO = new RoleDTO();
+        inputDTO.setName("UPDATED_NAME");
+
+        RoleDTO outputDTO = new RoleDTO();
+        outputDTO.setId(1L);
+        outputDTO.setName("UPDATED_NAME");
+
+        when(roleService.updateRole(eq(1L), any(RoleDTO.class))).thenReturn(outputDTO);
+
+        mockMvc.perform(put("/api/admin/roles/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(inputDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("UPDATED_NAME"));
+    }
+
+    @Test
+    void deleteRole_shouldReturnOk() throws Exception {
+        doNothing().when(roleService).deleteRole(1L);
+
+        mockMvc.perform(delete("/api/admin/roles/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
     }
 }

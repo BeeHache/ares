@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -16,4 +17,5 @@ public class AccountDTO implements Serializable {
     private String passwordExpiresAt;
     private String accountLockedUntil;
     private String accountEnabledAt;
+    private List<RoleDTO> roles;
 }
