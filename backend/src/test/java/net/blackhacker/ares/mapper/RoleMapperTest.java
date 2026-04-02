@@ -22,9 +22,11 @@ class RoleMapperTest {
     void toDTO_shouldMapRoleToRoleDTO() {
         // Arrange
         Role parent = new Role();
+        parent.setId(1L);
         parent.setName("PARENT");
 
         Role child = new Role();
+        child.setId(2L);
         child.setName("CHILD");
         child.setParentRole(parent);
 
@@ -33,12 +35,18 @@ class RoleMapperTest {
         parent.setSubRoles(children);
 
         // Act
-        RoleDTO dto = roleMapper.toDTO(parent);
+        RoleDTO parentDto = roleMapper.toDTO(parent);
+        RoleDTO childDto = roleMapper.toDTO(child);
 
         // Assert
-        assertNotNull(dto);
-        assertEquals("PARENT", dto.getName());
-        assertNull(dto.getSubRoles());
+        assertNotNull(parentDto);
+        assertEquals("PARENT", parentDto.getName());
+        assertNull(parentDto.getParentId());
+
+        assertNotNull(childDto);
+        assertEquals("CHILD", childDto.getName());
+        assertEquals(1L, childDto.getParentId());
+        assertEquals("PARENT", childDto.getParentName());
     }
 
     @Test
@@ -46,13 +54,6 @@ class RoleMapperTest {
         // Arrange
         RoleDTO parentDTO = new RoleDTO();
         parentDTO.setName("PARENT_DTO");
-
-        RoleDTO childDTO = new RoleDTO();
-        childDTO.setName("CHILD_DTO");
-
-        List<RoleDTO> childrenDTO = new ArrayList<>();
-        childrenDTO.add(childDTO);
-        parentDTO.setSubRoles(childrenDTO);
 
         // Act
         Role model = roleMapper.toModel(parentDTO);
