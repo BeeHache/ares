@@ -124,7 +124,9 @@ public class RoleService {
                     if (parentDTO.getSubRoles() == null) {
                         parentDTO.setSubRoles(new ArrayList<>());
                     }
-                    parentDTO.getSubRoles().add(roleDTO);
+                    if (!parentDTO.getSubRoles().contains(roleDTO)) {
+                        parentDTO.getSubRoles().add(roleDTO);
+                    }
                 }
             }
         }

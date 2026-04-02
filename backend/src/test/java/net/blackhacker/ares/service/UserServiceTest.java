@@ -9,13 +9,12 @@ import net.blackhacker.ares.repository.jpa.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.thymeleaf.TemplateEngine;
 
 import java.time.ZonedDateTime;
 import java.util.HashSet;
@@ -43,15 +42,14 @@ class UserServiceTest {
     private CacheService cacheService;
 
     @Mock
-    private JavaMailSender javaMailSender;
-
-    @Mock
-    private TemplateEngine templateEngine;
-
-    @Mock
     private TransactionTemplate transactionTemplate;
 
-    @InjectMocks
+    @Mock
+    private ObjectProvider<PasswordEncoder> passwordEncoderProvider;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     private UserService userService;
 
     private User user, existingUser, existingNonenabledUser;
@@ -61,10 +59,9 @@ class UserServiceTest {
     private EmailConfirmationCode ecc;
 
     @BeforeEach
-    public void setUP() {
-        // Re-instantiate to ensure @Value is set (though @InjectMocks might handle it if we used constructor injection properly with mocks)
-        // But for safety:
-        userService = new UserService(userRepository, emailSenderService, emailConfirmationRepository, cacheService, transactionTemplate, "http://localhost:4200");
+    public void setUp() {
+        userService = new UserService(userRepository, emailSenderService, emailConfirmationRepository, 
+                                     cacheService, transactionTemplate, "http://localhost:4200");
 
         existingEnabledAccount = new Account();
         existingEnabledAccount.setUsername("testuser");
@@ -111,7 +108,7 @@ class UserServiceTest {
     @Test
     void registerUser_shouldThrowException_whenEmailIsTakenAndEnabled() {
         when(userRepository.findByEmail(existingUser.getEmail())).thenReturn(Optional.of(existingUser));
-        assertThrows(ServiceException.class, () -> {
+        assertThrows(RegistrationException.class, () -> {
             userService.registerUser(existingUser);
         });
     }
