@@ -5,7 +5,9 @@ import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.mapper.AccountMapper;
 import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.model.Account;
+import net.blackhacker.ares.model.Role;
 import net.blackhacker.ares.model.User;
+import net.blackhacker.ares.repository.jpa.RoleRepository;
 import net.blackhacker.ares.service.AccountService;
 import net.blackhacker.ares.service.FeedService;
 import net.blackhacker.ares.service.UserService;
@@ -17,10 +19,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -32,18 +32,21 @@ public class AdminController {
     private final FeedService feedService;
     private final FeedMapper feedMapper;
     private final AccountMapper accountMapper;
+    private final RoleRepository roleRepository;
 
 
     public AdminController(AccountService accountService,
                            UserService userService,
                            FeedService feedService,
                            FeedMapper feedMapper,
-                           AccountMapper accountMapper) {
+                           AccountMapper accountMapper,
+                           RoleRepository roleRepository) {
         this.accountService = accountService;
         this.userService = userService;
         this.feedService = feedService;
         this.feedMapper = feedMapper;
         this.accountMapper = accountMapper;
+        this.roleRepository = roleRepository;
     }
 
     @GetMapping("/hello")
@@ -66,6 +69,20 @@ public class AdminController {
             @RequestParam(required = false) Boolean locked,
             @PageableDefault(size = 20) Pageable pageable) {
         return accountService.getAccountsFiltered(type, locked, pageable).map(accountMapper::toDTO);
+    }
+
+    @PutMapping("/accounts/{id}/roles")
+    public AccountDTO updateAccountRoles(@PathVariable("id") Long id, @RequestBody List<Long> roleIds) {
+        Account account = accountService.getAccount(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
+
+        Set<Role> roles = roleIds.stream()
+                .map(roleId -> roleRepository.findById(roleId)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role not found: " + roleId)))
+                .collect(Collectors.toSet());
+
+        account.setRoles(roles);
+        return accountMapper.toDTO(accountService.saveAccount(account));
     }
 
     @GetMapping("/users")

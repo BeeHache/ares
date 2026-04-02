@@ -1,17 +1,22 @@
 package net.blackhacker.ares.mapper;
 
 import net.blackhacker.ares.dto.AccountDTO;
+import net.blackhacker.ares.dto.RoleDTO;
 import net.blackhacker.ares.model.Account;
+import net.blackhacker.ares.model.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Collections;
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 
@@ -24,12 +29,14 @@ class AccountMapperTest {
     @Mock
     private ObjectProvider<PasswordEncoder> objectProvider;
 
-    @InjectMocks
+    @Mock
+    private RoleMapper roleMapper;
+
     private AccountMapper accountMapper;
 
     @BeforeEach
     void setUp() {
-        accountMapper = new AccountMapper(objectProvider);
+        accountMapper = new AccountMapper(objectProvider, roleMapper);
     }
 
     @Test
@@ -38,8 +45,17 @@ class AccountMapperTest {
         Account account = new Account();
         account.setUsername("testuser");
         account.setType(Account.AccountType.USER);
-        // Password is not mapped to DTO for security usually, but let's check the implementation
-        // AccountMapper.toDTO only maps username and type.
+        
+        Role role = new Role();
+        role.setId(1L);
+        role.setName("USER");
+        account.setRoles(Set.of(role));
+
+        RoleDTO roleDTO = new RoleDTO();
+        roleDTO.setId(1L);
+        roleDTO.setName("USER");
+
+        when(roleMapper.toDTO(any(Role.class))).thenReturn(roleDTO);
 
         // Act
         AccountDTO dto = accountMapper.toDTO(account);
@@ -48,7 +64,10 @@ class AccountMapperTest {
         assertNotNull(dto);
         assertEquals("testuser", dto.getUsername());
         assertEquals("USER", dto.getType());
-        assertNull(dto.getPassword()); // Password should not be exposed in DTO
+        assertNull(dto.getPassword());
+        assertNotNull(dto.getRoles());
+        assertEquals(1, dto.getRoles().size());
+        assertEquals("USER", dto.getRoles().get(0).getName());
     }
 
     @Test
@@ -80,6 +99,8 @@ class AccountMapperTest {
         dto.setPassword("pass");
         dto.setType("INVALID_TYPE");
 
+        // In the current implementation, toModel creates the account before validation
+        // The exception happens at Account.AccountType.valueOf
         when(objectProvider.getObject()).thenReturn(passwordEncoder);
         when(passwordEncoder.encode("pass")).thenReturn("encodedPass");
 

@@ -5,6 +5,11 @@ import { environment } from '../../../environments/environment';
 import { AuthService } from '../../auth.service';
 import { FormsModule } from '@angular/forms';
 
+interface Role {
+  id: number;
+  name: string;
+}
+
 interface Account {
   id: number;
   username: string;
@@ -12,6 +17,7 @@ interface Account {
   accountEnabledAt: string;
   accountLockedUntil: string;
   accountExpiresAt: string;
+  roles?: Role[];
 }
 
 interface Page<T> {
@@ -32,20 +38,24 @@ interface Page<T> {
 export class UserManagementComponent implements OnInit {
   // Signals
   users = signal<Account[]>([]);
+  allRoles = signal<Role[]>([]);
   loading = signal<boolean>(false);
   currentPage = signal<number>(0);
   totalPages = signal<number>(0);
   pageSize = signal<number>(20);
 
   // Filter Signals
-  typeFilter = signal<string>(''); // empty, ADMIN, USER
-  statusFilter = signal<string>(''); // empty, LOCKED, ACTIVE
+  typeFilter = signal<string>('');
+  statusFilter = signal<string>('');
+
+  // Role Edit state
+  editingRolesFor = signal<Account | null>(null);
+  selectedRoleIds = new Set<number>();
 
   constructor(
     private http: HttpClient,
     public authService: AuthService
   ) {
-    // Reload users when filters change
     effect(() => {
       this.typeFilter();
       this.statusFilter();
@@ -54,36 +64,69 @@ export class UserManagementComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Initial load happens via effect
+    this.loadAvailableRoles();
+  }
+
+  loadAvailableRoles() {
+    this.http.get<Role[]>(`${environment.apiUrl}/admin/roles`).subscribe({
+      next: (data) => this.allRoles.set(data),
+      error: (err) => console.error('Error loading roles', err)
+    });
   }
 
   loadUsers(page: number) {
     this.loading.set(true);
-
     let url = `${environment.apiUrl}/admin/accounts?page=${page}&size=${this.pageSize()}`;
+    if (this.typeFilter()) url += `&type=${this.typeFilter()}`;
+    if (this.statusFilter()) url += `&locked=${this.statusFilter() === 'LOCKED'}`;
 
-    if (this.typeFilter()) {
-      url += `&type=${this.typeFilter()}`;
+    this.http.get<Page<Account>>(url).subscribe({
+      next: (data) => {
+        this.users.set(data.content);
+        this.currentPage.set(data.number);
+        this.totalPages.set(data.totalPages);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading users', err);
+        this.loading.set(false);
+      }
+    });
+  }
+
+  openRoleEditor(account: Account) {
+    this.editingRolesFor.set(account);
+    this.selectedRoleIds.clear();
+    if (account.roles) {
+      account.roles.forEach(r => this.selectedRoleIds.add(r.id));
     }
+  }
 
-    if (this.statusFilter()) {
-      const isLocked = this.statusFilter() === 'LOCKED';
-      url += `&locked=${isLocked}`;
+  closeRoleEditor() {
+    this.editingRolesFor.set(null);
+    this.selectedRoleIds.clear();
+  }
+
+  toggleRole(roleId: number) {
+    if (this.selectedRoleIds.has(roleId)) {
+      this.selectedRoleIds.delete(roleId);
+    } else {
+      this.selectedRoleIds.add(roleId);
     }
+  }
 
-    this.http.get<Page<Account>>(url)
-      .subscribe({
-        next: (data) => {
-          this.users.set(data.content);
-          this.currentPage.set(data.number);
-          this.totalPages.set(data.totalPages);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          console.error('Error loading users', err);
-          this.loading.set(false);
-        }
-      });
+  saveRoles() {
+    const account = this.editingRolesFor();
+    if (!account) return;
+
+    const roleIds = Array.from(this.selectedRoleIds);
+    this.http.put(`${environment.apiUrl}/admin/accounts/${account.id}/roles`, roleIds).subscribe({
+      next: () => {
+        this.loadUsers(this.currentPage());
+        this.closeRoleEditor();
+      },
+      error: (err) => alert('Failed to update roles: ' + (err.error?.message || err.message))
+    });
   }
 
   lockUser(id: number) {

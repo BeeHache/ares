@@ -1,58 +1,54 @@
 package net.blackhacker.ares.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import net.blackhacker.ares.mapper.RoleMapper;
-import net.blackhacker.ares.model.Role;
-import net.blackhacker.ares.repository.jpa.RoleRepository;
 import net.blackhacker.ares.dto.RoleDTO;
-
+import net.blackhacker.ares.service.RoleService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/roles")
+@RequestMapping("/api/admin/roles")
+@PreAuthorize("hasRole('ADMIN')")
 public class RoleController {
 
-    private final RoleRepository roleRepository;
-    private final RoleMapper roleMapper;
+    private final RoleService roleService;
 
-    public RoleController(RoleRepository roleRepository, RoleMapper mapper){
-        this.roleRepository = roleRepository;
-        this.roleMapper = mapper;
+    public RoleController(RoleService roleService) {
+        this.roleService = roleService;
     }
 
-    // Get the full hierarchy
-    @GetMapping("/tree")
-    public List<RoleDTO> getRoleTree() {
-        List<Role> rootRoles = roleRepository.findByParentRoleIsNull();
-        return rootRoles.stream()
-                .map(roleMapper::toDTO)
-                .collect(Collectors.toList());
+    @GetMapping
+    public List<RoleDTO> getAllRoles() {
+        return roleService.getAllRoles();
     }
 
-    // Create a sub-role under a parent
-    @PostMapping("/{parentId}/subrole")
-    public ResponseEntity<String> createSubRole(@PathVariable("parentId") Long parentId, @RequestBody RoleDTO roleDTO) {
+    @GetMapping("/hierarchy")
+    public List<RoleDTO> getRoleHierarchy() {
+        return roleService.getRoleHierarchy();
+    }
 
-        Optional<Role> optionalParentRole = roleRepository.findById(parentId);
-        if (optionalParentRole.isEmpty()){
-            return ResponseEntity.notFound().build();
-        }
+    @GetMapping("/{id}")
+    public ResponseEntity<RoleDTO> getRoleById(@PathVariable Long id) {
+        return roleService.getRoleById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
-        Role parentRole = optionalParentRole.get();
-        Role subRole = roleMapper.toRole(roleDTO, parentRole);
-        roleRepository.save(parentRole);
-        Role savedRole = roleRepository.save(subRole);
-        try {
-            String json = new ObjectMapper().writeValueAsString(roleMapper.toDTO(savedRole));
-            return ResponseEntity.ok().body(json);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+    @PostMapping
+    public RoleDTO createRole(@RequestBody RoleDTO roleDTO) {
+        return roleService.createRole(roleDTO);
+    }
+
+    @PutMapping("/{id}")
+    public RoleDTO updateRole(@PathVariable Long id, @RequestBody RoleDTO roleDTO) {
+        return roleService.updateRole(id, roleDTO);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteRole(@PathVariable Long id) {
+        roleService.deleteRole(id);
+        return ResponseEntity.ok().build();
     }
 }
