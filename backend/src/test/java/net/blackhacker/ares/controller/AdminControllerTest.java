@@ -7,6 +7,7 @@ import net.blackhacker.ares.mapper.AccountMapper;
 import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Role;
+import net.blackhacker.ares.repository.jpa.AccountRepository;
 import net.blackhacker.ares.repository.jpa.RoleRepository;
 import net.blackhacker.ares.security.CustomAccessDeniedHandler;
 import net.blackhacker.ares.security.JwtAuthenticationEntryPoint;
@@ -63,6 +64,9 @@ class AdminControllerTest {
     private RoleRepository roleRepository;
 
     @MockitoBean
+    private AccountRepository accountRepository;
+
+    @MockitoBean
     private JWTService jwtService;
 
     @MockitoBean
@@ -116,6 +120,30 @@ class AdminControllerTest {
     }
 
     @Test
+    void createAccount_shouldReturnCreatedAccount() throws Exception {
+        AccountDTO inputDto = new AccountDTO();
+        inputDto.setUsername("new@test.com");
+        inputDto.setPassword("password123");
+        inputDto.setType("USER");
+
+        Account account = new Account();
+        AccountDTO outputDto = new AccountDTO();
+        outputDto.setId(1L);
+        outputDto.setUsername("new@test.com");
+
+        when(accountMapper.toModel(any(AccountDTO.class))).thenReturn(account);
+        when(accountService.createAccount(any(Account.class), any())).thenReturn(account);
+        when(accountMapper.toDTO(any(Account.class))).thenReturn(outputDto);
+
+        mockMvc.perform(post("/api/admin/accounts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(inputDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.username").value("new@test.com"));
+    }
+
+    @Test
     void updateAccountRoles_shouldReturnUpdatedAccount() throws Exception {
         Long accountId = 1L;
         List<Long> roleIds = List.of(2L);
@@ -140,6 +168,15 @@ class AdminControllerTest {
                         .content(objectMapper.writeValueAsString(roleIds)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(accountId));
+    }
+
+    @Test
+    void deleteAccount_shouldReturnOk() throws Exception {
+        Long accountId = 1L;
+        when(accountRepository.existsById(accountId)).thenReturn(true);
+
+        mockMvc.perform(delete("/api/admin/accounts/{id}", accountId))
+                .andExpect(status().isOk());
     }
 
     @Test

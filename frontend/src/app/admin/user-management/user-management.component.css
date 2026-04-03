@@ -2,6 +2,13 @@
   padding: 20px;
 }
 
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
 .filters {
   display: flex;
   gap: 20px;
@@ -77,6 +84,13 @@ thead {
   border-radius: 4px;
   font-size: 0.75em;
   font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.role-badge.inherited {
+  background-color: #ebf5fb;
+  color: #2980b9;
+  border: 1px dashed #3498db;
 }
 
 .no-roles {
@@ -97,13 +111,17 @@ thead {
   color: #c0392b;
 }
 
+.action-buttons {
+  display: flex;
+  gap: 5px;
+}
+
 .btn-action {
   padding: 6px 10px;
   border: none;
   border-radius: 4px;
   color: white;
   cursor: pointer;
-  margin-right: 5px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -139,6 +157,14 @@ thead {
   background-color: #27ae60;
 }
 
+.btn-delete {
+  background-color: #e74c3c;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background-color: #c0392b;
+}
+
 .pagination {
   display: flex;
   justify-content: center;
@@ -164,16 +190,26 @@ thead {
   background: white;
   padding: 30px;
   border-radius: 8px;
-  max-width: 400px;
+  max-width: 450px;
   width: 90%;
   box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
-.role-selection-list {
+.account-modal {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.role-selection-list, .role-selection-grid {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin: 20px 0;
+  margin: 15px 0;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid #eee;
+  border-radius: 4px;
 }
 
 .role-checkbox {
@@ -209,7 +245,33 @@ thead {
   color: white;
 }
 
+.btn.primary:hover:not(:disabled) {
+  background-color: #1976D2;
+}
+
 .btn.secondary {
   background-color: #95a5a6;
   color: white;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+.form-group input, .form-group select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }

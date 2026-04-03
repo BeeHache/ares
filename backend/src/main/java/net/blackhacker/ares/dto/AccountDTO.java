@@ -10,8 +10,9 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AccountDTO implements Serializable {
     private Long id;
-    private String username;
+    private String username; // This will be the email for both USER and ADMIN accounts
     private String password;
+    private String name; // For Admin accounts, this is the display name
     private String type;
     private String accountExpiresAt;
     private String passwordExpiresAt;

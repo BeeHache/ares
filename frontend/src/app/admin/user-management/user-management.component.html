@@ -1,5 +1,11 @@
 <div class="user-management-container">
-  <h2>Account Management</h2>
+  <div class="header-row">
+    <h2>Account Management</h2>
+    <div class="header-actions">
+      <button class="btn secondary" (click)="openAddUserModal()">+ Add User</button>
+      <button class="btn primary" (click)="openAddAdminModal()">+ Add Admin</button>
+    </div>
+  </div>
 
   <div class="filters">
     <div class="filter-group">
@@ -32,7 +38,7 @@
           <th>ID</th>
           <th>Username</th>
           <th>Type</th>
-          <th>Roles</th>
+          <th>Effective Roles</th>
           <th>Status</th>
           <th>Actions</th>
         </tr>
@@ -47,8 +53,12 @@
             </td>
             <td>
               <div class="role-badges">
-                @for (role of user.roles; track role.id) {
-                  <span class="role-badge">{{ role.name }}</span>
+                @for (roleName of getEffectiveRoles(user); track roleName) {
+                  <span class="role-badge"
+                        [class.inherited]="!isExplicitRole(user, roleName)"
+                        [title]="isExplicitRole(user, roleName) ? 'Explicitly assigned' : 'Inherited from parent role'">
+                    {{ roleName }}
+                  </span>
                 } @empty {
                   <span class="no-roles">None</span>
                 }
@@ -60,36 +70,50 @@
               </span>
             </td>
             <td>
-              <button (click)="openRoleEditor(user)" class="btn-action btn-roles" title="Manage Roles">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-              </button>
+              <div class="action-buttons">
+                <button (click)="openRoleEditor(user)" class="btn-action btn-roles" title="Manage Roles">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                </button>
 
-              @if (!isLocked(user)) {
-                <button (click)="lockUser(user.id)"
-                        class="btn-action btn-lock"
-                        [title]="isCurrentUser(user.username) ? 'Cannot lock your own account' : 'Lock Account'"
+                @if (!isLocked(user)) {
+                  <button (click)="lockUser(user.id)"
+                          class="btn-action btn-lock"
+                          [title]="isCurrentUser(user.username) ? 'Cannot lock your own account' : 'Lock Account'"
+                          [disabled]="isCurrentUser(user.username)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                  </button>
+                } @else {
+                  <button (click)="unlockUser(user.id)"
+                          class="btn-action btn-unlock"
+                          [title]="isCurrentUser(user.username) ? 'Cannot unlock your own account' : 'Unlock Account'"
+                          [disabled]="isCurrentUser(user.username)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+                    </svg>
+                  </button>
+                }
+
+                <button (click)="deleteAccount(user.id, user.username)"
+                        class="btn-action btn-delete"
+                        [title]="isCurrentUser(user.username) ? 'Cannot delete your own account' : 'Delete Account'"
                         [disabled]="isCurrentUser(user.username)">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
                   </svg>
                 </button>
-              } @else {
-                <button (click)="unlockUser(user.id)"
-                        class="btn-action btn-unlock"
-                        [title]="isCurrentUser(user.username) ? 'Cannot unlock your own account' : 'Unlock Account'"
-                        [disabled]="isCurrentUser(user.username)">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
-                  </svg>
-                </button>
-              }
+              </div>
             </td>
           </tr>
         } @empty {
@@ -126,6 +150,85 @@
       <div class="modal-actions">
         <button class="btn secondary" (click)="closeRoleEditor()">Cancel</button>
         <button class="btn primary" (click)="saveRoles()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Add User Modal -->
+@if (showAddUserModal()) {
+  <div class="modal-overlay">
+    <div class="modal-content account-modal">
+      <h3>Add New User</h3>
+      <div class="form-group">
+        <label for="newUserEmail">Email Address:</label>
+        <input type="email" id="newUserEmail" [(ngModel)]="newAccount.username" placeholder="user@example.com">
+      </div>
+
+      <app-password-input
+        [(ngModel)]="newAccount.password"
+        name="newUserPassword"
+        id="newUserPassword"
+        label="Password"
+        [required]="true"
+      ></app-password-input>
+
+      <div class="modal-actions">
+        <button class="btn secondary" (click)="closeModals()">Cancel</button>
+        <button class="btn primary"
+                (click)="createAccount()"
+                [disabled]="!newAccount.username || !newAccount.password">
+          Create User
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Add Admin Modal -->
+@if (showAddAdminModal()) {
+  <div class="modal-overlay">
+    <div class="modal-content account-modal">
+      <h3>Add New Administrator</h3>
+      <div class="form-group">
+        <label for="newAdminEmail">Email:</label>
+        <input type="email" id="newAdminEmail" [(ngModel)]="newAccount.username" placeholder="admin@example.com">
+      </div>
+
+      <div class="form-group">
+        <label for="newAdminName">Name:</label>
+        <input type="text" id="newAdminName" [(ngModel)]="newAccount.name" placeholder="Admin Name">
+      </div>
+
+      <app-password-input
+        [(ngModel)]="newAccount.password"
+        name="newAdminPassword"
+        id="newAdminPassword"
+        label="Password"
+        [required]="true"
+      ></app-password-input>
+
+      <div class="form-group">
+        <label>Assign Roles:</label>
+        <div class="role-selection-grid">
+          @for (role of allRoles(); track role.id) {
+            <label class="role-checkbox">
+              <input type="checkbox"
+                     [checked]="newAccount.roleIds.includes(role.id)"
+                     (change)="toggleNewAccountRole(role.id)">
+              {{ role.name }}
+            </label>
+          }
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn secondary" (click)="closeModals()">Cancel</button>
+        <button class="btn primary"
+                (click)="createAccount()"
+                [disabled]="!newAccount.username || !newAccount.password">
+          Create Administrator
+        </button>
       </div>
     </div>
   </div>
