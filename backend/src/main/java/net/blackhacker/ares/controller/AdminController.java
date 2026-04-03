@@ -2,11 +2,13 @@ package net.blackhacker.ares.controller;
 
 import net.blackhacker.ares.dto.AccountDTO;
 import net.blackhacker.ares.dto.FeedDTO;
+import net.blackhacker.ares.dto.RoleDTO;
 import net.blackhacker.ares.mapper.AccountMapper;
 import net.blackhacker.ares.mapper.FeedMapper;
 import net.blackhacker.ares.model.Account;
 import net.blackhacker.ares.model.Role;
 import net.blackhacker.ares.model.User;
+import net.blackhacker.ares.repository.jpa.AccountRepository;
 import net.blackhacker.ares.repository.jpa.RoleRepository;
 import net.blackhacker.ares.service.AccountService;
 import net.blackhacker.ares.service.FeedService;
@@ -15,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -33,6 +36,7 @@ public class AdminController {
     private final FeedMapper feedMapper;
     private final AccountMapper accountMapper;
     private final RoleRepository roleRepository;
+    private final AccountRepository accountRepository;
 
 
     public AdminController(AccountService accountService,
@@ -40,13 +44,15 @@ public class AdminController {
                            FeedService feedService,
                            FeedMapper feedMapper,
                            AccountMapper accountMapper,
-                           RoleRepository roleRepository) {
+                           RoleRepository roleRepository,
+                           AccountRepository accountRepository) {
         this.accountService = accountService;
         this.userService = userService;
         this.feedService = feedService;
         this.feedMapper = feedMapper;
         this.accountMapper = accountMapper;
         this.roleRepository = roleRepository;
+        this.accountRepository = accountRepository;
     }
 
     @GetMapping("/hello")
@@ -71,6 +77,31 @@ public class AdminController {
         return accountService.getAccountsFiltered(type, locked, pageable).map(accountMapper::toDTO);
     }
 
+    @PostMapping("/accounts")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AccountDTO createAccount(@RequestBody AccountDTO accountDTO) {
+        if (accountDTO.getPassword() == null || accountDTO.getPassword().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password is required");
+        }
+        
+        Account account = accountMapper.toModel(accountDTO);
+        
+        // Map roles if provided
+        if (accountDTO.getRoles() != null && !accountDTO.getRoles().isEmpty()) {
+            Set<Role> roles = accountDTO.getRoles().stream()
+                    .map(RoleDTO::getId)
+                    .map(roleId -> roleRepository.findById(roleId)
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role not found: " + roleId)))
+                    .collect(Collectors.toSet());
+            account.setRoles(roles);
+        } else if (account.getType() == Account.AccountType.USER) {
+            // Automatically assign USER role for USER type if no roles provided
+            roleRepository.findByName("USER").ifPresent(role -> account.setRoles(Set.of(role)));
+        }
+
+        return accountMapper.toDTO(accountService.createAccount(account, accountDTO.getName()));
+    }
+
     @PutMapping("/accounts/{id}/roles")
     public AccountDTO updateAccountRoles(@PathVariable("id") Long id, @RequestBody List<Long> roleIds) {
         Account account = accountService.getAccount(id)
@@ -83,6 +114,14 @@ public class AdminController {
 
         account.setRoles(roles);
         return accountMapper.toDTO(accountService.saveAccount(account));
+    }
+
+    @DeleteMapping("/accounts/{id}")
+    public void deleteAccount(@PathVariable("id") Long id) {
+        if (!accountRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found");
+        }
+        accountRepository.deleteById(id);
     }
 
     @GetMapping("/users")

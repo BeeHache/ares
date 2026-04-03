@@ -1,7 +1,12 @@
 package net.blackhacker.ares.service;
 
 import net.blackhacker.ares.model.Account;
+import net.blackhacker.ares.model.Admins;
+import net.blackhacker.ares.model.User;
+import net.blackhacker.ares.projection.AccountProjection;
 import net.blackhacker.ares.repository.jpa.AccountRepository;
+import net.blackhacker.ares.repository.jpa.AdminsRepository;
+import net.blackhacker.ares.repository.jpa.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.ZonedDateTime;
 import java.util.Collections;
@@ -28,13 +34,19 @@ class AccountServiceTest {
     private AccountRepository accountRepository;
 
     @Mock
+    private AdminsRepository adminsRepository;
+
+    @Mock
     private EmailSenderService emailSenderService;
+
+    @Mock
+    private UserRepository userRepository;
 
     private AccountService accountService;
 
     @BeforeEach
     void setUp() {
-        accountService = new AccountService(accountRepository, emailSenderService, 3600000L);
+        accountService = new AccountService(accountRepository, adminsRepository, userRepository, emailSenderService, 3600000L);
     }
 
     @Test
@@ -48,6 +60,47 @@ class AccountServiceTest {
 
         assertTrue(result.isPresent());
         assertEquals(username, result.get().getUsername());
+    }
+
+    @Test
+    void createAccount_shouldCreateAdmin_whenTypeIsAdmin() {
+        Account account = new Account();
+        account.setUsername("admin@test.com");
+        account.setType(AccountProjection.AccountType.ADMIN);
+
+        when(accountRepository.findByUsername(any())).thenReturn(Optional.empty());
+        when(accountRepository.save(any(Account.class))).thenReturn(account);
+
+        Account result = accountService.createAccount(account, "Test Admin");
+
+        assertNotNull(result);
+        verify(adminsRepository).save(any(Admins.class));
+        verify(accountRepository).save(account);
+    }
+
+    @Test
+    void createAccount_shouldCreateUser_whenTypeIsUser() {
+        Account account = new Account();
+        account.setUsername("user@test.com");
+        account.setType(AccountProjection.AccountType.USER);
+
+        when(accountRepository.findByUsername(any())).thenReturn(Optional.empty());
+        when(accountRepository.save(any(Account.class))).thenReturn(account);
+
+        Account result = accountService.createAccount(account);
+
+        assertNotNull(result);
+        verify(userRepository).save(any(User.class));
+        verify(accountRepository).save(account);
+    }
+
+    @Test
+    void createAccount_shouldThrowConflict_whenUsernameExists() {
+        Account account = new Account();
+        account.setUsername("existing@test.com");
+        when(accountRepository.findByUsername("existing@test.com")).thenReturn(Optional.of(new Account()));
+
+        assertThrows(ResponseStatusException.class, () -> accountService.createAccount(account));
     }
 
     @Test
