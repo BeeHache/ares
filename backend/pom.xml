@@ -35,7 +35,7 @@
         <compiler.version>3.15.0</compiler.version>
         <httpcompents.version>5.6</httpcompents.version>
         <testcontainers.version>1.21.4</testcontainers.version>
-        <lombok.version>1.18.44</lombok.version>
+        <lombok.version>1.18.46</lombok.version>
         <jedis.version>7.4.1</jedis.version>
         <flywaydb.version>12.3.0</flywaydb.version>
         <jacoco.version>0.8.14</jacoco.version>
