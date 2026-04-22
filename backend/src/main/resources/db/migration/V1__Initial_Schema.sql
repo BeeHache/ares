@@ -63,6 +63,7 @@ create table if not exists feeds (
     link varchar(512),
     image_url varchar(512),
     podcast varchar(1) not null default 'N',
+    subscribers BIGINT DEFAULT 0,
     pubdate timestamp with time zone,
     last_modified timestamp with time zone,
     search_vector tsvector, -- Added for full-text search
@@ -70,7 +71,7 @@ create table if not exists feeds (
 );
 
 create index if not exists ix_feeds_podcast on feeds (podcast);
-create index if not exists ix_feeds_pudate on feeds (pubdate);
+create index if not exists ix_feeds_pubdate on feeds (pubdate);
 create index if not exists ix_feeds_last_mod on feeds (last_modified);
 create index if not exists ix_feeds_search_vector on feeds USING GIN (search_vector);
 
@@ -83,12 +84,12 @@ create table if not exists feed_items(
     link varchar(512),
     date timestamp with time zone,
     last_modified timestamp with time zone,
-    search_vector tsvector, -- Added for full-text search
+    search_vector tsvector,
     FOREIGN KEY (feed_id) references feeds(id) ON DELETE CASCADE,
     UNIQUE (feed_id, title)
 );
 
-create index if not exists ix_feed_items_guid on feed_items (guid);
+create unique index if not exists ix_feed_items_guid on feed_items (guid);
 create index if not exists ix_feed_items_title on feed_items (title);
 create index if not exists ix_feed_items_link on feed_items (link);
 create index if not exists ix_feed_items_date on feed_items (date);
@@ -166,3 +167,44 @@ CREATE TRIGGER tsvectorupdate_feeds BEFORE INSERT OR UPDATE
 DROP TRIGGER IF EXISTS tsvectorupdate_feed_items ON feed_items;
 CREATE TRIGGER tsvectorupdate_feed_items BEFORE INSERT OR UPDATE
     ON feed_items FOR EACH ROW EXECUTE FUNCTION update_search_vector_column();
+
+CREATE OR REPLACE FUNCTION update_feed_pubdate_on_item_change()
+    RETURNS TRIGGER AS $$
+BEGIN
+    IF (NEW.date IS NOT NULL) THEN
+        UPDATE feeds
+        SET pubdate = NEW.date
+        WHERE id = NEW.feed_id AND (pubdate IS NULL OR NEW.date > pubdate);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS update_feed_pubdate_trigger ON feed_items;
+CREATE TRIGGER update_feed_pubdate_trigger
+    AFTER INSERT OR UPDATE OF date ON feed_items
+    FOR EACH ROW
+EXECUTE FUNCTION update_feed_pubdate_on_item_change();
+
+
+-- Function to update the subscriber count in the feeds table
+CREATE OR REPLACE FUNCTION update_feed_subscriber_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (TG_OP = 'INSERT') THEN
+        UPDATE feeds SET subscribers = subscribers + 1 WHERE id = NEW.feed_id;
+        RETURN NEW;
+    ELSIF (TG_OP = 'DELETE') THEN
+        UPDATE feeds SET subscribers = subscribers - 1 WHERE id = OLD.feed_id;
+        RETURN OLD;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to call the function after an insert or delete on subscriptions
+DROP TRIGGER IF EXISTS update_feed_subscriber_count_trigger ON subscriptions;
+CREATE TRIGGER update_feed_subscriber_count_trigger
+AFTER INSERT OR DELETE ON subscriptions
+FOR EACH ROW
+EXECUTE FUNCTION update_feed_subscriber_count();

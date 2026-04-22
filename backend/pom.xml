@@ -40,6 +40,7 @@
         <flywaydb.version>12.4.0</flywaydb.version>
         <jacoco.version>0.8.14</jacoco.version>
         <togglz.version>4.6.1</togglz.version>
+        <xerces.version>2.12.2</xerces.version>
     </properties>
     <dependencies>
         <dependency>
@@ -164,6 +165,11 @@
             <groupId>org.togglz</groupId>
             <artifactId>togglz-spring-security</artifactId>
             <version>${togglz.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>${xerces.version}</version>
         </dependency>
 
         <!-- Test dependencies -->

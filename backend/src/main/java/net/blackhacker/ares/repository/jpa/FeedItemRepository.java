@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,4 +26,7 @@ public interface FeedItemRepository extends JpaRepository<FeedItem, UUID> {
     @EntityGraph(attributePaths = {"enclosures"})
     @Query(value="SELECT f from FeedItem f where f.feed.id=:feedId and f.title=:title")
     Optional<FeedItem> findByFeedAndTitle(@Param("feedId")UUID feedId, @Param("title")String title);
+
+    @Query(value = "SELECT max(f.date) from FeedItem f where f.feed.id=:feedId")
+    Optional<ZonedDateTime> findLatestDateByFeedId(@Param("feedId")UUID feedId);
 }

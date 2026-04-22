@@ -64,11 +64,6 @@ public class FeedService {
         this.queryLimit = queryLimit;
     }
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void startup() {
-        updateFeeds();
-    }
-
     public Page<Feed> findAllFeeds(Pageable pageable) {
         return feedRepository.findAll(pageable);
     }
@@ -199,9 +194,11 @@ public class FeedService {
         log.info("Feed update cycle completed");
     }
 
+    @Async
     public void updateFeed(UUID feedId){
 
             feedRepository.findById(feedId).ifPresent(feed -> {
+                log.info("Updating feed: {}", feed.getUrl());
                 if (rssService.updateFeed(feed)) {
                     saveFeed(feed);
                 }
