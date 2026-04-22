@@ -23,12 +23,12 @@ import java.util.UUID;
 @Repository
 public interface FeedRepository extends JpaRepository<Feed, UUID> {
 
-    String FIND_MODIFIED_BEFORE = "SELECT f.id FROM Feed f WHERE f.lastModified < :dt OR f.lastModified IS NULL";
+    String FIND_MODIFIED_BEFORE = "SELECT f.id FROM Feed f WHERE f.lastModified < :dt OR f.lastModified IS NULL OR f.pubdate IS NULL";
 
     String  FIND_FEED_USERID =
             "SELECT f.id, f.title, f.description, f.url, f.link, f.podcast, f.subscribers" +
                     "(select img.image_url from feed_image img where img.feed_id=f.id) as imageUrl, " +
-                    "(select max(i.date) from feed_items i where i.feed_id = f.id) as pubdate " +
+                    "f.pubdate " +
                     "FROM subscriptions s INNER JOIN feeds f ON s.feed_id = f.id " +
                     "WHERE s.user_id = :userid";
 

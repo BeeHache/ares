@@ -1,15 +1,18 @@
 package net.blackhacker.ares.service;
 
 import net.blackhacker.ares.model.Feed;
+import net.blackhacker.ares.model.FeedItem;
 import net.blackhacker.ares.repository.jpa.FeedItemRepository;
+import net.blackhacker.ares.utils.FeedParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.ResponseEntity;
 
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -28,79 +31,40 @@ class RssServiceTest {
     @Mock
     private FeedItemRepository feedItemRepository;
 
-    @InjectMocks
+    @Mock
+    private ObjectProvider<FeedParser> feedParserProvider;
+
+    @Mock
+    private FeedParser feedParser;
+
     private RssService rssService;
 
     private String validRssString;
-    private String emptyRssString;
-    private String malformedItemRssString;
 
     @BeforeEach
     void setUp() {
-        validRssString = """
-                <?xml version="1.0" encoding="UTF-8" ?>
-                <rss version="2.0">
-                <channel>
-                  <title>Test Feed</title>
-                  <description>Test Description</description>
-                  <link>http://example.com</link>
-                  <item>
-                    <title>Item Title</title>
-                    <description>Item Description</description>
-                    <link>http://example.com/item</link>
-                    <guid>unique-guid-1</guid>
-                    <pubDate>Mon, 06 Sep 2009 16:20:00 +0000</pubDate>
-                  </item>
-                </channel>
-                </rss>""";
-
-        emptyRssString = """
-                <?xml version="1.0" encoding="UTF-8" ?>
-                <rss version="2.0">
-                <channel>
-                  <title>Empty Feed</title>
-                </channel>
-                </rss>""";
+        rssService = new RssService(urlFetchService, feedItemRepository, feedParserProvider);
         
-        // Item 1 is valid, Item 2 has malformed enclosure length (space at end)
-        malformedItemRssString = """
-                <?xml version="1.0" encoding="UTF-8" ?>
-                <rss version="2.0">
-                <channel>
-                  <title>Mixed Feed</title>
-                  <item>
-                    <title>Valid Item</title>
-                    <link>http://example.com/valid</link>
-                  </item>
-                  <item>
-                    <title>Malformed Item</title>
-                    <link>http://example.com/malformed</link>
-                    <enclosure url="http://example.com/file.mp3" length="12345 " type="audio/mpeg" />
-                  </item>
-                </channel>
-                </rss>""";
+        validRssString = "Valid XML content";
     }
 
     @Test
     void buildFeedFromUrl_shouldReturnFeed_whenRssIsValid() {
         when(urlFetchService.fetchBytes(eq("http://example.com/rss"), any()))
                 .thenReturn(ResponseEntity.ok(validRssString.getBytes(StandardCharsets.UTF_8)));
+        when(feedParserProvider.getObject()).thenReturn(feedParser);
+        
+        // Mock parser behavior to set some data
+        doAnswer(invocation -> {
+            Feed feed = invocation.getArgument(0);
+            feed.setTitle("Parsed Title");
+            return null;
+        }).when(feedParser).parse(any(Feed.class), any(InputStream.class));
 
         Feed result = rssService.buildFeedFromUrl("http://example.com/rss");
         
         assertNotNull(result);
-        assertEquals("Test Feed", result.getTitle());
-        assertEquals(1, result.getFeedItems().size());
-    }
-
-    @Test
-    void buildFeedFromUrl_shouldReturnNull_whenRssIsEmpty() {
-        when(urlFetchService.fetchBytes(anyString(), any()))
-                .thenReturn(ResponseEntity.ok(emptyRssString.getBytes(StandardCharsets.UTF_8)));
-
-        Feed result = rssService.buildFeedFromUrl("http://example.com/rss");
-
-        assertNull(result);
+        assertEquals("Parsed Title", result.getTitle());
     }
 
     @Test
@@ -110,33 +74,52 @@ class RssServiceTest {
 
         when(urlFetchService.fetchBytes(eq("http://example.com/rss"), any()))
                 .thenReturn(ResponseEntity.ok(validRssString.getBytes(StandardCharsets.UTF_8)));
-        when(feedItemRepository.findByGuid(anyString())).thenReturn(Optional.empty());
+        when(feedParserProvider.getObject()).thenReturn(feedParser);
+
+        // Mock parser to add one item
+        doAnswer(invocation -> {
+            Feed tempFeed = invocation.getArgument(0);
+            tempFeed.setTitle("New Title");
+            FeedItem item = new FeedItem();
+            item.setTitle("New Item");
+            item.setGuid("guid-123");
+            tempFeed.getFeedItems().add(item);
+            return null;
+        }).when(feedParser).parse(any(Feed.class), any(InputStream.class));
+
+        when(feedItemRepository.findByGuid("guid-123")).thenReturn(Optional.empty());
 
         boolean result = rssService.updateFeed(feed);
 
         assertTrue(result);
-        assertEquals("Test Feed", feed.getTitle());
+        assertEquals("New Title", feed.getTitle());
         assertEquals(1, feed.getFeedItems().size());
     }
 
     @Test
-    void updateFeed_shouldSkipMalformedItems_butProcessValidOnes() {
-        // This tests the fix for "Failed to convert 169600320 "
+    void updateFeed_shouldSkipDuplicateItems() throws URISyntaxException, MalformedURLException {
         Feed feed = new Feed();
-        feed.setUrlFromString("http://example.com/mixed");
+        feed.setUrlFromString("http://example.com/rss");
 
-        when(urlFetchService.fetchBytes(eq("http://example.com/mixed"), any()))
-                .thenReturn(ResponseEntity.ok(malformedItemRssString.getBytes(StandardCharsets.UTF_8)));
+        when(urlFetchService.fetchBytes(anyString(), any()))
+                .thenReturn(ResponseEntity.ok(validRssString.getBytes(StandardCharsets.UTF_8)));
+        when(feedParserProvider.getObject()).thenReturn(feedParser);
+
+        doAnswer(invocation -> {
+            Feed tempFeed = invocation.getArgument(0);
+            FeedItem item = new FeedItem();
+            item.setTitle("Existing Item");
+            item.setGuid("dup-guid");
+            tempFeed.getFeedItems().add(item);
+            return null;
+        }).when(feedParser).parse(any(Feed.class), any(InputStream.class));
+
+        when(feedItemRepository.findByGuid("dup-guid")).thenReturn(Optional.of(new FeedItem()));
 
         boolean result = rssService.updateFeed(feed);
 
         assertTrue(result);
-        // Should contain the valid item, but skip the malformed one (or skip the enclosure if handled gracefully)
-        // Based on RssService logic, if rssReader throws on next(), the whole item is skipped.
-        // If rssReader handles it internally and returns an item with empty length, it might be included.
-        // Assuming our try-catch block in RssService works:
-        assertEquals(2, feed.getFeedItems().size());
-        assertEquals("Valid Item", feed.getFeedItems().iterator().next().getTitle());
+        assertEquals(0, feed.getFeedItems().size()); // Duplicate skipped
     }
 
     @Test

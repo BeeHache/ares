@@ -54,14 +54,29 @@ public class FeedItem implements Serializable {
 
     @Override
     public boolean equals(Object o) {
+        if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FeedItem feedItem = (FeedItem) o;
+
+        if (getGuid() != null && feedItem.getGuid() != null) {
+            return Objects.equals(getGuid(), feedItem.getGuid());
+        }
+
+        if (getGuid() != null || feedItem.getGuid() != null) {
+            return false;
+        }
+
+        UUID thisFeedId = getFeed() != null ? getFeed().getId() : null;
+        UUID otherFeedId = feedItem.getFeed() != null ? feedItem.getFeed().getId() : null;
+
         return Objects.equals(getTitle(), feedItem.getTitle()) &&
-                Objects.equals(getFeed().getId(), feedItem.getFeed().getId());
+                Objects.equals(thisFeedId, otherFeedId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getTitle(), getFeed().getId());
+        if (getGuid() != null) return Objects.hash(getGuid());
+        UUID feedId = getFeed() != null ? getFeed().getId() : null;
+        return Objects.hash(getTitle(), feedId);
     }
 }
