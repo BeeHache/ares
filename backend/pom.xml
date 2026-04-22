@@ -37,7 +37,7 @@
         <testcontainers.version>1.21.4</testcontainers.version>
         <lombok.version>1.18.46</lombok.version>
         <jedis.version>7.4.1</jedis.version>
-        <flywaydb.version>12.3.0</flywaydb.version>
+        <flywaydb.version>12.4.0</flywaydb.version>
         <jacoco.version>0.8.14</jacoco.version>
         <togglz.version>4.6.1</togglz.version>
     </properties>
