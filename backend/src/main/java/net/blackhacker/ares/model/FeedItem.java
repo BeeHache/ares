@@ -58,6 +58,10 @@ public class FeedItem implements Serializable {
         if (o == null || getClass() != o.getClass()) return false;
         FeedItem feedItem = (FeedItem) o;
 
+        if (getId() != null && feedItem.getId() != null) {
+            return Objects.equals(getId(), feedItem.getId());
+        }
+
         if (getGuid() != null && feedItem.getGuid() != null) {
             return Objects.equals(getGuid(), feedItem.getGuid());
         }
