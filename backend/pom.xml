@@ -41,7 +41,7 @@
         <jacoco.version>0.8.14</jacoco.version>
         <togglz.version>4.6.1</togglz.version>
         <xerces.version>2.12.2</xerces.version>
-        <jackson.version>2.21.2</jackson.version>
+        <jackson.version>2.21.3</jackson.version>
     </properties>
     <dependencies>
         <dependency>
