@@ -23,10 +23,12 @@ import java.util.UUID;
 @Repository
 public interface FeedRepository extends JpaRepository<Feed, UUID> {
 
-    String FIND_MODIFIED_BEFORE = "SELECT f.id FROM Feed f WHERE f.lastModified < :dt OR f.lastModified IS NULL OR f.pubdate IS NULL";
+    String FIND_IDS_MODIFIED_BEFORE = "SELECT f.id FROM Feed f WHERE f.lastModified < :dt OR f.lastModified IS NULL OR f.pubdate IS NULL";
+    
+    String FIND_FEEDS_MODIFIED_BEFORE = "SELECT f FROM Feed f WHERE f.lastModified < :dt OR f.lastModified IS NULL OR f.pubdate IS NULL";
 
     String  FIND_FEED_USERID =
-            "SELECT f.id, f.title, f.description, f.url, f.link, f.podcast, f.subscribers" +
+            "SELECT f.id, f.title, f.description, f.url, f.link, f.podcast, f.subscribers, " +
                     "(select img.image_url from feed_image img where img.feed_id=f.id) as imageUrl, " +
                     "f.pubdate " +
                     "FROM subscriptions s INNER JOIN feeds f ON s.feed_id = f.id " +
@@ -40,8 +42,12 @@ public interface FeedRepository extends JpaRepository<Feed, UUID> {
     String SUBSCRIPTION_COUNT =
             "SELECT count(0) FROM subscriptions WHERE feed_id = :feedId";
 
-    @Query(FIND_MODIFIED_BEFORE)
+    @Query(FIND_IDS_MODIFIED_BEFORE)
     Page<UUID> findFeedIdsModifiedBefore(@Param("dt") ZonedDateTime zonedDateTime, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"feedItems"})
+    @Query(FIND_FEEDS_MODIFIED_BEFORE)
+    Page<Feed> findFeedsModifiedBefore(@Param("dt") ZonedDateTime zonedDateTime, Pageable pageable);
 
     @EntityGraph(attributePaths = {"feedItems"})
     @NonNull Optional<Feed> findById(@NonNull @Param("id") UUID id);

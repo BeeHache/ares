@@ -38,7 +38,7 @@ class FeedItemMapperTest {
         feedItem.setLink(new URI("http://example.com/item").toURL());
         ZonedDateTime now = ZonedDateTime.now();
         feedItem.setDate(now);
-        feedItem.setEnclosures(Collections.singletonList(new Enclosure()));
+        feedItem.setEnclosures(Collections.singleton(new Enclosure()));
 
         when(enclosureMapper.toDTO(any(Enclosure.class))).thenReturn(new EnclosureDTO());
 

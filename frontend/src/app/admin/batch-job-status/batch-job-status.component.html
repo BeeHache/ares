@@ -1,0 +1,45 @@
+<div class="batch-jobs-container">
+  <div class="header-actions">
+    <h2>Batch Job History</h2>
+    <button class="btn btn-secondary" (click)="loadJobs()" [disabled]="loading()">
+      {{ loading() ? 'Refreshing...' : '🔄 Refresh' }}
+    </button>
+  </div>
+
+  <div *ngIf="error()" class="error-msg">{{ error() }}</div>
+
+  <div class="table-wrapper">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Job Name</th>
+          <th>Status</th>
+          <th>Exit Code</th>
+          <th>Started</th>
+          <th>Ended</th>
+          <th>Duration</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let job of jobExecutions()">
+          <td>{{ job.id }}</td>
+          <td>{{ job.jobName }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(job.status)">
+              {{ job.status }}
+            </span>
+          </td>
+          <td>{{ job.exitCode }}</td>
+          <td>{{ job.startTime | date:'medium' }}</td>
+          <td>{{ job.endTime | date:'medium' }}</td>
+          <td>{{ getDuration(job) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div *ngIf="jobExecutions().length === 0 && !loading()" class="empty-msg">
+    No job history found.
+  </div>
+</div>

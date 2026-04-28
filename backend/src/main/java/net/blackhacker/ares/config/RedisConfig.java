@@ -1,4 +1,4 @@
-package net.blackhacker.ares;
+package net.blackhacker.ares.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;

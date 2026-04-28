@@ -1,4 +1,4 @@
-package net.blackhacker.ares;
+package net.blackhacker.ares.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;

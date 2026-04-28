@@ -1,6 +1,7 @@
-package net.blackhacker.ares;
+package net.blackhacker.ares.config;
 
 import lombok.extern.slf4j.Slf4j;
+import net.blackhacker.ares.MaintenanceModeFilter;
 import net.blackhacker.ares.security.CustomAccessDeniedHandler;
 import net.blackhacker.ares.security.JwtAuthenticationEntryPoint;
 import net.blackhacker.ares.security.JwtAuthenticationFilter;
