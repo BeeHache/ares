@@ -57,40 +57,43 @@ SOFTWARE.`;
     {
       name: 'Spring Boot & Core',
       dependencies: [
-        { name: 'Spring Boot', version: '4.0.1', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-boot' },
-        { name: 'Spring Boot Web Starter', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-boot' },
-        { name: 'Spring Boot Security Starter', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-security' },
-        { name: 'Spring Boot Data JPA Starter', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-data-jpa' },
-        { name: 'Spring Boot Mail Starter', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-boot' },
-        { name: 'Spring Boot Thymeleaf Starter', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-boot' },
-        { name: 'Spring Data Redis', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-data-redis' },
-        { name: 'Flyway Core', version: '12.0.0', license: 'Apache License 2.0', url: 'https://flywaydb.org/' }
+        { name: 'Spring Boot', version: '4.1.0-M4', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-boot' },
+        { name: 'Spring Boot Web Starter', version: '4.1.0-M4', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-boot' },
+        { name: 'Spring Boot Security Starter', version: '4.1.0-M4', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-security' },
+        { name: 'Spring Boot Data JPA Starter', version: '4.1.0-M4', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-data-jpa' },
+        { name: 'Spring Boot Mail Starter', version: '4.1.0-M4', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-boot' },
+        { name: 'Spring Boot Thymeleaf Starter', version: '4.1.0-M4', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-boot' },
+        { name: 'Spring Boot Starter Batch', version: '4.1.0-M4', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-batch' },
+        { name: 'Spring Batch Core', version: '6.0.3', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-batch' },
+        { name: 'Spring Batch Infrastructure', version: '6.0.3', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-batch' },
+        { name: 'Spring Data Redis', version: '4.1.0-M2', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-data-redis' },
+        { name: 'Flyway Core', version: '12.4.0', license: 'Apache License 2.0', url: 'https://flywaydb.org/' }
       ]
     },
     {
       name: 'Data & Database',
       dependencies: [
         { name: 'Hibernate Community Dialects', license: 'LGPL 2.1', url: 'https://hibernate.org/' },
-        { name: 'Jedis', version: '7.2.0', license: 'MIT License', url: 'https://github.com/redis/jedis' },
-        { name: 'PostgreSQL JDBC Driver', version: '42.7.8', license: 'PostgreSQL License', url: 'https://jdbc.postgresql.org/' }
+        { name: 'Jedis', version: '7.4.1', license: 'MIT License', url: 'https://github.com/redis/jedis' },
+        { name: 'PostgreSQL JDBC Driver', version: '42.7.10', license: 'PostgreSQL License', url: 'https://jdbc.postgresql.org/' }
       ]
     },
     {
       name: 'Utilities & Libraries',
       dependencies: [
-        { name: 'Angular', version: '21.0.0', license: 'MIT License', url: 'https://angular.io/' },
-        { name: 'Jackson Databind', version: '3.0.4', license: 'Apache License 2.0', url: 'https://github.com/FasterXML/jackson-databind' },
+        { name: 'Angular', version: '17.0.0', license: 'MIT License', url: 'https://angular.io/' },
+        { name: 'Jackson Databind', version: '2.21.2', license: 'Apache License 2.0', url: 'https://github.com/FasterXML/jackson-databind' },
         { name: 'JJWT (Java JWT)', version: '0.13.0', license: 'Apache License 2.0', url: 'https://github.com/jwtk/jjwt' },
         { name: 'opml-parser', version: '3.1.0', license: 'Apache License 2.0', url: 'https://github.com/mdewilde/opml-parser' },
-        { name: 'Project Lombok', version: '1.18.42', license: 'MIT License', url: 'https://projectlombok.org/' },
+        { name: 'Project Lombok', version: '1.18.46', license: 'MIT License', url: 'https://projectlombok.org/' },
         { name: 'rss-reader', version: '3.12.0', license: 'MIT License', url: 'https://github.com/w3stling/rssreader' },
-        { name: 'Togglz', version: '4.6.0', license: 'Apache License 2.0', url: 'https://www.togglz.org/' }
+        { name: 'Togglz', version: '4.6.1', license: 'Apache License 2.0', url: 'https://www.togglz.org/' }
       ]
     },
     {
       name: 'Testing',
       dependencies: [
-        { name: 'Spring Boot Test Starter', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-boot' },
+        { name: 'Spring Boot Test Starter', version: '4.1.0-M4', license: 'Apache License 2.0', url: 'https://spring.io/projects/spring-boot' },
         { name: 'Testcontainers', version: '1.21.4', license: 'MIT License', url: 'https://www.testcontainers.org/' }
       ]
     }

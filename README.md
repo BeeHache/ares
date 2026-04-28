@@ -7,6 +7,7 @@ Ares is a robust RSS feed aggregator and podcast manager built with a modern tec
 ### Backend
 *   **Java 17+**
 *   **Spring Boot 4.x**: Core framework
+*   **Spring Batch**: Reliable, chunk-oriented background processing for feed updates
 *   **Spring Security**: JWT-based authentication & RBAC
 *   **Spring Data JPA**: Database interaction
 *   **PostgreSQL**: Primary relational database with Full-Text Search
@@ -125,7 +126,8 @@ ares/
 *   **OPML Support**: Import and export feed subscriptions via OPML files.
 *   **Role Management**: Hierarchical role system (Admin, User, etc.).
 *   **Email Notifications**: HTML email templates for account verification.
-*   **Automated Updates**: Scheduled background tasks to fetch latest feed items.
+*   **Automated Updates**: Scheduled background tasks to fetch latest feed items powered by **Spring Batch**.
+*   **Admin Dashboard**: Monitor application health and **Spring Batch Job Status** through a dedicated admin interface.
 *   **Responsive UI**: Mobile-friendly design with secure password inputs.
 
 ## 🤝 Contributing
