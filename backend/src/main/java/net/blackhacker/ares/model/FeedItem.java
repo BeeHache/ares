@@ -7,14 +7,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.blackhacker.ares.utils.URLConverter;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.io.Serializable;
 import java.net.URL;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Entity
@@ -44,9 +43,10 @@ public class FeedItem implements Serializable {
     @Column
     private ZonedDateTime date;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name="feed_item_id")
-    private Collection<Enclosure> enclosures = new ArrayList<>();
+    @Fetch(FetchMode.SUBSELECT)
+    private Set<Enclosure> enclosures = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name="feed_id")
@@ -55,28 +55,25 @@ public class FeedItem implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FeedItem feedItem = (FeedItem) o;
+        if (!(o instanceof FeedItem that)) return false;
 
-        if (getGuid() != null && feedItem.getGuid() != null) {
-            return Objects.equals(getGuid(), feedItem.getGuid());
+        if (guid != null && that.guid != null) {
+            return Objects.equals(guid, that.guid);
         }
 
-        if (getGuid() != null || feedItem.getGuid() != null) {
-            return false;
-        }
+        UUID thisFeedId = (feed != null) ? feed.getId() : null;
+        UUID thatFeedId = (that.feed != null) ? that.feed.getId() : null;
 
-        UUID thisFeedId = getFeed() != null ? getFeed().getId() : null;
-        UUID otherFeedId = feedItem.getFeed() != null ? feedItem.getFeed().getId() : null;
-
-        return Objects.equals(getTitle(), feedItem.getTitle()) &&
-                Objects.equals(thisFeedId, otherFeedId);
+        return Objects.equals(title, that.title) &&
+               Objects.equals(thisFeedId, thatFeedId);
     }
 
     @Override
     public int hashCode() {
-        if (getGuid() != null) return Objects.hash(getGuid());
-        UUID feedId = getFeed() != null ? getFeed().getId() : null;
-        return Objects.hash(getTitle(), feedId);
+        if (guid != null) {
+            return Objects.hash(guid);
+        }
+        UUID feedId = (feed != null) ? feed.getId() : null;
+        return Objects.hash(title, feedId);
     }
 }

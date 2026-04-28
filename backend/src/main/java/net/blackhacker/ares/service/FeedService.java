@@ -11,19 +11,14 @@ import net.blackhacker.ares.model.FeedItem;
 import net.blackhacker.ares.projection.FeedItemProjection;
 import net.blackhacker.ares.repository.jpa.FeedItemRepository;
 import net.blackhacker.ares.repository.jpa.FeedRepository;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.*;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -37,8 +32,6 @@ public class FeedService {
 
     private final TransactionTemplate transactionTemplate;
 
-    private final Long feedIntervalMs;
-    private final Integer queryLimit;
     private final FeedMapper feedMapper;
     private final FeedItemMapper feedItemMapper;
     private final ApplicationEventPublisher publisher;
@@ -50,9 +43,7 @@ public class FeedService {
             TransactionTemplate transactionTemplate,
             FeedMapper feedMapper,
             FeedItemMapper feedItemMapper,
-            ApplicationEventPublisher publisher,
-            @Value("${feed.interval_ms}") Long feedIntervalMs,
-            @Value("${feed.query_limit}") Integer queryLimit) {
+            ApplicationEventPublisher publisher) {
         this.feedRepository = feedRepository;
         this.feedMapper = feedMapper;
         this.feedItemRepository = feedItemRepository;
@@ -60,8 +51,6 @@ public class FeedService {
         this.transactionTemplate = transactionTemplate;
         this.feedItemMapper = feedItemMapper;
         this.publisher = publisher;
-        this.feedIntervalMs = feedIntervalMs;
-        this.queryLimit = queryLimit;
     }
 
     public Page<Feed> findAllFeeds(Pageable pageable) {
@@ -154,49 +143,17 @@ public class FeedService {
             ofeed.ifPresentOrElse(existingFeeds::add, () -> newFeeds.add(feed));
         }
 
-        Stream<Feed> savedFeeds = newFeeds.stream()
+        List<Feed> savedFeeds = newFeeds.stream()
                 .map(this::saveFeed) //save the new feeds to the DB
-                .peek(rssService::updateFeed); // update those feeds from the internet
+                .peek(rssService::updateFeed) // update those feeds from the internet
+                .toList();
 
         //combine and return
-        return Stream.concat(existingFeeds.stream(), savedFeeds).toList();
-    }
-
-    @Scheduled(fixedRateString = "${feed.interval_ms}")
-    @Async
-    public void updateFeeds() {
-        log.info("Starting feed update cycle");
-        ZonedDateTime fiveMinutesAgo = ZonedDateTime.now().minusSeconds(feedIntervalMs / 1000);
-        log.debug("Five minutes ago:      {}", fiveMinutesAgo);
-        ZonedDateTime fiveMinutesFromNow = ZonedDateTime.now().plusSeconds(feedIntervalMs / 1000);
-        log.debug("Five minutes from now: {}", fiveMinutesFromNow);
-
-        for (int page=0; true; page++) {
-            Pageable pageable = PageRequest.of(page, queryLimit, Sort.by("lastModified"));
-            Page<UUID> feedIds  = feedRepository.findFeedIdsModifiedBefore(fiveMinutesAgo, pageable);
-            if (feedIds.isEmpty()){
-                log.debug("No feeds to update");
-                break;
-            }
-
-            log.debug("Found {} feeds to update", feedIds.getNumberOfElements());
-
-            feedIds.forEach(this::updateFeed);
-
-            if (feedIds.getTotalElements() < queryLimit){
-                break;
-            }
-
-            if (ZonedDateTime.now().isAfter(fiveMinutesFromNow)){
-                break;
-            }
-        }
-        log.info("Feed update cycle completed");
+        return Stream.concat(existingFeeds.stream(), savedFeeds.stream()).toList();
     }
 
     @Async
     public void updateFeed(UUID feedId){
-
             feedRepository.findById(feedId).ifPresent(feed -> {
                 log.info("Updating feed: {}", feed.getUrl());
                 if (rssService.updateFeed(feed)) {

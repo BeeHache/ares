@@ -1,8 +1,7 @@
 package net.blackhacker.ares.service;
 
 import net.blackhacker.ares.model.Feed;
-import net.blackhacker.ares.model.FeedItem;
-import net.blackhacker.ares.repository.jpa.FeedItemRepository;
+import net.blackhacker.ares.repository.jpa.FeedRepository;
 import net.blackhacker.ares.utils.FeedParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,7 +15,6 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -27,9 +25,6 @@ class RssServiceTest {
 
     @Mock
     private URLFetchService urlFetchService;
-
-    @Mock
-    private FeedItemRepository feedItemRepository;
 
     @Mock
     private ObjectProvider<FeedParser> feedParserProvider;
@@ -43,7 +38,8 @@ class RssServiceTest {
 
     @BeforeEach
     void setUp() {
-        rssService = new RssService(urlFetchService, feedItemRepository, feedParserProvider);
+        // We don't need feedItemRepository mock here because RssService no longer uses it directly
+        rssService = new RssService(urlFetchService, feedParserProvider);
         
         validRssString = "Valid XML content";
     }
@@ -76,50 +72,10 @@ class RssServiceTest {
                 .thenReturn(ResponseEntity.ok(validRssString.getBytes(StandardCharsets.UTF_8)));
         when(feedParserProvider.getObject()).thenReturn(feedParser);
 
-        // Mock parser to add one item
-        doAnswer(invocation -> {
-            Feed tempFeed = invocation.getArgument(0);
-            tempFeed.setTitle("New Title");
-            FeedItem item = new FeedItem();
-            item.setTitle("New Item");
-            item.setGuid("guid-123");
-            tempFeed.getFeedItems().add(item);
-            return null;
-        }).when(feedParser).parse(any(Feed.class), any(InputStream.class));
-
-        when(feedItemRepository.findByGuid("guid-123")).thenReturn(Optional.empty());
-
         boolean result = rssService.updateFeed(feed);
 
         assertTrue(result);
-        assertEquals("New Title", feed.getTitle());
-        assertEquals(1, feed.getFeedItems().size());
-    }
-
-    @Test
-    void updateFeed_shouldSkipDuplicateItems() throws URISyntaxException, MalformedURLException {
-        Feed feed = new Feed();
-        feed.setUrlFromString("http://example.com/rss");
-
-        when(urlFetchService.fetchBytes(anyString(), any()))
-                .thenReturn(ResponseEntity.ok(validRssString.getBytes(StandardCharsets.UTF_8)));
-        when(feedParserProvider.getObject()).thenReturn(feedParser);
-
-        doAnswer(invocation -> {
-            Feed tempFeed = invocation.getArgument(0);
-            FeedItem item = new FeedItem();
-            item.setTitle("Existing Item");
-            item.setGuid("dup-guid");
-            tempFeed.getFeedItems().add(item);
-            return null;
-        }).when(feedParser).parse(any(Feed.class), any(InputStream.class));
-
-        when(feedItemRepository.findByGuid("dup-guid")).thenReturn(Optional.of(new FeedItem()));
-
-        boolean result = rssService.updateFeed(feed);
-
-        assertTrue(result);
-        assertEquals(0, feed.getFeedItems().size()); // Duplicate skipped
+        verify(feedParser).parse(eq(feed), any(InputStream.class));
     }
 
     @Test
@@ -133,5 +89,6 @@ class RssServiceTest {
         boolean result = rssService.updateFeed(feed);
 
         assertFalse(result);
+        verify(feedParser, never()).parse(any(), any());
     }
 }

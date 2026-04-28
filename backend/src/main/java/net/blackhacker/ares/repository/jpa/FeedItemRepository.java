@@ -16,6 +16,7 @@ import java.util.UUID;
 @Repository
 public interface FeedItemRepository extends JpaRepository<FeedItem, UUID> {
 
+    @EntityGraph(attributePaths = {"enclosures"})
     @Query(value = "SELECT f from FeedItem f where f.feed.id=:feedId",
             countQuery = "SELECT count(f) from f.FeedItem where f.feed.id=:feedId")
     Slice<FeedItem> findByFeedId(@Param("feedId")UUID feedId, Pageable pageable);

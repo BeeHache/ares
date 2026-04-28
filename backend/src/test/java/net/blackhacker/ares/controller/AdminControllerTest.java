@@ -15,6 +15,7 @@ import net.blackhacker.ares.security.JwtAuthenticationFilter;
 import net.blackhacker.ares.security.OAuth2LoginSuccessHandler;
 import net.blackhacker.ares.service.*;
 import org.junit.jupiter.api.Test;
+import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -86,6 +87,9 @@ class AdminControllerTest {
 
     @MockitoBean
     private HttpSecurity httpSecurity;
+
+    @MockitoBean
+    private JobRepository jobRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

@@ -1,5 +1,6 @@
-package net.blackhacker.ares;
+package net.blackhacker.ares.config;
 
+import net.blackhacker.ares.AresFeatures;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.togglz.core.manager.EnumBasedFeatureProvider;

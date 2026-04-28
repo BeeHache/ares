@@ -30,9 +30,8 @@ public class FeedMapper implements ModelDTOMapper<Feed, FeedDTO> {
         if (feed.getSubscribers() != null){
             feedDTO.setSubscribers(feed.getSubscribers());
         }
-
-        if (!feed.getFeedItems().isEmpty()) {
-            feedDTO.setPubdate(feed.getFeedItems().iterator().next().getDate().format(DateTimeFormatter.ISO_DATE_TIME));
+        if (feed.getPubdate() != null) {
+            feedDTO.setPubdate(feed.getPubdate().format(DateTimeFormatter.ISO_DATE_TIME));
         }
         return feedDTO;
     }

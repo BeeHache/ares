@@ -35,6 +35,11 @@ spring:
   sql:
     init:
       mode: never
+  batch:
+    job:
+      enabled: false # Prevents job execution on startup, avoiding lock contention
+    jdbc:
+      initialize-schema: never # Using Flyway for schema management
   data:
     redis:
       host: redis
@@ -107,5 +112,5 @@ logging:
     org.springframework.security: INFO
     org.hibernate.SQL: ${SQL_LOG_LEVEL:INFO}
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    console: "%d (UTC): %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

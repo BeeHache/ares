@@ -5,6 +5,7 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { UserManagementComponent } from './user-management/user-management.component';
 import { FeedManagementComponent } from './feed-management/feed-management.component';
 import { RoleManagementComponent } from './role-management/role-management.component';
+import { BatchJobStatusComponent } from './batch-job-status/batch-job-status.component';
 
 const routes: Routes = [
   {
@@ -14,7 +15,8 @@ const routes: Routes = [
       { path: '', component: DashboardComponent },
       { path: 'accounts', component: UserManagementComponent },
       { path: 'feeds', component: FeedManagementComponent },
-      { path: 'roles', component: RoleManagementComponent }
+      { path: 'roles', component: RoleManagementComponent },
+      { path: 'batch-jobs', component: BatchJobStatusComponent }
     ]
   }
 ];

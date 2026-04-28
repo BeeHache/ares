@@ -54,32 +54,40 @@ public class FeedParser extends DefaultHandler {
 
     final static private String  ITUNES_IMAGE = "itunes:image";
 
-    final private FeedItemRepository feedItemRepository;
-    final private FeedRepository feedRepository;
-    final private TransactionTemplate transactionTemplate;
-
     @Getter
     @Setter
     private Feed feed;
 
-    record Item(String tag, Object value) { }
+    record StackItem(String tag, Object value) { }
 
-    final private Stack<Item> stack = new Stack<>();
+    final private Stack<StackItem> stack = new Stack<>();
     final private StringBuilder chars = new StringBuilder();
-    final private Set<String> seenTitles = new HashSet<>();
-    final private Set<String> seenGuids = new HashSet<>();
     
-    public FeedParser(FeedRepository feedRepository, FeedItemRepository feedItemRepository, TransactionTemplate transactionTemplate) {
-        this.feedRepository = feedRepository;
-        this.feedItemRepository = feedItemRepository;
-        this.transactionTemplate = transactionTemplate;
-    }
+    // Map to keep track of items for synchronization
+    private final Map<String, FeedItem> existingItemsByTitle = new HashMap<>();
+    private final Map<String, FeedItem> existingItemsByGuid = new HashMap<>();
+
+    public FeedParser() { }
 
     public void parse(Feed feed, @NonNull InputStream is){
         this.feed = feed;
-        this.seenTitles.clear();
-        this.seenGuids.clear();
         this.stack.clear();
+        this.chars.setLength(0);
+        
+        // Index existing items for fast lookup
+        this.existingItemsByTitle.clear();
+        this.existingItemsByGuid.clear();
+        if (feed.getFeedItems() != null) {
+            for (FeedItem item : feed.getFeedItems()) {
+                if (item.getGuid() != null && !item.getGuid().isBlank()) {
+                    existingItemsByGuid.put(item.getGuid().trim(), item);
+                }
+                if (item.getTitle() != null && !item.getTitle().isBlank()) {
+                    existingItemsByTitle.put(item.getTitle().trim(), item);
+                }
+            }
+        }
+
         SAXParserFactory factory = SAXParserFactory.newInstance();
         try {
             factory.newSAXParser().parse(is, this);
@@ -117,15 +125,13 @@ public class FeedParser extends DefaultHandler {
         switch (qName) {
             case CHANNEL:
             case FEED:
-                stack.push(new Item(CHANNEL, new Feed()));
+                stack.push(new StackItem(CHANNEL, null));
                 break;
 
             case ITEM:
-            case ENTRY: {
-                FeedItem feedItem = new FeedItem();
-                stack.push(new Item(ITEM, feedItem));
+            case ENTRY:
+                stack.push(new StackItem(ITEM, null));
                 break;
-            }
 
             case ENCLOSURE: {
                 URL enclosureUrl = resolveUrl(attributes.getValue("url"));
@@ -140,7 +146,7 @@ public class FeedParser extends DefaultHandler {
                             } catch (NumberFormatException nfe) {}
                         }
                         enclosure.setType(attributes.getValue("type"));
-                        stack.push(new Item(ENCLOSURE, enclosure));
+                        stack.push(new StackItem(ENCLOSURE, enclosure));
                     } catch (Exception e) {
                         log.error("Failed to parse enclosure: {}", e.getMessage());
                     }
@@ -151,7 +157,7 @@ public class FeedParser extends DefaultHandler {
             case ITUNES_IMAGE:
                 URL itunesImg = resolveUrl(attributes.getValue("href"));
                 if (itunesImg != null) {
-                    stack.push(new Item(IMAGE, itunesImg));
+                    stack.push(new StackItem(IMAGE, itunesImg));
                 }
                 break;
 
@@ -160,7 +166,7 @@ public class FeedParser extends DefaultHandler {
                 if (href != null && !href.isBlank()) {
                     URL link = resolveUrl(href);
                     if (link != null) {
-                        stack.push(new Item(LINK, link));
+                        stack.push(new StackItem(LINK, link));
                     }
                 }
                 break;
@@ -172,30 +178,30 @@ public class FeedParser extends DefaultHandler {
     public void endElement(String uri, String localName, String qName) throws SAXException {
         switch (qName) {
             case TITLE:
-                stack.push(new Item(TITLE, getChars()));
+                stack.push(new StackItem(TITLE, getChars()));
                 break;
 
             case DESCRIPTION:
             case CONTENT:
             case SUMMARY:
-                stack.push(new Item(DESCRIPTION, getChars()));
+                stack.push(new StackItem(DESCRIPTION, getChars()));
                 break;
 
             case CONTENT_ENCODED:
-                stack.push(new Item(CONTENT_ENCODED, getChars()));
+                stack.push(new StackItem(CONTENT_ENCODED, getChars()));
                 break;
 
             case PUBDATE:
             case PUBLISHED:
             case UPDATED:
-                stack.push(new Item(PUBDATE, DateTimeReformatter.parse(getChars())));
+                stack.push(new StackItem(PUBDATE, DateTimeReformatter.parse(getChars())));
                 break;
 
             case LINK:
                 if (!getChars().isEmpty()) {
                     URL bodyLink = resolveUrl(getChars());
                     if (bodyLink != null) {
-                        stack.push(new Item(LINK, bodyLink));
+                        stack.push(new StackItem(LINK, bodyLink));
                     }
                 }
                 break;
@@ -203,19 +209,19 @@ public class FeedParser extends DefaultHandler {
             case URL: {
                 URL url = resolveUrl(getChars());
                 if (url != null) {
-                    stack.push(new Item(URL, url));
+                    stack.push(new StackItem(URL, url));
                 }
                 break;
             }
 
             case IMAGE:
                 if (!stack.isEmpty() && stack.peek().tag().equals(URL)) {
-                    stack.push(new Item(IMAGE, stack.pop().value()));
+                    stack.push(new StackItem(IMAGE, stack.pop().value()));
                 }
                 break;
 
             case GUID:
-                stack.push(new Item(GUID, getChars()));
+                stack.push(new StackItem(GUID, getChars()));
                 break;
 
             case ITEM:
@@ -229,45 +235,49 @@ public class FeedParser extends DefaultHandler {
                 ZonedDateTime pubdate = null;
 
                 while (!stack.isEmpty()) {
-                    Item item = stack.pop();
+                    StackItem item = stack.pop();
+                    if (item.tag().equals(ITEM)) break;
 
                     switch (item.tag()) {
-                        case TITLE: title = item.value().toString(); break;
-                        case DESCRIPTION: description = item.value().toString(); break;
-                        case CONTENT_ENCODED: contentEncoded = item.value().toString(); break;
-                        case GUID: guid = item.value().toString(); break;
+                        case TITLE: title = item.value().toString().trim(); break;
+                        case DESCRIPTION: description = item.value().toString().trim(); break;
+                        case CONTENT_ENCODED: contentEncoded = item.value().toString().trim(); break;
+                        case GUID: guid = item.value().toString().trim(); break;
                         case LINK: link = (URL) item.value(); break;
                         case ENCLOSURE: enclosures.add((Enclosure) item.value()); break;
                         case PUBDATE: pubdate = (ZonedDateTime) item.value(); break;
-                        case ITEM: {
-                            FeedItem feedItem = (FeedItem) item.value();
-                            if (title == null || title.isBlank()) {
-                                log.warn("Skipping item with no title in feed {}", feed.getUrl());
-                            } else {
-                                // 1. Check In-Memory Duplicates (same session)
-                                if (seenTitles.contains(title) || (guid != null && seenGuids.contains(guid))) {
-                                    continue;
-                                }
-
-                                feedItem.setTitle(title);
-                                feedItem.setGuid(guid);
-                                feedItem.setLink(link);
-                                feedItem.setDate(pubdate);
-                                feedItem.setDescription(contentEncoded != null ? contentEncoded : description);
-                                feedItem.getEnclosures().addAll(enclosures);
-
-                                feedItemRepository.findByFeedAndTitle(feed.getId(), title).ifPresent(value -> feedItem.setId(value.getId()));
-                                feedItem.setFeed(feed);
-                                feed.getFeedItems().add(feedItem);
-                                
-                                // Mark as seen
-                                seenTitles.add(title);
-                                if (guid != null) seenGuids.add(guid);
-                            }
-                            break;
-                        }
                     }
-                    if (item.tag().equals(ITEM)) break;
+                }
+
+                if (title == null || title.isBlank()) {
+                    break;
+                }
+
+                // SYNC LOGIC: Lookup existing item
+                FeedItem feedItem = null;
+                if (guid != null && !guid.isBlank()) feedItem = existingItemsByGuid.get(guid);
+                if (feedItem == null) feedItem = existingItemsByTitle.get(title);
+                
+                if (feedItem == null) {
+                    feedItem = new FeedItem();
+                    feedItem.setFeed(feed);
+                    feed.getFeedItems().add(feedItem);
+                    
+                    // Update maps so subsequent occurrences are merged
+                    existingItemsByTitle.put(title, feedItem);
+                    if (guid != null && !guid.isBlank()) existingItemsByGuid.put(guid, feedItem);
+                }
+
+                feedItem.setTitle(title);
+                feedItem.setGuid(guid);
+                feedItem.setLink(link);
+                feedItem.setDate(pubdate);
+                feedItem.setDescription(contentEncoded != null ? contentEncoded : description);
+                
+                for (Enclosure enc : enclosures) {
+                    if (!feedItem.getEnclosures().contains(enc)) {
+                        feedItem.getEnclosures().add(enc);
+                    }
                 }
                 break;
             }
@@ -281,14 +291,13 @@ public class FeedParser extends DefaultHandler {
                 URL imageUrl = null;
 
                 while (!stack.isEmpty()) {
-                    Item item = stack.pop();
-                    if (item.tag().equals(CHANNEL)) {
-                        break;
-                    }
+                    StackItem item = stack.pop();
+                    if (item.tag().equals(CHANNEL)) break;
+                    
                     switch (item.tag()) {
-                        case TITLE: title = item.value().toString(); break;
+                        case TITLE: title = item.value().toString().trim(); break;
                         case LINK: link = (URL) item.value(); break;
-                        case DESCRIPTION: description = item.value().toString(); break;
+                        case DESCRIPTION: description = item.value().toString().trim(); break;
                         case PUBDATE: pubdate = (ZonedDateTime) item.value(); break;
                         case IMAGE: imageUrl = (URL) item.value(); break;
                     }
@@ -299,13 +308,8 @@ public class FeedParser extends DefaultHandler {
                 if (description != null) feed.setDescription(description);
                 if (pubdate != null) feed.setPubdate(pubdate);
                 if (imageUrl != null) feed.setImageUrl(imageUrl);
-
-                transactionTemplate.executeWithoutResult(status -> {
-                    feedRepository.saveAndFlush(feed);
-                });
                 break;
             }
-
         }
     }
 

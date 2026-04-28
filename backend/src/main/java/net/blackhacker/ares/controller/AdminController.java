@@ -1,6 +1,7 @@
 package net.blackhacker.ares.controller;
 
 import net.blackhacker.ares.dto.AccountDTO;
+import net.blackhacker.ares.dto.BatchJobExecutionDTO;
 import net.blackhacker.ares.dto.FeedDTO;
 import net.blackhacker.ares.dto.RoleDTO;
 import net.blackhacker.ares.mapper.AccountMapper;
@@ -13,6 +14,8 @@ import net.blackhacker.ares.repository.jpa.RoleRepository;
 import net.blackhacker.ares.service.AccountService;
 import net.blackhacker.ares.service.FeedService;
 import net.blackhacker.ares.service.UserService;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -36,6 +39,7 @@ public class AdminController {
     private final AccountMapper accountMapper;
     private final RoleRepository roleRepository;
     private final AccountRepository accountRepository;
+    private final JobRepository jobRepository;
 
 
     public AdminController(AccountService accountService,
@@ -44,7 +48,8 @@ public class AdminController {
                            FeedMapper feedMapper,
                            AccountMapper accountMapper,
                            RoleRepository roleRepository,
-                           AccountRepository accountRepository) {
+                           AccountRepository accountRepository,
+                           JobRepository jobRepository) {
         this.accountService = accountService;
         this.userService = userService;
         this.feedService = feedService;
@@ -52,6 +57,7 @@ public class AdminController {
         this.accountMapper = accountMapper;
         this.roleRepository = roleRepository;
         this.accountRepository = accountRepository;
+        this.jobRepository = jobRepository;
     }
 
     @GetMapping("/hello")
@@ -152,14 +158,7 @@ public class AdminController {
 
     @GetMapping("/feeds")
     public Page<FeedDTO> getFeeds(@PageableDefault(size = 20) Pageable pageable) {
-        return feedService.findAllFeeds(pageable).map(feed -> {
-            //set the subscription count for each feed
-            feed.setSubscribers(feedService.feedSubscriberCount(feed.getId()));
-            if (feed.getSubscribers() == null) {
-                feed.setSubscribers(0L);
-            }
-            return feed;
-        }).map(feedMapper::toDTO);
+        return feedService.findAllFeeds(pageable).map(feedMapper::toDTO);
     }
 
     @DeleteMapping("/feeds/{id}")
@@ -176,5 +175,33 @@ public class AdminController {
            throw  new ResponseStatusException(HttpStatus.NOT_FOUND, "Feed not found");
         }
         feedService.updateFeed(id);
+    }
+
+    @GetMapping("/batch/jobs")
+    public List<BatchJobExecutionDTO> getBatchJobExecutions(@RequestParam(defaultValue = "10") int limit) {
+        List<BatchJobExecutionDTO> dtos = new ArrayList<>();
+        
+        List<String> jobNames = jobRepository.getJobNames();
+        for (String name : jobNames) {
+            List<JobExecution> executions = jobRepository.getJobExecutions(jobRepository.getLastJobInstance(name));
+            for (JobExecution ex : executions) {
+                dtos.add(BatchJobExecutionDTO.builder()
+                        .id(ex.getId())
+                        .jobName(name)
+                        .status(ex.getStatus().toString())
+                        .exitCode(ex.getExitStatus().getExitCode())
+                        .exitMessage(ex.getExitStatus().getExitDescription())
+                        .startTime(ex.getStartTime())
+                        .endTime(ex.getEndTime())
+                        .createTime(ex.getCreateTime())
+                        .build());
+            }
+        }
+        
+        // Sort by start time descending and limit
+        return dtos.stream()
+                .sorted(Comparator.comparing(BatchJobExecutionDTO::getCreateTime, Comparator.nullsLast(Comparator.reverseOrder())))
+                .limit(limit)
+                .toList();
     }
 }
