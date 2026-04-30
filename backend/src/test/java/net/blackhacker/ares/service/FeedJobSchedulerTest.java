@@ -8,7 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.parameters.JobParameters;
-import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.launch.JobOperator;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -17,10 +17,14 @@ import static org.mockito.Mockito.*;
 class FeedJobSchedulerTest {
 
     @Mock
-    private JobLauncher jobLauncher;
+    private JobOperator jobOperator;
 
     @Mock
     private Job feedUpdateJob;
+
+    @Mock
+    private Job userReaperJob;
+
 
     private FeedJobScheduler scheduler;
 
@@ -28,7 +32,7 @@ class FeedJobSchedulerTest {
 
     @BeforeEach
     void setUp() {
-        scheduler = new FeedJobScheduler(jobLauncher, feedUpdateJob, intervalMs);
+        scheduler = new FeedJobScheduler(jobOperator, feedUpdateJob, userReaperJob, intervalMs);
     }
 
     @Test
@@ -38,7 +42,7 @@ class FeedJobSchedulerTest {
 
         // Assert
         ArgumentCaptor<JobParameters> paramsCaptor = ArgumentCaptor.forClass(JobParameters.class);
-        verify(jobLauncher).run(eq(feedUpdateJob), paramsCaptor.capture());
+        verify(jobOperator).start(eq(feedUpdateJob), paramsCaptor.capture());
 
         JobParameters params = paramsCaptor.getValue();
         assertNotNull(params.getString("threshold"));
@@ -48,10 +52,10 @@ class FeedJobSchedulerTest {
     @Test
     void runFeedUpdateJob_shouldHandleExceptionGracefully() throws Exception {
         // Arrange
-        when(jobLauncher.run(any(), any())).thenThrow(new RuntimeException("Launch failed"));
+        when(jobOperator.start(eq(feedUpdateJob), any())).thenThrow(new RuntimeException("Launch failed"));
 
         // Act & Assert (Should not throw exception)
         assertDoesNotThrow(() -> scheduler.runFeedUpdateJob());
-        verify(jobLauncher).run(any(), any());
+        verify(jobOperator).start(eq(feedUpdateJob), any());
     }
 }

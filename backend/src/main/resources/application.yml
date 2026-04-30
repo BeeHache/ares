@@ -38,8 +38,10 @@ spring:
   batch:
     job:
       enabled: false # Prevents job execution on startup, avoiding lock contention
+      names: "" # Explicitly tell JobLauncherApplicationRunner not to run any jobs
     jdbc:
       initialize-schema: never # Using Flyway for schema management
+      isolation-level-for-create: read_committed
   data:
     redis:
       host: redis
