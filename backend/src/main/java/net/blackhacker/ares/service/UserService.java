@@ -6,11 +6,13 @@ import net.blackhacker.ares.model.EmailConfirmationCode;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.repository.crud.EmailConfirmationRepository;
+import net.blackhacker.ares.repository.jpa.AccountRepository;
 import net.blackhacker.ares.repository.jpa.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.ZonedDateTime;
@@ -22,6 +24,7 @@ import java.util.UUID;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final AccountRepository accountRepository; // Inject AccountRepository
     private final EmailSenderService emailSenderService;
     private final CacheService cacheService;
     private final EmailConfirmationRepository emailConfirmationRepository;
@@ -31,12 +34,14 @@ public class UserService {
     final private String frontendUrl;
 
     public UserService(UserRepository userRepository,
+                       AccountRepository accountRepository, // Inject AccountRepository
                        EmailSenderService emailSenderService,
                        EmailConfirmationRepository emailConfirmationRepository,
                        CacheService cacheService,
                        TransactionTemplate transactionTemplate,
                        @Value("${app.frontend.url}") String frontendUrl) {
         this.userRepository = userRepository;
+        this.accountRepository = accountRepository; // Assign
         this.emailSenderService = emailSenderService;
         this.cacheService = cacheService;
         this.emailConfirmationRepository = emailConfirmationRepository;
@@ -199,5 +204,19 @@ public class UserService {
                     }
                 }
         );
+    }
+
+    @Transactional
+    public void deleteUser(Long userId) {
+        userRepository.findById(userId).ifPresent(user -> {
+            log.info("Attempting to delete user with ID: {}", userId);
+            // Account is typically cascaded from User, but explicit deletion ensures it
+            if (user.getAccount() != null) {
+                accountRepository.delete(user.getAccount());
+                log.debug("Deleted associated account for user ID: {}", userId);
+            }
+            userRepository.delete(user);
+            log.info("Successfully deleted user with ID: {}", userId);
+        });
     }
 }

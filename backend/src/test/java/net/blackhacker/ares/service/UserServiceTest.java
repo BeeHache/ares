@@ -5,6 +5,7 @@ import net.blackhacker.ares.model.EmailConfirmationCode;
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.User;
 import net.blackhacker.ares.repository.crud.EmailConfirmationRepository;
+import net.blackhacker.ares.repository.jpa.AccountRepository;
 import net.blackhacker.ares.repository.jpa.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,9 @@ class UserServiceTest {
     private TransactionTemplate transactionTemplate;
 
     @Mock
+    private AccountRepository accountRepository;
+
+    @Mock
     private ObjectProvider<PasswordEncoder> passwordEncoderProvider;
 
     @Mock
@@ -60,7 +64,7 @@ class UserServiceTest {
 
     @BeforeEach
     public void setUp() {
-        userService = new UserService(userRepository, emailSenderService, emailConfirmationRepository, 
+        userService = new UserService(userRepository, accountRepository, emailSenderService, emailConfirmationRepository,
                                      cacheService, transactionTemplate, "http://localhost:4200");
 
         existingEnabledAccount = new Account();

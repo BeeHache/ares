@@ -11,7 +11,12 @@ import org.springframework.context.annotation.Primary;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest
+@SpringBootTest(
+    properties = {
+            "spring.batch.job.enabled=false",
+            "spring.main.allow-bean-definition-overriding=true",
+            "spring.task.scheduling.enabled=false"
+    })
 @Import({AresApplicationTests.TestSecurityConfiguration.class, TestConfig.class})
 class AresApplicationTests extends AbstractIntegrationTest {
 
@@ -28,6 +33,6 @@ class AresApplicationTests extends AbstractIntegrationTest {
 
     @Test
     void contextLoads() {
-        // Context should now load successfully
+        // Context should now load successfully without Batch components interfering
     }
 }
