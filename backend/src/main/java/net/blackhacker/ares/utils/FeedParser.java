@@ -9,11 +9,9 @@ import net.blackhacker.ares.model.Feed;
 
 import net.blackhacker.ares.model.FeedItem;
 import net.blackhacker.ares.repository.jpa.FeedItemRepository;
-import net.blackhacker.ares.repository.jpa.FeedRepository;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.support.TransactionTemplate;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.Attributes;
@@ -63,11 +61,15 @@ public class FeedParser extends DefaultHandler {
     final private Stack<StackItem> stack = new Stack<>();
     final private StringBuilder chars = new StringBuilder();
     
-    // Map to keep track of items for synchronization
+    // Map to keep track of items for synchronization;
     private final Map<String, FeedItem> existingItemsByTitle = new HashMap<>();
     private final Map<String, FeedItem> existingItemsByGuid = new HashMap<>();
 
-    public FeedParser() { }
+    final FeedItemRepository feedItemRepository;
+
+    public FeedParser(FeedItemRepository feedItemRepository) {
+        this.feedItemRepository = feedItemRepository;
+    }
 
     public void parse(Feed feed, @NonNull InputStream is){
         this.feed = feed;
@@ -239,13 +241,27 @@ public class FeedParser extends DefaultHandler {
                     if (item.tag().equals(ITEM)) break;
 
                     switch (item.tag()) {
-                        case TITLE: title = item.value().toString().trim(); break;
-                        case DESCRIPTION: description = item.value().toString().trim(); break;
-                        case CONTENT_ENCODED: contentEncoded = item.value().toString().trim(); break;
-                        case GUID: guid = item.value().toString().trim(); break;
-                        case LINK: link = (URL) item.value(); break;
-                        case ENCLOSURE: enclosures.add((Enclosure) item.value()); break;
-                        case PUBDATE: pubdate = (ZonedDateTime) item.value(); break;
+                        case TITLE:
+                            title = item.value().toString().trim();
+                            break;
+                        case DESCRIPTION:
+                            description = item.value().toString().trim();
+                            break;
+                        case CONTENT_ENCODED:
+                            contentEncoded = item.value().toString().trim();
+                            break;
+                        case GUID:
+                            guid = item.value().toString().trim();
+                            break;
+                        case LINK:
+                            link = (URL) item.value();
+                            break;
+                        case ENCLOSURE:
+                            enclosures.add((Enclosure) item.value());
+                            break;
+                        case PUBDATE:
+                            pubdate = (ZonedDateTime) item.value();
+                            break;
                     }
                 }
 
@@ -257,28 +273,35 @@ public class FeedParser extends DefaultHandler {
                 FeedItem feedItem = null;
                 if (guid != null && !guid.isBlank()) feedItem = existingItemsByGuid.get(guid);
                 if (feedItem == null) feedItem = existingItemsByTitle.get(title);
-                
-                if (feedItem == null) {
-                    feedItem = new FeedItem();
-                    feedItem.setFeed(feed);
-                    feed.getFeedItems().add(feedItem);
-                    
-                    // Update maps so subsequent occurrences are merged
-                    existingItemsByTitle.put(title, feedItem);
-                    if (guid != null && !guid.isBlank()) existingItemsByGuid.put(guid, feedItem);
-                }
 
-                feedItem.setTitle(title);
-                feedItem.setGuid(guid);
-                feedItem.setLink(link);
-                feedItem.setDate(pubdate);
-                feedItem.setDescription(contentEncoded != null ? contentEncoded : description);
-                
-                for (Enclosure enc : enclosures) {
-                    if (!feedItem.getEnclosures().contains(enc)) {
-                        feedItem.getEnclosures().add(enc);
+                if (feedItem != null) {
+                    Optional<FeedItem> existing = feedItemRepository.findByFeedAndTitle(feed.getId(), title);
+                    if (existing.isPresent()) {
+                        feedItem = existing.get();
                     }
                 }
+
+                if (feedItem == null) {
+                    feedItem = new FeedItem();
+
+                    feedItem.setFeed(feed);
+                    feed.getFeedItems().add(feedItem);
+
+                    feedItem.setTitle(title);
+                    feedItem.setGuid(guid);
+                    feedItem.setLink(link);
+                    feedItem.setDate(pubdate);
+                    feedItem.setDescription(contentEncoded != null ? contentEncoded : description);
+
+                    for (Enclosure enc : enclosures) {
+                        if (!feedItem.getEnclosures().contains(enc)) {
+                            feedItem.getEnclosures().add(enc);
+                        }
+                    }
+                }
+                // Update maps so subsequent occurrences are merged
+                existingItemsByTitle.put(title, feedItem);
+                if (guid != null && !guid.isBlank()) existingItemsByGuid.put(guid, feedItem);
                 break;
             }
 

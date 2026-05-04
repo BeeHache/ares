@@ -183,7 +183,7 @@ public class AdminController {
         
         List<String> jobNames = jobRepository.getJobNames();
         for (String name : jobNames) {
-            List<JobExecution> executions = jobRepository.getJobExecutions(jobRepository.getLastJobInstance(name));
+            List<JobExecution> executions = jobRepository.getJobExecutions(Objects.requireNonNull(jobRepository.getLastJobInstance(name)));
             for (JobExecution ex : executions) {
                 dtos.add(BatchJobExecutionDTO.builder()
                         .id(ex.getId())

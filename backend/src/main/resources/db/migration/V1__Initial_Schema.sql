@@ -198,7 +198,7 @@ BEGIN
         UPDATE feeds SET subscribers = subscribers - 1 WHERE id = OLD.feed_id;
         RETURN OLD;
     END IF;
-    RETURN NULL;
+    RETURN NULL; -- AFTER triggers should return NULL
 END;
 $$ LANGUAGE plpgsql;
 
@@ -208,3 +208,44 @@ CREATE TRIGGER update_feed_subscriber_count_trigger
 AFTER INSERT OR DELETE ON subscriptions
 FOR EACH ROW
 EXECUTE FUNCTION update_feed_subscriber_count();
+
+-- Function to update the podcast status of a feed based on its feed_items' enclosures
+CREATE OR REPLACE FUNCTION update_feed_podcast_status()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_feed_id UUID;
+    v_has_enclosures BOOLEAN;
+BEGIN
+    -- Determine the feed_id based on whether it's an INSERT or DELETE operation
+    IF (TG_OP = 'INSERT') THEN
+        SELECT feed_id INTO v_feed_id FROM feed_items WHERE id = NEW.feed_item_id;
+    ELSIF (TG_OP = 'DELETE') THEN
+        SELECT feed_id INTO v_feed_id FROM feed_items WHERE id = OLD.feed_item_id;
+    END IF;
+
+    -- If a feed_id is found, check if any of its feed_items have enclosures
+    IF v_feed_id IS NOT NULL THEN
+        SELECT EXISTS (
+            SELECT 1
+            FROM feed_items fi
+            JOIN enclosures e ON fi.id = e.feed_item_id
+            WHERE fi.feed_id = v_feed_id
+            LIMIT 1
+        ) INTO v_has_enclosures;
+
+        -- Update the podcast status in the feeds table
+        UPDATE feeds
+        SET podcast = CASE WHEN v_has_enclosures THEN 'Y' ELSE 'N' END
+        WHERE id = v_feed_id;
+    END IF;
+
+    RETURN NULL; -- AFTER triggers should return NULL
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to call the function after an insert or delete on the enclosures table
+DROP TRIGGER IF EXISTS update_feed_podcast_status_trigger ON enclosures;
+CREATE TRIGGER update_feed_podcast_status_trigger
+AFTER INSERT OR DELETE ON enclosures
+FOR EACH ROW
+EXECUTE FUNCTION update_feed_podcast_status();

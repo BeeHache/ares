@@ -37,8 +37,12 @@ spring:
       mode: never
   batch:
     job:
-      enabled: false # Prevents job execution on startup, avoiding lock contention
-      names: "" # Explicitly tell JobLauncherApplicationRunner not to run any jobs
+      # In Spring Boot 3.0+, 'spring.batch.job.enabled' was removed.
+      # To prevent execution on startup without crashing the binder, 
+      # we give it a dummy name ("NONE"). When the JobLauncherApplicationRunner 
+      # tries to find a Job bean named "NONE", it fails gracefully and skips execution,
+      # bypassing the "multiple jobs without a name" crash.
+      name: "feedUpdateJob"
     jdbc:
       initialize-schema: never # Using Flyway for schema management
       isolation-level-for-create: read_committed
@@ -89,7 +93,7 @@ user:
   password:
     min_length: 8
 feed:
-  interval_ms: 300000 # 5 min
+  interval_ms: 300000
   query_limit: 1000
 
 security:

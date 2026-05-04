@@ -4,6 +4,9 @@ spring:
     allowedOrigins: https://ares.example.com
   main:
     allow-bean-definition-overriding: true
+  task:
+    scheduling:
+      enabled: false
   jpa:
     hibernate:
       ddl-auto: none # Disable Hibernate's schema validation
