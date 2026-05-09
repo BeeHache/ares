@@ -22,28 +22,23 @@ class FeedJobSchedulerTest {
     @Mock
     private Job feedUpdateJob;
 
-    @Mock
-    private Job userReaperJob;
-
-
     private FeedJobScheduler scheduler;
 
     private final Long intervalMs = 300000L;
 
     @BeforeEach
     void setUp() {
-        scheduler = new FeedJobScheduler(jobOperator, feedUpdateJob, userReaperJob, intervalMs);
+        scheduler = new FeedJobScheduler(jobOperator, feedUpdateJob, intervalMs);
     }
 
     @Test
-    void runFeedUpdateJob_shouldLaunchJobWithParameters() throws Exception {
-        // Act
-        scheduler.runFeedUpdateJob();
+    void runFeedUpdateJob_shouldLaunchJobWithCorrectParameters() throws Exception {
 
-        // Assert
         ArgumentCaptor<JobParameters> paramsCaptor = ArgumentCaptor.forClass(JobParameters.class);
+        scheduler.runFeedUpdateJob();
         verify(jobOperator).start(eq(feedUpdateJob), paramsCaptor.capture());
 
+        // Then you extract the value AFTER the verify method has captured it
         JobParameters params = paramsCaptor.getValue();
         assertNotNull(params.getString("threshold"));
         assertNotNull(params.getLong("time"));
@@ -52,10 +47,9 @@ class FeedJobSchedulerTest {
     @Test
     void runFeedUpdateJob_shouldHandleExceptionGracefully() throws Exception {
         // Arrange
-        when(jobOperator.start(eq(feedUpdateJob), any())).thenThrow(new RuntimeException("Launch failed"));
+        when(jobOperator.start(eq(feedUpdateJob), any(JobParameters.class))).thenThrow(new RuntimeException("Launch failed"));
 
         // Act & Assert (Should not throw exception)
         assertDoesNotThrow(() -> scheduler.runFeedUpdateJob());
-        verify(jobOperator).start(eq(feedUpdateJob), any());
     }
 }

@@ -2,6 +2,8 @@ package net.blackhacker.ares;
 
 import net.blackhacker.ares.service.RoleHierarchyService;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.batch.autoconfigure.BatchAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -13,10 +15,11 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest(
     properties = {
-            "spring.batch.job.enabled=false",
-            "spring.main.allow-bean-definition-overriding=true",
-            "spring.task.scheduling.enabled=false"
-    })
+            "spring.batch.job.name=feedUpdateJob",
+            "spring.main.allow-bean-definition-overriding=true"
+    }
+)
+@EnableAutoConfiguration(exclude = {BatchAutoConfiguration.class})
 @Import({AresApplicationTests.TestSecurityConfiguration.class, TestConfig.class})
 class AresApplicationTests extends AbstractIntegrationTest {
 

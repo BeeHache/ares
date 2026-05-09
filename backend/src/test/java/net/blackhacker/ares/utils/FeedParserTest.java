@@ -2,9 +2,11 @@ package net.blackhacker.ares.utils;
 
 import net.blackhacker.ares.model.Feed;
 import net.blackhacker.ares.model.FeedItem;
+import net.blackhacker.ares.repository.jpa.FeedItemRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.xml.parsers.SAXParserFactory;
@@ -12,6 +14,7 @@ import java.io.ByteArrayInputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -21,14 +24,18 @@ class FeedParserTest {
     private Feed feed;
     private FeedParser feedParser;
 
+    @Mock
+    private FeedItemRepository feedItemRepository;
+
+
     @BeforeEach
     void setUp() throws Exception {
-        SAXParserFactory factory = SAXParserFactory.newInstance();
         feed = new Feed();
         feed.setId(UUID.randomUUID());
         feed.setUrl(new URL("http://example.com/rss"));
-        
-        feedParser = new FeedParser();
+        feed.setFeedItems(new HashSet<>());
+
+        feedParser = new FeedParser(feedItemRepository);
         feedParser.setFeed(feed);
     }
 

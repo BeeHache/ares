@@ -14,38 +14,33 @@ import java.time.ZonedDateTime;
 
 @Slf4j
 @Service
-public class FeedJobScheduler {
+public class UserReaperJobScheduler {
 
     private final JobOperator jobOperator;
-    private final Job feedUpdateJob;
+    private final Job userReaperJob;
     private final Long feedIntervalMs;
 
-    public FeedJobScheduler(JobOperator jobOperator,
-                            @Qualifier("feedUpdateJob") Job feedUpdateJob,
-                            @Value("${feed.interval_ms:300000}") Long feedIntervalMs) {
+    public UserReaperJobScheduler(JobOperator jobOperator,
+                                  @Qualifier("userReaperJob") Job userReaperJob,
+                                  @Value("${feed.interval_ms:300000}") Long feedIntervalMs) {
         this.jobOperator = jobOperator;
-        this.feedUpdateJob = feedUpdateJob;
+        this.userReaperJob = userReaperJob;
         this.feedIntervalMs = feedIntervalMs;
     }
 
-    @Scheduled(
-            initialDelayString = "10000ms",
-            fixedDelayString = "${feed.interval_ms:300000}")
-    public void runFeedUpdateJob() {
-        log.info("Starting Feed Update Batch Job");
-        
+    @Scheduled(cron = "0 0/15 * * * ?")
+    public void runUserReaperJob() {
+        log.info("Starting User Reaper Batch Job");
+
         try {
-            ZonedDateTime threshold = ZonedDateTime.now().minusNanos(feedIntervalMs * 1_000_000);
-            
             JobParameters params = new JobParametersBuilder()
-                    .addString("threshold", threshold.toString())
                     .addLong("time", System.currentTimeMillis())
                     .toJobParameters();
-            
-            jobOperator.start(feedUpdateJob, params);
+
+            jobOperator.start(userReaperJob, params);
 
         } catch (Exception e) {
-            log.error("Error launching feed update job", e);
+            log.error("Error launching user reaper job", e);
         }
     }
 }
