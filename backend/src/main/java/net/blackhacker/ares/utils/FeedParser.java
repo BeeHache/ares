@@ -283,22 +283,22 @@ public class FeedParser extends DefaultHandler {
 
                 if (feedItem == null) {
                     feedItem = new FeedItem();
-
                     feedItem.setFeed(feed);
                     feed.getFeedItems().add(feedItem);
+                }
 
-                    feedItem.setTitle(title);
-                    feedItem.setGuid(guid);
-                    feedItem.setLink(link);
-                    feedItem.setDate(pubdate);
-                    feedItem.setDescription(contentEncoded != null ? contentEncoded : description);
+                feedItem.setTitle(title);
+                feedItem.setGuid(guid);
+                feedItem.setLink(link);
+                feedItem.setDate(pubdate);
+                feedItem.setDescription(contentEncoded != null ? contentEncoded : description);
 
-                    for (Enclosure enc : enclosures) {
-                        if (!feedItem.getEnclosures().contains(enc)) {
-                            feedItem.getEnclosures().add(enc);
-                        }
+                for (Enclosure enc : enclosures) {
+                    if (!feedItem.getEnclosures().contains(enc)) {
+                        feedItem.getEnclosures().add(enc);
                     }
                 }
+
                 // Update maps so subsequent occurrences are merged
                 existingItemsByTitle.put(title, feedItem);
                 if (guid != null && !guid.isBlank()) existingItemsByGuid.put(guid, feedItem);

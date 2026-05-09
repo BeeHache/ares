@@ -14,6 +14,7 @@ import java.io.ByteArrayInputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -29,9 +30,10 @@ class FeedParserTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        SAXParserFactory factory = SAXParserFactory.newInstance();
+        feed = new Feed();
         feed.setId(UUID.randomUUID());
         feed.setUrl(new URL("http://example.com/rss"));
+        feed.setFeedItems(new HashSet<>());
 
         feedParser = new FeedParser(feedItemRepository);
         feedParser.setFeed(feed);
