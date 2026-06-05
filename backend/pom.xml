@@ -38,7 +38,7 @@
         <lombok.version>1.18.46</lombok.version>
         <jedis.version>7.5.0</jedis.version>
         <flywaydb.version>12.6.0</flywaydb.version>
-        <jacoco.version>0.8.14</jacoco.version>
+        <jacoco.version>0.8.15</jacoco.version>
         <togglz.version>4.6.1</togglz.version>
         <xerces.version>2.12.2</xerces.version>
         <jackson.version>2.21.2</jackson.version>
